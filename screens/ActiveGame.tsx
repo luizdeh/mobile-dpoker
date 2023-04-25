@@ -2,13 +2,26 @@ import React, { useState, useEffect } from "react";
 import { Text, HStack, Box, VStack, Divider, IconButton } from "native-base";
 import { useRoute } from "@react-navigation/native";
 import { getGamePlayers } from "../utils/getGamePlayers";
-import { addRebuy } from "../utils/addRebuy";
 import { gameStatus } from "../utils/gameStatus";
-import { Entypo } from "@expo/vector-icons";
+import ActivePlayer from "../components/ActivePlayer";
+import { Player } from "../utils/types";
 
 // TODO:
-// create a single object to manage everything through state
 // interact with database with confirmations
+
+// TODO:
+// closing the game
+// 1. create the function to update chips for each player
+// 2. create the function to close the game in the db
+// 3. render the button
+// 4. create the modal to update chips for each player
+
+// TODO:
+// adding a player
+// 1. check if the function to add a player to a game works with the ACTIVE status
+// 2. render the button -> modal with list of inactive players
+// 3. render updated game
+// 4. check if rebuys are working
 
 export default function ActiveGame() {
   const route = useRoute();
@@ -19,7 +32,10 @@ export default function ActiveGame() {
   // console.log(route);
 
   const [activePlayers, setActivePlayers] = useState([]);
-  // const [gameObject, setGameObject] = useState([]);
+
+  // useEffect(() => {
+  //   console.log(activePlayers);
+  // }, [activePlayers]);
 
   useEffect(() => {
     (async () => {
@@ -27,37 +43,32 @@ export default function ActiveGame() {
 
       const gamePlayers = await getGamePlayers();
       if (gamePlayers) {
-        setActivePlayers(
-          gamePlayers.filter((item: any) => item.game_id === game.id)
+        const currentGamePlayers = gamePlayers.filter(
+          (item: any) => item.game_id === game.id
         );
+        const gamePlayersWithNames = currentGamePlayers.map((item: any) => {
+          const buy_in_value = game.buy_in_value;
+          const re_buy_value = game.re_buy_value;
+          const name = players.find(
+            (player: any) => player.id === item.person_id
+          ).name;
+          return { ...item, name, buy_in_value, re_buy_value };
+        });
+        setActivePlayers(gamePlayersWithNames);
       }
     })();
   }, []);
 
-  const findPlayerName = (id: number) =>
-    players.find((item: any) => item.id === id).name;
-
   const totalChips = () => {
-    const buyins = activePlayers.length;
-    const rebuys = activePlayers.reduce((a, b) => a + b.quantity_rebuy, 0);
-    const buyInValue = game.buy_in_value;
-    const totalBuyIns = buyins + rebuys;
-    return totalBuyIns * buyInValue;
+    if (activePlayers.length === 0) return 0;
+    const buyins = activePlayers.length * game.buy_in_value;
+    const rebuys =
+      activePlayers.reduce((a, b) => a + b.quantity_rebuy, 0) *
+      game.buy_in_value;
+    return buyins + rebuys;
   };
 
-  // const addRebuy = (id: number) => {
-  //   const players = [...activePlayers];
-  //   const idx = players.findIndex((item: any) => item.person_id === id);
-  //   const player = players[idx];
-  //   if (player) {
-  //     player.quantity_rebuy++;
-  //     player.chips = player.chips + game.buy_in_value;
-  //     setActivePlayers(players);
-  //   }
-  //   // const rebuy = players[idx].quantity_rebuy++
-  //   // players[idx] = [...players[idx], quantity_rebuy: ++1 ];
-  //   // console.log(players);
-  // };
+  const averageStack = () => Math.round(totalChips() / activePlayers.length);
 
   return (
     <Box
@@ -87,40 +98,15 @@ export default function ActiveGame() {
             bg: "muted.50",
           }}
         />
-        {activePlayers ? (
-          activePlayers.map((player: any) => (
-            <HStack
+        {activePlayers
+          ? activePlayers.map((player: Player) => (
+            <ActivePlayer
               key={player.id}
-              space={6}
-              justifyItems="space-between"
-              alignItems="center"
-              lineHeight="2xl"
-            >
-              <Text flex={3}>{findPlayerName(player.person_id)}</Text>
-              <HStack flex={2} alignItems="center" justifyItems="space-between">
-                <IconButton
-                  colorScheme="muted"
-                  _icon={{ as: Entypo, name: "minus" }}
-                  flex={1}
-                />
-                <Text fontSize="lg" flex={2} textAlign="center">
-                  {player.quantity_rebuy}
-                </Text>
-                <IconButton
-                  colorScheme="muted"
-                  _icon={{ as: Entypo, name: "plus" }}
-                  flex={1}
-                  onPress={() => addRebuy(player.id)}
-                />
-              </HStack>
-              <Text flex={1} textAlign="center">
-                {player.chips}
-              </Text>
-            </HStack>
+              player={player}
+              updateActivePlayers={setActivePlayers}
+            />
           ))
-        ) : (
-          <Text>SOMETHING WENT WRONG</Text>
-        )}
+          : null}
       </VStack>
       <br />
       <br />
@@ -130,7 +116,7 @@ export default function ActiveGame() {
             TOTAL CHIPS
           </Text>
           <Text flex={1} fontSize="xl" textAlign="right">
-            {activePlayers ? totalChips() : 0}
+            {totalChips()}
           </Text>
         </HStack>
         <HStack space={8} justifyItems="space-between" alignItems="center">
@@ -138,9 +124,7 @@ export default function ActiveGame() {
             AVERAGE STACK
           </Text>
           <Text flex={1} fontSize="sm" textAlign="right">
-            {activePlayers
-              ? Math.round(totalChips() / activePlayers.length)
-              : 0}
+            {averageStack()}
           </Text>
         </HStack>
       </VStack>
