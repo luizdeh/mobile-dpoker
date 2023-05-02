@@ -7,7 +7,6 @@ import { Player } from "../utils/types";
 // TODO:
 // set up modals for confirmation of adding a rebuy
 
-
 interface Props {
   player: Player;
   updateActivePlayers: Dispatch<SetStateAction<Player[]>>;

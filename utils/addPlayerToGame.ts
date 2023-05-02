@@ -12,6 +12,6 @@ export const addPlayerToGame = async (gameId: number, personId: number) => {
     const game = await res.json();
     return game;
   } catch (error) {
-    console.log("[ERROR] addPersonToGame() =>", error.message);
+    console.log("[ERROR] addPlayerToGame() =>", error.message);
   }
 };

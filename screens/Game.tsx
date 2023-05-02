@@ -3,25 +3,25 @@ import { Text, VStack, Button, HStack, Box } from "native-base";
 import { getPlayers } from "../utils/fetchPlayers";
 import { createNewGame } from "../utils/createNewGame";
 import { addPlayerToGame } from "../utils/addPlayerToGame";
-import { ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { gameStatus } from "../utils/gameStatus";
 import { getAllGames } from "../utils/getAllGames";
+import { PlayerList, Game } from "../utils/types";
 
 // TODO:
-// treat players as pills ( no buttons )
-// PLayers: 0 / *total*
-// start game button -> disabled until 5 players
-// bulk request -> { gameId: 'id', players: [1,2,3] }
-// footer
-
-// FIX:
-// players are not being removed from the gamePlayers table
+// refactor EVERYTHING
 
 export default function NewGame() {
-  const [playerList, setPlayerList] = useState([]);
-  const [newGame, setNewGame] = useState([]);
-  const [registeredPlayers, setRegisteredPlayers] = useState([]);
+  const [playerList, setPlayerList] = useState<PlayerList[]>([]);
+  const [newGame, setNewGame] = useState<Game>({
+    id: 0,
+    date: "",
+    buy_in_value: 0,
+    re_buy_value: 0,
+    chip_value: 0,
+    status: "",
+  });
+  const [activePlayers, setActivePlayers] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -47,14 +47,15 @@ export default function NewGame() {
     })();
   }, [newGame]);
 
-  const navigation = useNavigation();
+  useEffect(() => {
+    setActivePlayers(
+      playerList
+        .filter((player: PlayerList) => player.active === true)
+        .map((active: PlayerList) => active.id)
+    );
+  }, [playerList]);
 
-  const activateGame = () => {
-    navigation.navigate("Active Game", {
-      game: newGame,
-      players: registeredPlayers,
-    });
-  };
+  const navigation = useNavigation();
 
   const gameParams = {
     buy_in_value: 1000,
@@ -63,31 +64,25 @@ export default function NewGame() {
     status: "LOBBY",
   };
 
-  const checkDoubleEntry = (array: any, playerId: number) =>
-    !!array.find((item: any) => item.id === playerId);
-
-  const addPlayerToList = (player: any) => {
-    if (registeredPlayers.length === 0) {
-      setRegisteredPlayers([player]);
-    } else {
-      const check = checkDoubleEntry(registeredPlayers, player.id);
-      if (!check) {
-        setRegisteredPlayers([...registeredPlayers, player]);
-      }
-    }
+  const toggleRegisterPlayer = (id: number) => {
+    setPlayerList((prev) => {
+      const updatedList = [...prev];
+      const idx = updatedList.findIndex((item: PlayerList) => item.id === id);
+      updatedList[idx].active = !updatedList[idx].active;
+      return updatedList;
+    });
   };
 
-  const isPlayerRegistered = (id: number) =>
-    !!registeredPlayers.find((item: any) => item.id === id);
+  useEffect(() => {
+    console.log(newGame.id);
+  }, [newGame]);
 
-  const unregisterPlayer = (player: any) =>
-    setRegisteredPlayers(
-      registeredPlayers.filter((item: any) => item.id !== player.id)
-    );
-
-  const startGame = (players: any) => {
-    players.forEach((item: any) => addPlayerToGame(newGame.id, item.id));
-    activateGame();
+  const startGame = async (players: any) => {
+    await players.forEach((id: number) => addPlayerToGame(newGame.id, id));
+    navigation.navigate("Active Game", {
+      game: newGame,
+      players: playerList,
+    } as { game: any; players: any });
   };
 
   return (
@@ -103,61 +98,51 @@ export default function NewGame() {
           <br />
           <HStack space={12} alignItems="center">
             <Text fontSize="md">Players:</Text>
-            <Text fontSize="4xl">{registeredPlayers.length ?? 0}</Text>
+            <Text fontSize="4xl">
+              {playerList.filter((item: PlayerList) => item.active === true)
+                .length ?? 0}
+            </Text>
             <VStack alignItems="center" justifyContent="center">
               <Text fontSize="sm">TOTAL</Text>
               <Text fontSize="sm">{playerList.length}</Text>
             </VStack>
           </HStack>
           <br />
-          {playerList ? (
-            playerList.map((item: any) => {
-              const active = isPlayerRegistered(item.id);
-              if (active) {
-                return (
-                  <Button
-                    onPress={() => {
-                      unregisterPlayer(item);
-                    }}
-                    key={item.id + item.name}
-                    variant="solid"
-                    width="60%"
-                    colorScheme="tertiary"
-                    my="1"
-                  >
-                    {item.name.toUpperCase()}
-                  </Button>
-                );
-              } else {
-                return (
-                  <Button
-                    onPress={() => addPlayerToList(item)}
-                    key={item.id + item.name}
-                    variant="subtle"
-                    width="60%"
-                    colorScheme="tertiary"
-                    my="1"
-                  >
-                    {item.name.toUpperCase()}
-                  </Button>
-                );
-              }
+          {playerList
+            ? playerList.map((player: PlayerList) => {
+              return (
+                <Button
+                  onPress={() => {
+                    toggleRegisterPlayer(player.id);
+                  }}
+                  key={player.id}
+                  variant={player.active ? "solid" : "subtle"}
+                  width="60%"
+                  colorScheme="tertiary"
+                  my="1"
+                >
+                  {player.name.toUpperCase()}
+                </Button>
+              );
             })
-          ) : (
-            <Text>No players registered yet.</Text>
-          )}
+            : null}
         </VStack>
       </Box>
       <Box safeArea>
         <Button
-          isDisabled={registeredPlayers.length >= 5 ? false : true}
+          isDisabled={
+            playerList.filter((item: PlayerList) => item.active === true)
+              .length >= 5
+              ? false
+              : true
+          }
           variant="solid"
           colorScheme="blueGray"
           width="100%"
           mb="0"
           minHeight="16"
           borderRadius="none"
-          onPress={() => startGame(registeredPlayers)}
+          onPress={() => startGame(activePlayers)}
         >
           START GAME
         </Button>
