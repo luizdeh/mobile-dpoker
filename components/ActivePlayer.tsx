@@ -1,8 +1,8 @@
-import React, { useState, useEffect, SetStateAction, Dispatch } from "react";
+import React, { useState, SetStateAction, Dispatch } from "react";
 import { HStack, Text, IconButton } from "native-base";
 import { Entypo } from "@expo/vector-icons";
 import { addRebuy } from "../utils/addRebuy";
-import { Player } from "../utils/types";
+import { Player } from "../lib/types";
 
 // TODO:
 // set up modals for confirmation of adding a rebuy
@@ -36,10 +36,6 @@ export default function ActivePlayer({ player, updateActivePlayers }: Props) {
     });
   };
 
-  // useEffect(() => {
-  //   console.log("i am:", me);
-  // }, [me]);
-
   return (
     <HStack
       space={6}
@@ -47,7 +43,7 @@ export default function ActivePlayer({ player, updateActivePlayers }: Props) {
       alignItems="center"
       lineHeight="2xl"
     >
-      <Text flex={3}>{me.name}</Text>
+      <Text flex={3}>{me.name.toUpperCase()}</Text>
       <HStack flex={2} alignItems="center" justifyItems="space-between">
         <Text fontSize="lg" flex={1} textAlign="center">
           {me.quantity_rebuy}

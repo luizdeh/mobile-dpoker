@@ -10,7 +10,6 @@ export const createNewGame = async (gameData: {}) => {
       body: JSON.stringify(gameData),
     });
     const game = await res.json();
-    console.log(game);
     return game;
   } catch (error) {
     console.log("[ERROR] createNewGame() =>", error.message);

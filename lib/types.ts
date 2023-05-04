@@ -9,7 +9,7 @@ export type Player = {
   quantity_rebuy: number;
   re_buy_value: number;
   buy_in_value: number;
-  active: boolean;
+  final_chips: number;
 };
 
 export type PlayerList = {
@@ -25,4 +25,11 @@ export type Game = {
   re_buy_value: number;
   chip_value: number;
   status: string;
+};
+
+export type ParamsList = {
+  Info: {
+    game: any;
+    players: any;
+  };
 };

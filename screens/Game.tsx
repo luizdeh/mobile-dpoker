@@ -4,9 +4,7 @@ import { getPlayers } from "../utils/fetchPlayers";
 import { createNewGame } from "../utils/createNewGame";
 import { addPlayerToGame } from "../utils/addPlayerToGame";
 import { useNavigation } from "@react-navigation/native";
-import { gameStatus } from "../utils/gameStatus";
-import { getAllGames } from "../utils/getAllGames";
-import { PlayerList, Game } from "../utils/types";
+import { PlayerList, Game } from "../lib/types";
 
 // TODO:
 // refactor EVERYTHING
@@ -34,20 +32,6 @@ export default function NewGame() {
   }, []);
 
   useEffect(() => {
-    (async () => {
-      const games = await getAllGames();
-      if (games) {
-        const oldGames = games.filter((item: any) => item.id !== newGame.id);
-        oldGames.forEach((item: any) => {
-          if (item.status === "LOBBY" || item.status === "ACTIVE") {
-            return gameStatus(item.id, "CLOSED");
-          }
-        });
-      }
-    })();
-  }, [newGame]);
-
-  useEffect(() => {
     setActivePlayers(
       playerList
         .filter((player: PlayerList) => player.active === true)
@@ -72,10 +56,6 @@ export default function NewGame() {
       return updatedList;
     });
   };
-
-  useEffect(() => {
-    console.log(newGame.id);
-  }, [newGame]);
 
   const startGame = async (players: any) => {
     await players.forEach((id: number) => addPlayerToGame(newGame.id, id));

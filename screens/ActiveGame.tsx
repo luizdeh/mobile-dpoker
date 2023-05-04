@@ -7,14 +7,17 @@ import {
   Divider,
   Button,
   Center,
+  Modal,
+  Input,
 } from "native-base";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import ActivePlayer from "../components/ActivePlayer";
 import { getGamePlayers } from "../utils/getGamePlayers";
 import { gameStatus } from "../utils/gameStatus";
-import ActivePlayer from "../components/ActivePlayer";
-import { Player, PlayerList } from "../utils/types";
 import { addPlayerToGame } from "../utils/addPlayerToGame";
-import { Modal } from "native-base";
+import { Player, PlayerList, ParamsList } from "../lib/types";
+import { updateChips } from "../utils/updateChips";
+import { endGame } from "../utils/endGame";
 
 // TODO:
 // interact with database with confirmations
@@ -26,22 +29,9 @@ import { Modal } from "native-base";
 // 3. render the button
 // 4. create the modal to update chips for each player
 
-// TODO:
-// adding a player
-// 1. check if the function to add a player to a game works with the ACTIVE status
-// 2. render the button -> modal with list of inactive players
-// 3. render updated game
-// 4. check if rebuys are working
-
-type ParamsList = {
-  Info: {
-    game: any;
-    players: any;
-  };
-};
-
 export default function ActiveGame() {
-  const [showModal, setShowModal] = useState(false);
+  const [showInactivesModal, setShowInactivesModal] = useState(false);
+  const [showChipCountModal, setShowChipCountModal] = useState(false);
 
   const route = useRoute<RouteProp<ParamsList, "Info">>();
 
@@ -49,19 +39,9 @@ export default function ActiveGame() {
   const players = route.params.players;
   const inactive = players.filter((item: PlayerList) => item.active === false);
 
-  // console.log(route);
-
   const [activePlayers, setActivePlayers] = useState<Player[]>([]);
   const [inactivePlayers, setInactivePlayers] = useState(inactive);
   const [addNewPlayers, setAddNewPlayers] = useState<[] | number[]>([]);
-
-  useEffect(() => {
-    console.log("activePlayers:", activePlayers);
-  }, [activePlayers]);
-
-  useEffect(() => {
-    console.log("inactivePlayers:", inactivePlayers);
-  }, [inactivePlayers]);
 
   useEffect(() => {
     (async () => {
@@ -89,7 +69,7 @@ export default function ActiveGame() {
           const name = players.find(
             (player: any) => player.id === item.person_id
           ).name;
-          return { ...item, name, buy_in_value, re_buy_value };
+          return { ...item, name, buy_in_value, re_buy_value, final_chips: 0 };
         });
       setActivePlayers(gamePlayersWithNames);
     }
@@ -128,13 +108,16 @@ export default function ActiveGame() {
 
     setInactivePlayers(cleanedInactive);
     setAddNewPlayers([]);
-    setShowModal(false);
+    setShowInactivesModal(false);
   };
 
-  const renderModal = () => {
+  const renderInactivesModal = () => {
     return (
       <Center>
-        <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+        <Modal
+          isOpen={showInactivesModal}
+          onClose={() => setShowInactivesModal(false)}
+        >
           <Modal.Content maxWidth="400px">
             <Modal.CloseButton />
             <Modal.Header>Inactive Players</Modal.Header>
@@ -167,7 +150,7 @@ export default function ActiveGame() {
                 <Button
                   variant="ghost"
                   colorScheme="blueGray"
-                  onPress={() => setShowModal(false)}
+                  onPress={() => setShowInactivesModal(false)}
                 >
                   Cancel
                 </Button>
@@ -175,7 +158,109 @@ export default function ActiveGame() {
                   onPress={() => {
                     addNewPlayers.length >= 1
                       ? sendNewPlayersToActiveGame()
-                      : setShowModal(false);
+                      : setShowInactivesModal(false);
+                  }}
+                >
+                  SAVE
+                </Button>
+              </Button.Group>
+            </Modal.Footer>
+          </Modal.Content>
+        </Modal>
+      </Center>
+    );
+  };
+
+  const handleChange = (event: any, index: number) => {
+    const { value } = event.target;
+
+    const newState = [...activePlayers];
+    newState[index] = { ...activePlayers[index], final_chips: Number(value) };
+    setActivePlayers(newState);
+  };
+
+  const navigation = useNavigation();
+
+  const closeGame = async () => {
+    activePlayers.forEach(async (item: Player) => {
+      await updateChips(item.id, item.final_chips);
+    });
+    await endGame(game.id);
+    // await gameStatus(game.id, "CLOSED");
+    alert("Game succesfully ended");
+    navigation.navigate("Home");
+  };
+
+  const renderChipCountModal = () => {
+    return (
+      <Center>
+        <Modal
+          isOpen={showChipCountModal}
+          onClose={() => setShowChipCountModal(false)}
+        >
+          <Modal.Content maxWidth="400px">
+            <Modal.CloseButton />
+            <Modal.Header>Close Game</Modal.Header>
+            <Modal.Body>
+              <VStack space={2}>
+                {activePlayers.map((item, index) => {
+                  return (
+                    <HStack
+                      space={6}
+                      justifyItems="space-between"
+                      alignItems="center"
+                      lineHeight="2xl"
+                      key={item.id}
+                    >
+                      <Text flex={3}>{item.name.toUpperCase()}</Text>
+                      <Input
+                        flex={2}
+                        name="final_chips"
+                        value={item.final_chips}
+                        keyboardType="numeric"
+                        maxLength={5}
+                        onChange={(e: any) => handleChange(e, index)}
+                      />
+                    </HStack>
+                  );
+                })}
+              </VStack>
+              <br />
+              <HStack
+                justifyItems="space-between"
+                alignItems="baseline"
+                lineHeight="2xl"
+              >
+                <Text flex={2}>TOTAL</Text>
+                <HStack space={2} flex={1} justifyItems="space-between">
+                  <Text flex={2} textAlign="right" fontSize="md">
+                    {activePlayers.reduce((a, b) => a + b.final_chips, 0)}
+                  </Text>
+                  <Text flex={1} textAlign="right" fontSize="xs">
+                    / {totalChips()}
+                  </Text>
+                </HStack>
+              </HStack>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button.Group space={2}>
+                <Button
+                  variant="ghost"
+                  colorScheme="blueGray"
+                  onPress={() => setShowChipCountModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  isDisabled={
+                    activePlayers.reduce((a, b) => a + b.final_chips, 0) ===
+                      totalChips()
+                      ? false
+                      : true
+                  }
+                  onPress={() => {
+                    closeGame();
+                    setShowChipCountModal(false);
                   }}
                 >
                   SAVE
@@ -195,7 +280,8 @@ export default function ActiveGame() {
       h="100%"
       w="100%"
     >
-      {renderModal()}
+      {renderInactivesModal()}
+      {renderChipCountModal()}
       <Box flex={1} p={8}>
         <VStack>
           <HStack space={6} justifyItems="space-between" alignItems="center">
@@ -229,9 +315,9 @@ export default function ActiveGame() {
             : null}
           <Center>
             <Button
-              onPress={() => setShowModal(true)}
+              onPress={() => setShowInactivesModal(true)}
               variant="subtle"
-              width="80%"
+              width="60%"
               colorScheme="tertiary"
               my="2"
             >
@@ -268,7 +354,7 @@ export default function ActiveGame() {
           mb="0"
           minHeight="16"
           borderRadius="none"
-          onPress={() => setShowModal(true)}
+          onPress={() => setShowChipCountModal(true)}
         >
           GO TO CHIP COUNT
         </Button>
