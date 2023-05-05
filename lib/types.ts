@@ -27,6 +27,15 @@ export type Game = {
   status: string;
 };
 
+export type GamePlayer = {
+  id: number;
+  game_id: number;
+  person_id: number;
+  quantity_rebuy: number;
+  chips: number;
+  name?: string;
+};
+
 export type ParamsList = {
   Info: {
     game: any;

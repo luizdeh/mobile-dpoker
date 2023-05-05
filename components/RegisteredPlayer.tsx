@@ -48,7 +48,7 @@ export default function RegisteredPlayer({ player, updatePlayers }: Prop) {
       justifyContent="space-between"
       height="12"
       flex={1}
-      w="80%"
+      w="100%"
       bgColor="tertiary.100"
       borderRadius="lg"
       px={2}

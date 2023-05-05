@@ -8,6 +8,7 @@ import {
   useColorMode,
   VStack,
   Button,
+  Box,
 } from "native-base";
 
 // TODO: create a modal component that shows game parameters to edit or just confirm
@@ -32,27 +33,58 @@ function ToggleDarkMode() {
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
   return (
-    <Center
-      _dark={{ bg: "blueGray.900" }}
-      _light={{ bg: "blueGray.50" }}
-      px={4}
-      flex={1}
-    >
-      <VStack space={5} alignItems="center">
-        <Heading size="lg">D/Poker</Heading>
-        <Button onPress={() => navigation.navigate("Game")}>
-          CREATE NEW GAME
-        </Button>
-        <br />
-        <Button onPress={() => navigation.navigate("Players")}>Players</Button>
-        <Button onPress={() => navigation.navigate("Stats")}>Statistics</Button>
-        <br />
-        <Button onPress={() => navigation.navigate("Profile")}>
+    <Box h="100%">
+      <Heading
+        size="2xl"
+        color="tertiary.800"
+        lineHeight="2xl"
+        p={8}
+        textAlign="center"
+      >
+        D/POKER
+      </Heading>
+      <Center
+        _dark={{ bg: "blueGray.900" }}
+        _light={{ bg: "blueGray.50" }}
+        px={4}
+        flex={1}
+      >
+        <VStack space={8} alignItems="center" w="100%">
+          <Button
+            variant="solid"
+            colorScheme="blueGray"
+            width="90%"
+            p="4"
+            onPress={() => navigation.navigate("Game")}
+          >
+            CREATE NEW GAME
+          </Button>
+          <Button
+            variant="solid"
+            colorScheme="blueGray"
+            width="90%"
+            p="4"
+            onPress={() => navigation.navigate("Players")}
+          >
+            PLAYERS
+          </Button>
+          <Button
+            variant="solid"
+            colorScheme="blueGray"
+            width="90%"
+            p="4"
+            onPress={() => navigation.navigate("Stats")}
+          >
+            STATISTICS
+          </Button>
+          <br />
+          {/*<Button onPress={() => navigation.navigate("Profile")}>
           User Profile
-        </Button>
-        <br />
-        <ToggleDarkMode />
-      </VStack>
-    </Center>
+        </Button>*/}
+          <br />
+          <ToggleDarkMode />
+        </VStack>
+      </Center>
+    </Box>
   );
 }

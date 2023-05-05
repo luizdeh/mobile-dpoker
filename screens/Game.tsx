@@ -6,8 +6,7 @@ import { addPlayerToGame } from "../utils/addPlayerToGame";
 import { useNavigation } from "@react-navigation/native";
 import { PlayerList, Game } from "../lib/types";
 
-// TODO:
-// refactor EVERYTHING
+// TODO: create game and append players only at the end of this component's function
 
 export default function NewGame() {
   const [playerList, setPlayerList] = useState<PlayerList[]>([]);
@@ -21,25 +20,25 @@ export default function NewGame() {
   });
   const [activePlayers, setActivePlayers] = useState<any[]>([]);
 
+  const navigation = useNavigation();
+
   useEffect(() => {
     (async () => {
       const players = await getPlayers();
       if (players) setPlayerList(players);
 
-      const createdGame = await createNewGame(gameParams);
-      if (createdGame) setNewGame(createdGame);
+      // const createdGame = await createNewGame(gameParams);
+      // if (createdGame) setNewGame(createdGame);
     })();
   }, []);
 
-  useEffect(() => {
-    setActivePlayers(
-      playerList
-        .filter((player: PlayerList) => player.active === true)
-        .map((active: PlayerList) => active.id)
-    );
-  }, [playerList]);
-
-  const navigation = useNavigation();
+  // useEffect(() => {
+  //   setActivePlayers(
+  //     playerList
+  //       .filter((player: PlayerList) => player.active === true)
+  //       .map((active: PlayerList) => active.id)
+  //   );
+  // }, [playerList]);
 
   const gameParams = {
     buy_in_value: 1000,
@@ -55,14 +54,29 @@ export default function NewGame() {
       updatedList[idx].active = !updatedList[idx].active;
       return updatedList;
     });
+    console.log(playerList);
   };
 
   const startGame = async (players: any) => {
-    await players.forEach((id: number) => addPlayerToGame(newGame.id, id));
-    navigation.navigate("Active Game", {
-      game: newGame,
-      players: playerList,
-    } as { game: any; players: any });
+    const createdGame = await createNewGame(gameParams);
+    // if (createdGame) setNewGame(createdGame);
+
+    if (createdGame) {
+      for (const player of players) {
+        console.log(player);
+        if (player.active === true) {
+          await addPlayerToGame(createdGame.id, player.id);
+        } else {
+          console.log("player not sent", player.name);
+        }
+      }
+      // await players.forEach((id: number) => addPlayerToGame(newGame.id, id));
+
+      navigation.navigate("Active Game", {
+        game: createdGame,
+        players: playerList,
+      } as { game: any; players: any });
+    }
   };
 
   return (
@@ -122,7 +136,7 @@ export default function NewGame() {
           mb="0"
           minHeight="16"
           borderRadius="none"
-          onPress={() => startGame(activePlayers)}
+          onPress={() => startGame(playerList)}
         >
           START GAME
         </Button>
