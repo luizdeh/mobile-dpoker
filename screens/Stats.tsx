@@ -115,11 +115,7 @@ export default function OverallStats() {
               statName: what,
             };
           })
-          .sort(
-            (a, b) =>
-              (order == "down" ? b.stat - a.stat : a.stat - b.stat) |
-              (a.games - b.games)
-          )
+          .sort((a, b) => (order == "down" ? b.stat - a.stat : a.stat - b.stat))
           .filter((item: any) => item.games !== 0);
       };
 
@@ -189,8 +185,11 @@ export default function OverallStats() {
                   colorScheme="blueGray"
                   variant={item.show ? "solid" : "subtle"}
                   textAlign="center"
-                  w="90%"
+                  w="95%"
                   mt="2"
+                  borderColor="blueGray.300"
+                  borderRadius="none"
+                  borderWidth="1"
                   onPress={() =>
                     setStats((prev: any) => {
                       const temp = [...prev];
@@ -201,16 +200,22 @@ export default function OverallStats() {
                 >
                   {item.name.toUpperCase()}
                 </Button>
-                <VStack w="90%" space={1}>
-                  {item.show
-                    ? item.stats.map((subItem: any, idx: number) => {
+                {item.show ? (
+                  <VStack
+                    w="95%"
+                    space={1}
+                    borderColor="blueGray.300"
+                    borderRadius="none"
+                    borderWidth="1"
+                  >
+                    {item.stats.map((subItem: any, idx: number) => {
                       return (
                         <HStack
                           key={idx}
                           w="100%"
                           alignItems="center"
                           h="12"
-                          backgroundColor="tertiary.100"
+                          backgroundColor="tertiary.50"
                           px="2"
                         >
                           <Text flex={1}>
@@ -221,9 +226,9 @@ export default function OverallStats() {
                           </Text>
                         </HStack>
                       );
-                    })
-                    : null}
-                </VStack>
+                    })}
+                  </VStack>
+                ) : null}
               </Box>
             );
           })}
