@@ -182,13 +182,19 @@ export default function ActiveGame() {
   const navigation = useNavigation();
 
   const closeGame = async () => {
-    activePlayers.forEach(async (item: Player) => {
-      await updateChips(item.id, item.final_chips);
-    });
-    await endGame(game.id);
-    // await gameStatus(game.id, "CLOSED");
-    alert("Game succesfully ended");
-    navigation.navigate("Home");
+    let results = [];
+    for (const player of activePlayers) {
+      const res = await updateChips(player.id, player.final_chips);
+      if (res.error)
+        results.push({ id: player.id, final_chips: player.final_chips });
+    }
+    if (results.length === 0) {
+      await endGame(game.id);
+      console.log("game ended");
+      navigation.navigate("Home");
+    } else {
+      console.log({ results });
+    }
   };
 
   const renderChipCountModal = () => {
