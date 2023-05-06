@@ -4,21 +4,10 @@ import { getPlayers } from "../utils/fetchPlayers";
 import { createNewGame } from "../utils/createNewGame";
 import { addPlayerToGame } from "../utils/addPlayerToGame";
 import { useNavigation } from "@react-navigation/native";
-import { PlayerList, Game } from "../lib/types";
-
-// TODO: create game and append players only at the end of this component's function
+import { PlayerList } from "../lib/types";
 
 export default function NewGame() {
   const [playerList, setPlayerList] = useState<PlayerList[]>([]);
-  const [newGame, setNewGame] = useState<Game>({
-    id: 0,
-    date: "",
-    buy_in_value: 0,
-    re_buy_value: 0,
-    chip_value: 0,
-    status: "",
-  });
-  const [activePlayers, setActivePlayers] = useState<any[]>([]);
 
   const navigation = useNavigation();
 
@@ -26,19 +15,8 @@ export default function NewGame() {
     (async () => {
       const players = await getPlayers();
       if (players) setPlayerList(players);
-
-      // const createdGame = await createNewGame(gameParams);
-      // if (createdGame) setNewGame(createdGame);
     })();
   }, []);
-
-  // useEffect(() => {
-  //   setActivePlayers(
-  //     playerList
-  //       .filter((player: PlayerList) => player.active === true)
-  //       .map((active: PlayerList) => active.id)
-  //   );
-  // }, [playerList]);
 
   const gameParams = {
     buy_in_value: 1000,
@@ -59,18 +37,16 @@ export default function NewGame() {
 
   const startGame = async (players: any) => {
     const createdGame = await createNewGame(gameParams);
-    // if (createdGame) setNewGame(createdGame);
-
     if (createdGame) {
       for (const player of players) {
-        console.log(player);
         if (player.active === true) {
           await addPlayerToGame(createdGame.id, player.id);
         } else {
-          console.log("player not sent", player.name);
+          console.log(
+            `[ERROR] Player not sent => ( ${player.id} ): ${player.name}`
+          );
         }
       }
-      // await players.forEach((id: number) => addPlayerToGame(newGame.id, id));
 
       navigation.navigate("Active Game", {
         game: createdGame,
@@ -83,13 +59,6 @@ export default function NewGame() {
     <Box _dark={{ bg: "blueGray.900" }} _light={{ bg: "blueGray.50" }} h="100%">
       <Box flex={1}>
         <VStack space={1} alignItems="center">
-          <Box>
-            <Text>
-              Currently registering for game #
-              {newGame ? newGame.id : "NOT FOUND"}
-            </Text>
-          </Box>
-          <br />
           <HStack space={12} alignItems="center">
             <Text fontSize="md">Players:</Text>
             <Text fontSize="4xl">
