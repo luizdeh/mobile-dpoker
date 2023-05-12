@@ -6,7 +6,7 @@ export const getPlayers = async () => {
     const list = await res.json();
     const newList = list.map((item: any) => { return { ...item, active: false } })
     return newList;
-  } catch (error) {
+  } catch (error: any) {
     console.log("[ERROR] getPlayers() =>", error.message);
   }
 };
