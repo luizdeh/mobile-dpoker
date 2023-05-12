@@ -64,6 +64,15 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             colorScheme="blueGray"
             width="90%"
             p="4"
+            onPress={() => navigation.navigate("Games")}
+          >
+            GAMES
+          </Button>
+          <Button
+            variant="solid"
+            colorScheme="blueGray"
+            width="90%"
+            p="4"
             onPress={() => navigation.navigate("Players")}
           >
             PLAYERS

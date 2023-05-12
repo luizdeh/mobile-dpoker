@@ -8,6 +8,7 @@ import OverallStats from "./screens/Stats";
 import Profile from "./screens/Profile";
 import Game from "./screens/Game";
 import ActiveGame from "./screens/ActiveGame";
+import GamesPlayed from "./screens/GamesPlayed";
 
 // Define the config
 const config = {
@@ -34,6 +35,7 @@ export default function App() {
           <Stack.Screen name="Stats" component={OverallStats} />
           <Stack.Screen name="Profile" component={Profile} />
           <Stack.Screen name="Game" component={Game} />
+          <Stack.Screen name="Games" component={GamesPlayed} />
           <Stack.Screen
             name="Active Game"
             component={ActiveGame}
