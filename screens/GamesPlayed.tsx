@@ -13,6 +13,9 @@ import { getPlayers } from "../utils/fetchPlayers";
 import { Game, GamePlayer, PlayerList } from "../lib/types";
 import { getGamePlayers } from "../utils/getGamePlayers";
 import { ScrollView } from "react-native";
+import { IconButton } from "native-base";
+import { Entypo } from "@expo/vector-icons";
+import GameScoreboard from "../components/GameScoreboard";
 
 export default function GamesPlayed() {
   const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +27,8 @@ export default function GamesPlayed() {
   const [initialFetch, setInitialFetch] = useState(false);
 
   const [stats, setStats] = useState<any[]>([]);
+
+  const [showLegends, setShowLegends] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -44,7 +49,7 @@ export default function GamesPlayed() {
 
   useEffect(() => {
     if (initialFetch) {
-      const obj = games.map((game: Game) => {
+      const gamesPlayed = games.map((game: Game) => {
         const game_played = gamePlayers.filter(
           (item: GamePlayer) => item.game_id === game.id
         );
@@ -52,130 +57,26 @@ export default function GamesPlayed() {
         game_played.length >= 1
           ? (sum_of_chips = game_played.reduce((a, b) => a + b.chips, 0))
           : 0;
-        return { ...game, game_played, sum_of_chips };
+        const active_players = game_played.map((player: GamePlayer) => {
+          const equity = player.chips / sum_of_chips || 0;
+          const investment =
+            (game.buy_in_value + player.quantity_rebuy * game.re_buy_value) *
+            game.chip_value;
+          const name = players.find(
+            (playerName: PlayerList) => playerName.id === player.person_id
+          )?.name;
+          const prize = player.chips * game.chip_value;
+          const profit = prize - investment;
+          return { ...player, equity, investment, name, prize, profit };
+        });
+        return { ...game, active_players, sum_of_chips };
       });
-
-      const allGames = gamePlayers.map((item: any) => {
-        const name = players.find(
-          (playerName: PlayerList) => playerName.id === item.person_id
-        )?.name;
-        const idx = obj.findIndex((idx: any) => idx.id === item.game_id);
-        const copyObj = [...obj];
-        const foundGame = copyObj[idx];
-        const { buy_in_value, re_buy_value, chip_value, sum_of_chips } =
-          foundGame;
-        const equity = item.chips / sum_of_chips;
-        const investment =
-          (buy_in_value + item.quantity_rebuy * re_buy_value) * chip_value;
-        const prize = item.chips * chip_value;
-        return { ...item, equity, investment, prize, name };
-      });
-
-      // console.log(allGames);
-
-      const playerTotals = players.map((item: PlayerList) => {
-        const myGames = allGames.filter(
-          (player: GamePlayer) => player.person_id === item.id
-        );
-        const rebuys = myGames.reduce((a, b) => a + b.quantity_rebuy, 0);
-        const investments = myGames.reduce((a, b) => a + b.investment, 0);
-        const prize = myGames.reduce((a, b) => a + b.prize, 0);
-        const profit = prize - investments;
-        const equitySum = myGames.reduce((a, b) => a + b.equity, 0);
-        const average_equity = equitySum / myGames.length || 0;
-        const perGame = (stat: number) => stat / myGames.length || 0;
-        return {
-          id: item.id,
-          name: item.name,
-          games_played: myGames.length,
-          investments: investments,
-          investments_per_game: perGame(investments),
-          prize,
-          prize_per_game: perGame(prize),
-          profit,
-          profit_per_game: perGame(profit),
-          rebuys,
-          rebuys_per_game: perGame(rebuys),
-          average_equity,
-        };
-      });
-
-      // console.log(playerTotals);
-
-      const makeTopFive = (what: any) => {
-        return allGames
-          .map((item: any) => {
-            const topFive = item[what];
-            const statName =
-              what === "prize" ? "top prizes" : "largest equities";
-            return {
-              name: item.name,
-              stat: topFive,
-              statName,
-            };
-          })
-          .sort((a, b) => b.stat - a.stat)
-          .splice(0, 5);
-      };
-
-      const makeStats = (what: string, order: string) => {
-        return playerTotals
-          .map((item: any) => {
-            const stat = item[what];
-            return {
-              name: item.name,
-              stat: stat,
-              games: item.games_played,
-              statName: what,
-            };
-          })
-          .sort((a, b) => (order == "down" ? b.stat - a.stat : a.stat - b.stat))
-          .filter((item: any) => item.games !== 0);
-      };
-
-      setStats([
-        {
-          name: "top prizes in a game",
-          stats: makeTopFive("prize"),
-          show: false,
-        },
-        {
-          name: "largest equities in a game",
-          stats: makeTopFive("equity"),
-          show: false,
-        },
-        {
-          name: "average equity",
-          stats: makeStats("average_equity", "down"),
-          show: false,
-        },
-        {
-          name: "all-time prizes",
-          stats: makeStats("prize", "down"),
-          show: false,
-        },
-        {
-          name: "all-time investments",
-          stats: makeStats("investments", "up"),
-          show: false,
-        },
-        {
-          name: "all-time profits",
-          stats: makeStats("profit", "down"),
-          show: false,
-        },
-        {
-          name: "all-time rebuys",
-          stats: makeStats("rebuys", "up"),
-          show: false,
-        },
-      ]);
+      setStats(gamesPlayed);
     }
   }, [initialFetch]);
 
   useEffect(() => {
-    if (stats.length === 7) setIsLoading(false);
-    // console.log(stats);
+    if (stats.length) setIsLoading(false);
   }, [stats]);
 
   return (
@@ -185,69 +86,93 @@ export default function GamesPlayed() {
           <Spinner size="lg" color="emerald.600" />
         </Center>
       ) : (
-        <ScrollView>
-          <VStack space={2} my="2">
-            <HStack justifyContent="space-evenly">
-              <Text textAlign="left">GAMES PLAYED</Text>
-              <Text textAlign="right">{games.length}</Text>
+        <>
+          <Center py={1}>
+            <HStack alignItems="center">
+              <Text>Legend</Text>
+              <IconButton
+                _icon={
+                  showLegends
+                    ? {
+                      as: Entypo,
+                      name: "chevron-up",
+                      color: "blueGray.600",
+                      size: "lg",
+                    }
+                    : {
+                      as: Entypo,
+                      name: "chevron-down",
+                      color: "blueGray.600",
+                      size: "lg",
+                    }
+                }
+                onPress={() => setShowLegends((state) => !state)}
+              />
             </HStack>
-          </VStack>
-          {stats.map((item: any, index: number) => {
-            return (
-              <Box alignItems="center" key={index}>
-                <Button
-                  p="2"
-                  colorScheme="blueGray"
-                  variant={item.show ? "solid" : "subtle"}
-                  textAlign="center"
-                  w="95%"
-                  mt="2"
-                  borderColor="blueGray.300"
-                  borderRadius="none"
-                  borderWidth="1"
-                  onPress={() =>
-                    setStats((prev: any) => {
-                      const temp = [...prev];
-                      temp[index].show = !temp[index].show;
-                      return temp;
-                    })
-                  }
+            {showLegends ? (
+              <VStack
+                space={1}
+                w="40%"
+                borderWidth="1"
+                borderRadius="lg"
+                borderColor="emerald.600"
+                p={1}
+              >
+                <HStack
+                  alignItems="baseline"
+                  borderBottomWidth="1"
+                  borderBottomColor="emerald.600"
                 >
-                  {item.name.toUpperCase()}
-                </Button>
-                {item.show ? (
-                  <VStack
-                    w="95%"
-                    space={1}
-                    borderColor="blueGray.300"
-                    borderRadius="none"
-                    borderWidth="1"
-                  >
-                    {item.stats.map((subItem: any, idx: number) => {
-                      return (
-                        <HStack
-                          key={idx}
-                          w="100%"
-                          alignItems="center"
-                          h="12"
-                          backgroundColor="tertiary.50"
-                          px="2"
-                        >
-                          <Text flex={1}>
-                            {idx + 1}. {subItem.name.toUpperCase()}
-                          </Text>
-                          <Text textAlign="right">
-                            {subItem.stat.toFixed(2)}
-                          </Text>
-                        </HStack>
-                      );
-                    })}
-                  </VStack>
-                ) : null}
-              </Box>
-            );
-          })}
-        </ScrollView>
+                  <Text flex={1} bold textAlign="center">
+                    R
+                  </Text>
+                  <Text flex={1}>Rebuy</Text>
+                </HStack>
+                <HStack
+                  alignItems="baseline"
+                  borderBottomWidth="1"
+                  borderBottomColor="emerald.600"
+                >
+                  <Text flex={1} bold textAlign="center">
+                    I
+                  </Text>
+                  <Text flex={1}>Investment</Text>
+                </HStack>
+                <HStack
+                  alignItems="baseline"
+                  borderBottomWidth="1"
+                  borderBottomColor="emerald.600"
+                >
+                  <Text flex={1} bold textAlign="center">
+                    P
+                  </Text>
+                  <Text flex={1}>Prize</Text>
+                </HStack>
+                <HStack
+                  alignItems="baseline"
+                  borderBottomWidth="1"
+                  borderBottomColor="emerald.600"
+                >
+                  <Text flex={1} bold textAlign="center">
+                    $
+                  </Text>
+                  <Text flex={1}>Profit</Text>
+                </HStack>
+                <HStack alignItems="baseline">
+                  <Text flex={1} bold textAlign="center">
+                    %
+                  </Text>
+                  <Text flex={1}>Equity</Text>
+                </HStack>
+              </VStack>
+            ) : null}
+          </Center>
+          <ScrollView>
+            {stats.map((game: any, index: number) => {
+              return <GameScoreboard key={index} game={game} index={index} />;
+            })}
+          </ScrollView>
+        </>
       )}
     </Box>
   );
