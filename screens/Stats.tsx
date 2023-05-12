@@ -21,6 +21,8 @@ export default function OverallStats() {
   const [players, setPlayers] = useState<PlayerList[]>([]);
   const [gamePlayers, setGamePlayers] = useState<GamePlayer[]>([]);
 
+  const [initialFetch, setInitialFetch] = useState(false);
+
   const [stats, setStats] = useState<any[]>([]);
 
   useEffect(() => {
@@ -34,16 +36,22 @@ export default function OverallStats() {
 
       const fetchGamePlayers = await getGamePlayers();
       if (fetchGamePlayers) setGamePlayers(fetchGamePlayers);
+
+      if (fetchGames.length && fetchPlayers.length && fetchGamePlayers.length)
+        setInitialFetch(true);
     })();
   }, []);
 
   useEffect(() => {
-    if (games && players && gamePlayers) {
+    if (initialFetch) {
       const obj = games.map((game: Game) => {
         const game_played = gamePlayers.filter(
           (item: GamePlayer) => item.game_id === game.id
         );
-        const sum_of_chips = game_played.reduce((a, b) => a + b.chips, 0);
+        let sum_of_chips = 0;
+        game_played.length >= 1
+          ? (sum_of_chips = game_played.reduce((a, b) => a + b.chips, 0))
+          : 0;
         return { ...game, game_played, sum_of_chips };
       });
 
@@ -52,32 +60,36 @@ export default function OverallStats() {
           (playerName: PlayerList) => playerName.id === item.person_id
         )?.name;
         const idx = obj.findIndex((idx: any) => idx.id === item.game_id);
-        const totalChips = obj[idx].sum_of_chips;
-        const equity = item.chips / totalChips;
-        const { buy_in_value, re_buy_value, chip_value } = obj[idx];
+        const copyObj = [...obj];
+        const foundGame = copyObj[idx];
+        const { buy_in_value, re_buy_value, chip_value, sum_of_chips } =
+          foundGame;
+        const equity = item.chips / sum_of_chips;
         const investment =
           (buy_in_value + item.quantity_rebuy * re_buy_value) * chip_value;
         const prize = item.chips * chip_value;
         return { ...item, equity, investment, prize, name };
       });
 
+      // console.log(allGames);
+
       const playerTotals = players.map((item: PlayerList) => {
         const myGames = allGames.filter(
           (player: GamePlayer) => player.person_id === item.id
         );
         const rebuys = myGames.reduce((a, b) => a + b.quantity_rebuy, 0);
-        const investment = myGames.reduce((a, b) => a + b.investment, 0);
+        const investments = myGames.reduce((a, b) => a + b.investment, 0);
         const prize = myGames.reduce((a, b) => a + b.prize, 0);
-        const profit = prize - investment;
+        const profit = prize - investments;
         const equitySum = myGames.reduce((a, b) => a + b.equity, 0);
-        const average_equity = equitySum / myGames.length;
-        const perGame = (stat: number) => stat / myGames.length;
+        const average_equity = equitySum / myGames.length || 0;
+        const perGame = (stat: number) => stat / myGames.length || 0;
         return {
           id: item.id,
           name: item.name,
           games_played: myGames.length,
-          investment,
-          investment_per_game: perGame(investment),
+          investments: investments,
+          investments_per_game: perGame(investments),
           prize,
           prize_per_game: perGame(prize),
           profit,
@@ -87,6 +99,8 @@ export default function OverallStats() {
           average_equity,
         };
       });
+
+      // console.log(playerTotals);
 
       const makeTopFive = (what: any) => {
         return allGames
@@ -142,7 +156,7 @@ export default function OverallStats() {
         },
         {
           name: "all-time investments",
-          stats: makeStats("investment", "up"),
+          stats: makeStats("investments", "up"),
           show: false,
         },
         {
@@ -157,10 +171,11 @@ export default function OverallStats() {
         },
       ]);
     }
-  }, [games, players, gamePlayers]);
+  }, [initialFetch]);
 
   useEffect(() => {
     if (stats.length === 7) setIsLoading(false);
+    // console.log(stats);
   }, [stats]);
 
   return (
