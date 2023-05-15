@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Text,
-  Center,
-  Box,
-  Spinner,
-  VStack,
-  HStack,
-  Button,
-} from "native-base";
+import { Text, Center, Box, Spinner, VStack, HStack } from "native-base";
 import { getAllGames } from "../utils/getAllGames";
 import { getPlayers } from "../utils/fetchPlayers";
 import { Game, GamePlayer, PlayerList } from "../lib/types";
@@ -16,6 +8,7 @@ import { ScrollView } from "react-native";
 import { IconButton } from "native-base";
 import { Entypo } from "@expo/vector-icons";
 import GameScoreboard from "../components/GameScoreboard";
+import PlayersCheckboxes from "../components/PlayersCheckboxes";
 
 export default function GamesPlayed() {
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +22,10 @@ export default function GamesPlayed() {
   const [stats, setStats] = useState<any[]>([]);
 
   const [showLegends, setShowLegends] = useState(false);
+
+  const [filteredStats, setFilteredStats] = useState<any[]>([]);
+
+  const [playerCheckboxes, setPlayerCheckboxes] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -72,12 +69,35 @@ export default function GamesPlayed() {
         return { ...game, active_players, sum_of_chips };
       });
       setStats(gamesPlayed);
+
+      const checkbox = players.map((player: PlayerList) => {
+        return { id: player.id, name: player.name, checkbox: false };
+      });
+      setPlayerCheckboxes(checkbox);
     }
   }, [initialFetch]);
 
   useEffect(() => {
-    if (stats.length) setIsLoading(false);
+    if (stats.length) {
+      setFilteredStats(stats);
+      setIsLoading(false);
+    }
   }, [stats]);
+
+  useEffect(() => {
+    const temp = [...playerCheckboxes];
+    const updated = temp
+      .filter((item: any) => item.checkbox)
+      .map((subItem: any) => subItem.id);
+
+    const filter = stats.filter((game: any) =>
+      game.active_players.some((player: any) =>
+        updated.includes(player.person_id)
+      )
+    );
+
+    filter.length === 0 ? setFilteredStats(stats) : setFilteredStats(filter);
+  }, [playerCheckboxes]);
 
   return (
     <Box h="100%" px="4" py="2" backgroundColor="white">
@@ -87,6 +107,17 @@ export default function GamesPlayed() {
         </Center>
       ) : (
         <>
+          <Box w="90%">
+            {playerCheckboxes.map((player: PlayerList) => {
+              return (
+                <PlayersCheckboxes
+                  key={player.id}
+                  player={player}
+                  updateCheckboxes={setPlayerCheckboxes}
+                />
+              );
+            })}
+          </Box>
           <Center py={1}>
             <HStack alignItems="center">
               <Text>Legend</Text>
@@ -168,9 +199,13 @@ export default function GamesPlayed() {
             ) : null}
           </Center>
           <ScrollView>
-            {stats.map((game: any, index: number) => {
-              return <GameScoreboard key={index} game={game} index={index} />;
-            })}
+            {filteredStats.length
+              ? filteredStats.map((game: any, index: number) => {
+                return <GameScoreboard key={index} game={game} />;
+              })
+              : stats.map((game: any, index: number) => {
+                return <GameScoreboard key={index} game={game} />;
+              })}
           </ScrollView>
         </>
       )}
