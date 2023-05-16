@@ -31,10 +31,6 @@ export default function GamesPlayed() {
 
   const [showLegends, setShowLegends] = useState(false);
 
-  const [filteredStats, setFilteredStats] = useState<any[]>([]);
-
-  const [playerCheckboxes, setPlayerCheckboxes] = useState<any[]>([]);
-
   useEffect(() => {
     (async () => {
       const fetchPlayers = await getPlayers();
@@ -78,99 +74,14 @@ export default function GamesPlayed() {
         return { ...game, active_players, sum_of_chips, playerIds };
       });
       setStats(gamesPlayed);
-
-      const checkbox = players.map((player: PlayerList) => {
-        return { id: player.id, name: player.name, checkbox: false };
-      });
-      setPlayerCheckboxes(checkbox);
     }
   }, [initialFetch]);
 
   useEffect(() => {
     if (stats.length) {
-      setFilteredStats(stats);
       setIsLoading(false);
     }
   }, [stats]);
-
-  useEffect(() => {
-    const temp = [...playerCheckboxes];
-    const updated = temp
-      .filter((item: any) => item.checkbox)
-      .map((subItem: any) => subItem.id);
-
-    const filter = stats.filter((game: any) => {
-      const playerIds = game.playerIds;
-      return updated.every((playerId: number) => playerIds.includes(playerId));
-    });
-
-    setFilteredStats(filter);
-  }, [playerCheckboxes]);
-
-  const cleanCheckboxes = () => {
-    const updatedCheckboxes = playerCheckboxes.map((checkbox: any) => {
-      return { ...checkbox, checkbox: false };
-    });
-    setPlayerCheckboxes(updatedCheckboxes);
-  };
-
-  const renderCheckedPlayerScores = () => {
-    const temp = [...playerCheckboxes];
-    const updated = temp
-      .filter((item: any) => item.checkbox)
-      .map((subItem: any) => subItem.id);
-
-    const players = filteredStats.flatMap((game: any) => {
-      const each = updated.flatMap((item: any) =>
-        game.active_players.find(
-          (subItem: Player) => subItem.person_id === item
-        )
-      );
-      return each;
-    });
-
-    const summedObjects = players.reduce((result, obj) => {
-      if (!obj || !("person_id" in obj)) return result;
-      const { person_id, ...rest } = obj;
-      if (!result[person_id]) {
-        result[person_id] = { person_id, ...rest };
-      } else {
-        for (const key in rest) {
-          if (
-            Object.prototype.hasOwnProperty.call(rest, key) &&
-            typeof rest[key] === "number"
-          ) {
-            result[person_id][key] = (result[person_id][key] || 0) + rest[key];
-          }
-        }
-      }
-      return result;
-    }, {});
-    const summedArray = Object.values(summedObjects).sort(
-      (a: any, b: any) => b.profit - a.profit
-    );
-
-    return summedArray.map((item: any, idx: number) => {
-      const [name, ...lastName] = item.name.split(" ").filter(Boolean);
-      const myName =
-        lastName.length && item.name.length >= 11
-          ? `${name} ${lastName[0][0]}.`
-          : `${name} ${lastName}`;
-      return (
-        <HStack key={idx} py={1}>
-          <Text flex={2} fontSize="xs">
-            {myName.toUpperCase()}
-          </Text>
-          <Text flex={1} fontSize="xs" textAlign="right">
-            {item.profit.toFixed(2)}
-          </Text>
-          <Text flex={1} fontSize="xs" textAlign="right">
-            {(item.equity / filteredStats.length).toFixed(2)}
-          </Text>
-        </HStack>
-      );
-    });
-  };
 
   return (
     <Box h="100%" px="4" py="2" backgroundColor="white">
@@ -180,56 +91,6 @@ export default function GamesPlayed() {
         </Center>
       ) : (
         <>
-          <Box w="100%">
-            <HStack>
-              <Box flex={1}>
-                {playerCheckboxes.map((player: PlayerList) => {
-                  return (
-                    <PlayersCheckboxes
-                      key={player.id}
-                      player={player}
-                      updateCheckboxes={setPlayerCheckboxes}
-                    />
-                  );
-                })}
-              </Box>
-              <VStack flex={1} ml="2" px={2}>
-                <HStack justifyItems="center">
-                  <Text>Games found: </Text>
-                  <Text bold>{filteredStats.length}</Text>
-                </HStack>
-                <br />
-                {playerCheckboxes.some((item: any) => item.checkbox == true) ? (
-                  <HStack borderBottomColor="black" borderBottomWidth="1">
-                    <Text flex={2} fontSize="xs" bold>
-                      PLAYER
-                    </Text>
-                    <Text flex={1} fontSize="xs" textAlign="right" bold>
-                      $
-                    </Text>
-                    <Text flex={1} fontSize="xs" textAlign="right" bold>
-                      %
-                    </Text>
-                  </HStack>
-                ) : null}
-                {filteredStats.length && renderCheckedPlayerScores()}
-              </VStack>
-            </HStack>
-            <Button
-              isDisabled={
-                playerCheckboxes.some((item: any) => item.checkbox == true)
-                  ? false
-                  : true
-              }
-              colorScheme="blueGray"
-              variant="subtle"
-              onPress={cleanCheckboxes}
-              h="8"
-              mt="2"
-            >
-              CLEAN SEARCH
-            </Button>
-          </Box>
           <Center py={1}>
             <HStack alignItems="center">
               <Text>Legend</Text>
@@ -311,7 +172,7 @@ export default function GamesPlayed() {
             ) : null}
           </Center>
           <ScrollView>
-            {filteredStats.map((game: any, index: number) => {
+            {stats.map((game: any, index: number) => {
               return <GameScoreboard key={index} game={game} />;
             })}
           </ScrollView>
