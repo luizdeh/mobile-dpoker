@@ -15,7 +15,10 @@ export default function GameScoreboard({ game }: Prop) {
         <Text flex={2} textAlign="center" fontSize="md">
           Game #{game.id}
         </Text>
-        <Text flex={1}>{game.active_players.length} players</Text>
+        <VStack flex={1}>
+          <Text flex={1}>{game.active_players.length} players</Text>
+          <Text flex={1}>$ {game.sum_of_chips * game.chip_value}</Text>
+        </VStack>
         <IconButton
           _icon={
             showStats
