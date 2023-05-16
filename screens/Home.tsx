@@ -86,6 +86,15 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           >
             STATISTICS
           </Button>
+          <Button
+            variant="solid"
+            colorScheme="blueGray"
+            width="90%"
+            p="4"
+            onPress={() => navigation.navigate("Matchups")}
+          >
+            MATCHUPS
+          </Button>
           <br />
           {/*<Button onPress={() => navigation.navigate("Profile")}>
           User Profile
