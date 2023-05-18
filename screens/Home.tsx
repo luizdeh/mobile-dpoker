@@ -1,108 +1,43 @@
 import React from "react";
-import {
-  Text,
-  HStack,
-  Center,
-  Heading,
-  Switch,
-  useColorMode,
-  VStack,
-  Button,
-  Box,
-} from "native-base";
+import { Center, VStack, Button, Box } from "native-base";
+import { Image } from "react-native";
 
-// TODO: create a modal component that shows game parameters to edit or just confirm
-
-// Color Switch Component
-function ToggleDarkMode() {
-  const { colorMode, toggleColorMode } = useColorMode();
-  return (
-    <HStack space={2} alignItems="center">
-      <Text>Dark</Text>
-      <Switch
-        isChecked={colorMode === "light"}
-        onToggle={toggleColorMode}
-        aria-label={
-          colorMode === "light" ? "switch to dark mode" : "switch to light mode"
-        }
-      />
-      <Text>Light</Text>
-    </HStack>
-  );
-}
+const navLinks = [
+  { link: "Game", title: "CREATE NEW GAME" },
+  { link: "Games", title: "GAMES" },
+  { link: "Players", title: "PLAYERS" },
+  { link: "Stats", title: "STATISTICS" },
+  { link: "Matchups", title: "MATCHUPS" },
+];
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
   return (
-    <Box h="100%">
-      <Heading
-        size="2xl"
-        color="tertiary.800"
-        lineHeight="2xl"
-        p={8}
-        textAlign="center"
-      >
-        D/POKER
-      </Heading>
-      <Center
-        _dark={{ bg: "blueGray.900" }}
-        _light={{ bg: "blueGray.50" }}
-        px={4}
-        flex={1}
-      >
-        <VStack space={8} alignItems="center" w="100%">
-          <Button
-            variant="solid"
-            colorScheme="blueGray"
-            width="90%"
-            p="4"
-            onPress={() => navigation.navigate("Game")}
-          >
-            CREATE NEW GAME
-          </Button>
-          <Button
-            variant="solid"
-            colorScheme="blueGray"
-            width="90%"
-            p="4"
-            onPress={() => navigation.navigate("Games")}
-          >
-            GAMES
-          </Button>
-          <Button
-            variant="solid"
-            colorScheme="blueGray"
-            width="90%"
-            p="4"
-            onPress={() => navigation.navigate("Players")}
-          >
-            PLAYERS
-          </Button>
-          <Button
-            variant="solid"
-            colorScheme="blueGray"
-            width="90%"
-            p="4"
-            onPress={() => navigation.navigate("Stats")}
-          >
-            STATISTICS
-          </Button>
-          <Button
-            variant="solid"
-            colorScheme="blueGray"
-            width="90%"
-            p="4"
-            onPress={() => navigation.navigate("Matchups")}
-          >
-            MATCHUPS
-          </Button>
-          <br />
-          {/*<Button onPress={() => navigation.navigate("Profile")}>
-          User Profile
-        </Button>*/}
-          <br />
-          <ToggleDarkMode />
+    <Box h="100%" backgroundColor="black">
+      <Box flex={1} w="100%" minH="100px">
+        <Image
+          style={{ width: "100%", height: "100%" }}
+          source={require("../assets/logo.jpg")}
+        />
+      </Box>
+      <Center flex={2} px={4}>
+        <VStack space={4} alignItems="center" w="100%">
+          {navLinks.map((item: any, idx: number) => {
+            const name = item.link;
+            return (
+              <Button
+                key={idx}
+                variant="solid"
+                colorScheme="blueGray"
+                width="90%"
+                p="4"
+                onPress={() => navigation.navigate(name)}
+              >
+                {item.title}
+              </Button>
+            );
+          })}
         </VStack>
       </Center>
-    </Box>
+    </Box >
   );
 }
