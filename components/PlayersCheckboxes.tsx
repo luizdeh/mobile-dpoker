@@ -24,6 +24,9 @@ export default function PlayersCheckboxes({ player, updateCheckboxes }: Props) {
       borderColor="tertiary.400"
       borderWidth="1"
       borderRadius="lg"
+      m={0.5}
+      alignSelf="flex-start"
+      minW="48%"
     >
       <Text flex={1} fontSize="xs">
         {player.name.toUpperCase()}
