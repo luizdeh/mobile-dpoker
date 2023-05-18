@@ -25,6 +25,8 @@ export default function OverallStats() {
 
   const [stats, setStats] = useState<any[]>([]);
 
+  const [showAllTime, setShowAllTime] = useState(true);
+
   useEffect(() => {
     (async () => {
       const fetchPlayers = await getPlayers();
@@ -103,20 +105,20 @@ export default function OverallStats() {
       // console.log(playerTotals);
 
       const makeTopFive = (what: any) => {
-        return allGames
-          .map((item: any) => {
-            const topFive = item[what];
-            const statName =
-              what === "prize" ? "top prizes" : "largest equities";
-            return {
-              name: item.name,
-              stat: topFive,
-              statName,
-            };
-          })
-          .sort((a, b) => b.stat - a.stat)
-          .splice(0, 5);
-      };
+        const temp = [...allGames]
+        return temp.map((item: any) => {
+          const top = item[what]
+          const statName = what === "prize" ? "top prizes" : "largest equities"
+          const games = playerTotals.find((player: any) => player.id === item.person_id)?.games_played
+          return {
+            person_id: item.person_id,
+            name: item.name,
+            stat: top,
+            statName,
+            games
+          }
+        }).sort((a, b) => b.stat - a.stat).splice(0, 5)
+      }
 
       const makeStats = (what: string, order: string) => {
         return playerTotals
@@ -127,46 +129,78 @@ export default function OverallStats() {
               stat: stat,
               games: item.games_played,
               statName: what,
+              person_id: item.id,
             };
           })
           .sort((a, b) => (order == "down" ? b.stat - a.stat : a.stat - b.stat))
-          .filter((item: any) => item.games !== 0);
+          .filter((item: any) => item.games > 1);
       };
 
       setStats([
         {
           name: "top prizes in a game",
           stats: makeTopFive("prize"),
+          type: "all time",
           show: false,
         },
         {
           name: "largest equities in a game",
           stats: makeTopFive("equity"),
-          show: false,
-        },
-        {
-          name: "average equity",
-          stats: makeStats("average_equity", "down"),
+          type: "all time",
           show: false,
         },
         {
           name: "all-time prizes",
           stats: makeStats("prize", "down"),
+          type: "all time",
           show: false,
         },
         {
           name: "all-time investments",
           stats: makeStats("investments", "up"),
+          type: "all time",
           show: false,
         },
         {
           name: "all-time profits",
           stats: makeStats("profit", "down"),
+          type: "all time",
           show: false,
         },
         {
           name: "all-time rebuys",
           stats: makeStats("rebuys", "up"),
+          type: "all time",
+          show: false,
+        },
+        {
+          name: "average equity",
+          stats: makeStats("average_equity", "down"),
+          type: "per game",
+          show: false,
+        },
+        {
+          name: "profit per game",
+          stats: makeStats("profit_per_game", "down"),
+          type: "per game",
+          show: false,
+        },
+        {
+          name: "prize per game",
+          stats: makeStats("prize_per_game", "down"),
+          type: "per game",
+          show: false,
+        },
+        {
+          name: "investment per game",
+          stats: makeStats("investments_per_game", "up"),
+          type: "per game",
+          show: false,
+        },
+        {
+          name: "rebuys per game",
+          stats: makeStats("rebuys_per_game", "up"),
+          type: "per game",
           show: false,
         },
       ]);
@@ -174,8 +208,7 @@ export default function OverallStats() {
   }, [initialFetch]);
 
   useEffect(() => {
-    if (stats.length === 7) setIsLoading(false);
-    // console.log(stats);
+    if (stats.length === 11) setIsLoading(false);
   }, [stats]);
 
   return (
@@ -192,60 +225,90 @@ export default function OverallStats() {
               <Text textAlign="right">{games.length}</Text>
             </HStack>
           </VStack>
+          <HStack backgroundColor="blueGray.200">
+            <Button
+              flex={1}
+              borderRadius="none"
+              colorScheme="blueGray"
+              variant={showAllTime ? "solid" : "subtle"}
+              onPress={() => setShowAllTime((state) => !state)}
+            >
+              ALL TIME
+            </Button>
+            <Button
+              flex={1}
+              borderRadius="none"
+              colorScheme="blueGray"
+              variant={showAllTime ? "subtle" : "solid"}
+              onPress={() => setShowAllTime((state) => !state)}
+            >
+              PER GAME
+            </Button>
+          </HStack>
           {stats.map((item: any, index: number) => {
-            return (
-              <Box alignItems="center" key={index}>
-                <Button
-                  p="2"
-                  colorScheme="blueGray"
-                  variant={item.show ? "solid" : "subtle"}
-                  textAlign="center"
-                  w="95%"
-                  mt="2"
-                  borderColor="blueGray.300"
-                  borderRadius="none"
-                  borderWidth="1"
-                  onPress={() =>
-                    setStats((prev: any) => {
-                      const temp = [...prev];
-                      temp[index].show = !temp[index].show;
-                      return temp;
-                    })
-                  }
-                >
-                  {item.name.toUpperCase()}
-                </Button>
-                {item.show ? (
-                  <VStack
+            const type = showAllTime ? "all time" : "per game";
+            if (item.type === type)
+              return (
+                <Box alignItems="center" key={index}>
+                  <Button
+                    p="2"
+                    colorScheme="blueGray"
+                    variant={item.show ? "solid" : "subtle"}
+                    textAlign="center"
                     w="95%"
-                    space={1}
+                    mt="2"
                     borderColor="blueGray.300"
                     borderRadius="none"
                     borderWidth="1"
+                    onPress={() =>
+                      setStats((prev: any) => {
+                        const temp = [...prev];
+                        temp[index].show = !temp[index].show;
+                        return temp;
+                      })
+                    }
                   >
-                    {item.stats.map((subItem: any, idx: number) => {
-                      return (
-                        <HStack
-                          key={idx}
-                          w="100%"
-                          alignItems="center"
-                          h="12"
-                          backgroundColor="tertiary.50"
-                          px="2"
-                        >
-                          <Text flex={1}>
-                            {idx + 1}. {subItem.name.toUpperCase()}
-                          </Text>
-                          <Text textAlign="right">
-                            {subItem.stat.toFixed(2)}
-                          </Text>
-                        </HStack>
-                      );
-                    })}
-                  </VStack>
-                ) : null}
-              </Box>
-            );
+                    {item.name.toUpperCase()}
+                  </Button>
+                  {item.show ? (
+                    <VStack
+                      w="95%"
+                      space={1}
+                      borderColor="blueGray.300"
+                      borderRadius="none"
+                      borderWidth="1"
+                    >
+                      {item.stats.map((subItem: any, idx: number) => {
+                        return (
+                          <HStack
+                            key={idx}
+                            w="100%"
+                            alignItems="center"
+                            h="12"
+                            backgroundColor="tertiary.50"
+                            px="2"
+                          >
+                            <Text flex={3} fontSize="xs">
+                              {idx + 1}. {subItem.name.toUpperCase()}
+                            </Text>
+                            <Text
+                              flex={1}
+                              fontSize="xs"
+                              textAlign="center"
+                              color="coolGray.400"
+                            >
+                              GP: {subItem.games}
+                            </Text>
+                            <Text flex={1} textAlign="right" fontSize="xs">
+                              {subItem.stat.toFixed(2)}
+                            </Text>
+                          </HStack>
+                        );
+                      })}
+                    </VStack>
+                  ) : null}
+                </Box>
+              );
           })}
         </ScrollView>
       )}
