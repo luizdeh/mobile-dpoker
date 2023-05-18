@@ -6,17 +6,15 @@ import {
   Spinner,
   VStack,
   HStack,
-  Button,
 } from "native-base";
 import { getAllGames } from "../utils/getAllGames";
 import { getPlayers } from "../utils/fetchPlayers";
-import { Game, GamePlayer, Player, PlayerList } from "../lib/types";
+import { Game, GamePlayer, PlayerList } from "../lib/types";
 import { getGamePlayers } from "../utils/getGamePlayers";
 import { ScrollView } from "react-native";
 import { IconButton } from "native-base";
 import { Entypo } from "@expo/vector-icons";
 import GameScoreboard from "../components/GameScoreboard";
-import PlayersCheckboxes from "../components/PlayersCheckboxes";
 
 export default function GamesPlayed() {
   const [isLoading, setIsLoading] = useState(true);
