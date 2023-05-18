@@ -8,7 +8,6 @@ import {
   IconButton,
   HStack,
   Input,
-  Divider,
 } from "native-base";
 import { getPlayers } from "../utils/fetchPlayers";
 import { addPlayer } from "../utils/addPlayer";
@@ -24,7 +23,7 @@ export default function PlayersList() {
   const ref = useRef<HTMLInputElement | null>(null);
 
   const onClear = () => {
-    ref.current.value = "";
+    ref.current!.value = "";
     setRefState(false);
   };
 
@@ -124,15 +123,13 @@ export default function PlayersList() {
       )}
       <br />
       <ScrollView>
-        <VStack space={2} alignItems="center" width="95%">
+        <VStack space={2} alignItems="center" width="100%">
           {playerList ? (
-            playerList.map((item: PlayerList) => (
-              <RegisteredPlayer
-                key={item.id}
-                player={item}
-                updatePlayers={setPlayerList}
-              />
-            ))
+            playerList
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((item: PlayerList) => (
+                <RegisteredPlayer key={item.id} player={item} />
+              ))
           ) : (
             <Text>No players registered yet.</Text>
           )}
