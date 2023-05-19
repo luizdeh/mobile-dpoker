@@ -105,20 +105,26 @@ export default function OverallStats() {
       // console.log(playerTotals);
 
       const makeTopFive = (what: any) => {
-        const temp = [...allGames]
-        return temp.map((item: any) => {
-          const top = item[what]
-          const statName = what === "prize" ? "top prizes" : "largest equities"
-          const games = playerTotals.find((player: any) => player.id === item.person_id)?.games_played
-          return {
-            person_id: item.person_id,
-            name: item.name,
-            stat: top,
-            statName,
-            games
-          }
-        }).sort((a, b) => b.stat - a.stat).splice(0, 5)
-      }
+        const temp = [...allGames];
+        return temp
+          .map((item: any) => {
+            const top = item[what];
+            const statName =
+              what === "prize" ? "top prizes" : "largest equities";
+            const games = playerTotals.find(
+              (player: any) => player.id === item.person_id
+            )?.games_played;
+            return {
+              person_id: item.person_id,
+              name: item.name,
+              stat: top,
+              statName,
+              games,
+            };
+          })
+          .sort((a, b) => b.stat - a.stat)
+          .splice(0, 5);
+      };
 
       const makeStats = (what: string, order: string) => {
         return playerTotals
@@ -212,26 +218,21 @@ export default function OverallStats() {
   }, [stats]);
 
   return (
-    <Box h="100%" px="4" py="2" backgroundColor="white">
+    <Box h="100%" backgroundColor="black">
       {isLoading ? (
         <Center flex={1}>
-          <Spinner size="lg" color="emerald.600" />
+          <Spinner size="lg" color="emerald.200" />
         </Center>
       ) : (
         <ScrollView>
-          <VStack space={2} my="2">
-            <HStack justifyContent="space-evenly">
-              <Text textAlign="left">GAMES PLAYED</Text>
-              <Text textAlign="right">{games.length}</Text>
-            </HStack>
-          </VStack>
-          <HStack backgroundColor="blueGray.200">
+          <HStack w="100%" mt={6} mb={2}>
             <Button
               flex={1}
               borderRadius="none"
               colorScheme="blueGray"
-              variant={showAllTime ? "solid" : "subtle"}
+              variant={showAllTime ? "subtle" : "solid"}
               onPress={() => setShowAllTime((state) => !state)}
+              w="50%"
             >
               ALL TIME
             </Button>
@@ -239,8 +240,9 @@ export default function OverallStats() {
               flex={1}
               borderRadius="none"
               colorScheme="blueGray"
-              variant={showAllTime ? "subtle" : "solid"}
+              variant={showAllTime ? "solid" : "subtle"}
               onPress={() => setShowAllTime((state) => !state)}
+              w="50%"
             >
               PER GAME
             </Button>
@@ -252,14 +254,12 @@ export default function OverallStats() {
                 <Box alignItems="center" key={index}>
                   <Button
                     p="2"
-                    colorScheme="blueGray"
-                    variant={item.show ? "solid" : "subtle"}
+                    colorScheme={item.show ? "teal" : "blueGray"}
+                    variant="solid"
                     textAlign="center"
                     w="95%"
-                    mt="2"
-                    borderColor="blueGray.300"
+                    mt="4"
                     borderRadius="none"
-                    borderWidth="1"
                     onPress={() =>
                       setStats((prev: any) => {
                         const temp = [...prev];
@@ -271,21 +271,17 @@ export default function OverallStats() {
                     {item.name.toUpperCase()}
                   </Button>
                   {item.show ? (
-                    <VStack
-                      w="95%"
-                      space={1}
-                      borderColor="blueGray.300"
-                      borderRadius="none"
-                      borderWidth="1"
-                    >
+                    <VStack w="95%" space={0}>
                       {item.stats.map((subItem: any, idx: number) => {
                         return (
                           <HStack
                             key={idx}
                             w="100%"
                             alignItems="center"
-                            h="12"
-                            backgroundColor="tertiary.50"
+                            h="10"
+                            backgroundColor={
+                              idx % 2 === 0 ? "white" : "teal.50"
+                            }
                             px="2"
                           >
                             <Text flex={3} fontSize="xs">
