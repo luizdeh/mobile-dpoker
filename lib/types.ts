@@ -36,9 +36,16 @@ export type GamePlayer = {
   name?: string;
 };
 
-export type ParamsList = {
-  Info: {
-    game: any;
+export type GameParamsNavigation = {
+  ActiveGame: {
+    game: Game;
     players: any;
   };
+};
+
+export type GameParams = {
+  buy_in_value: number;
+  re_buy_value: number;
+  chip_value: number;
+  status: string;
 };
