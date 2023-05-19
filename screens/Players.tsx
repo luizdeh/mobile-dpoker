@@ -50,13 +50,7 @@ export default function PlayersList() {
   };
 
   return (
-    <Box
-      _dark={{ bg: "blueGray.900" }}
-      _light={{ bg: "white" }}
-      px={4}
-      py={2}
-      flex={1}
-    >
+    <Box backgroundColor="black" px={4} py={2} flex={1}>
       {showAddPlayerButton ? (
         <Center>
           <HStack
