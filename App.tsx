@@ -27,12 +27,12 @@ declare module "native-base" {
 
 const Stack = createNativeStackNavigator();
 
-const LogoTitle = () => (
-  <Image
-    style={{ width: 100, height: 50 }}
-    source={require("./assets/logo.jpg")}
-  />
-);
+// const LogoTitle = () => (
+//   <Image
+//     style={{ width: "70%", height: "70%" }}
+//     source={require("./assets/logo_small.png")}
+//   />
+// );
 
 export default function App() {
   return (
@@ -42,12 +42,12 @@ export default function App() {
           initialRouteName="Home"
           screenOptions={{
             headerStyle: {
-              backgroundColor: "black",
+              backgroundColor: "white",
             },
-            headerTintColor: "#0f0",
+            headerTintColor: "#0f766e",
             headerTitleStyle: {
               fontWeight: "bold",
-              fontSize: 14,
+              fontSize: 16,
             },
             // headerRight: () => <LogoTitle />,
             headerTitleAlign: "center",
@@ -56,7 +56,7 @@ export default function App() {
           <Stack.Screen
             name="Home"
             component={HomeScreen}
-            options={{ title: "HOME" }}
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="Players"
@@ -89,7 +89,7 @@ export default function App() {
             options={{ title: "MATCHUPS" }}
           />
           <Stack.Screen
-            name="Active Game"
+            name="ActiveGame"
             component={ActiveGame}
             options={{ title: "ACTIVE GAME" }}
           />
