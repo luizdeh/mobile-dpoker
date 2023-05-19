@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Text,
-  Center,
-  Box,
-  Spinner,
-  VStack,
-  HStack,
-} from "native-base";
+import { Text, Center, Box, Spinner, VStack, HStack } from "native-base";
 import { getAllGames } from "../utils/getAllGames";
 import { getPlayers } from "../utils/fetchPlayers";
 import { Game, GamePlayer, PlayerList } from "../lib/types";
@@ -79,102 +72,23 @@ export default function GamesPlayed() {
     if (stats.length) {
       setIsLoading(false);
     }
+    console.log(stats);
   }, [stats]);
 
   return (
-    <Box h="100%" px="4" py="2" backgroundColor="white">
+    <Box h="100%" px="2" py="2" backgroundColor="black">
       {isLoading ? (
         <Center flex={1}>
           <Spinner size="lg" color="emerald.600" />
         </Center>
       ) : (
-        <>
-          <Center py={1}>
-            <HStack alignItems="center">
-              <Text>Legend</Text>
-              <IconButton
-                _icon={
-                  showLegends
-                    ? {
-                      as: Entypo,
-                      name: "chevron-up",
-                      color: "blueGray.600",
-                      size: "lg",
-                    }
-                    : {
-                      as: Entypo,
-                      name: "chevron-down",
-                      color: "blueGray.600",
-                      size: "lg",
-                    }
-                }
-                onPress={() => setShowLegends((state) => !state)}
-              />
-            </HStack>
-            {showLegends ? (
-              <VStack
-                space={1}
-                w="40%"
-                borderWidth="1"
-                borderRadius="lg"
-                borderColor="emerald.600"
-                p={1}
-              >
-                <HStack
-                  alignItems="baseline"
-                  borderBottomWidth="1"
-                  borderBottomColor="emerald.600"
-                >
-                  <Text flex={1} bold textAlign="center">
-                    R
-                  </Text>
-                  <Text flex={1}>Rebuy</Text>
-                </HStack>
-                <HStack
-                  alignItems="baseline"
-                  borderBottomWidth="1"
-                  borderBottomColor="emerald.600"
-                >
-                  <Text flex={1} bold textAlign="center">
-                    I
-                  </Text>
-                  <Text flex={1}>Investment</Text>
-                </HStack>
-                <HStack
-                  alignItems="baseline"
-                  borderBottomWidth="1"
-                  borderBottomColor="emerald.600"
-                >
-                  <Text flex={1} bold textAlign="center">
-                    P
-                  </Text>
-                  <Text flex={1}>Prize</Text>
-                </HStack>
-                <HStack
-                  alignItems="baseline"
-                  borderBottomWidth="1"
-                  borderBottomColor="emerald.600"
-                >
-                  <Text flex={1} bold textAlign="center">
-                    $
-                  </Text>
-                  <Text flex={1}>Profit</Text>
-                </HStack>
-                <HStack alignItems="baseline">
-                  <Text flex={1} bold textAlign="center">
-                    %
-                  </Text>
-                  <Text flex={1}>Equity</Text>
-                </HStack>
-              </VStack>
-            ) : null}
-          </Center>
-          <ScrollView>
-            {stats.map((game: any, index: number) => {
-              return <GameScoreboard key={index} game={game} />;
+        <ScrollView>
+          {stats
+            .sort((a, b) => a.date.localeCompare(b.date))
+            .map((game: any, index: number) => {
+              return <GameScoreboard key={index} game={game} index={index} />;
             })}
-          </ScrollView>
-        </>
+        </ScrollView>
       )}
     </Box>
   );

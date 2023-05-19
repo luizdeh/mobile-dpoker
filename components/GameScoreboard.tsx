@@ -1,23 +1,36 @@
 import React, { useState } from "react";
 import { Text, VStack, HStack } from "native-base";
 import { IconButton } from "native-base";
-import { AntDesign } from "@expo/vector-icons";
+import {
+  AntDesign,
+  Entypo,
+  FontAwesome5,
+  FontAwesome,
+} from "@expo/vector-icons";
 
 interface Prop {
   game: any;
+  index: number;
 }
 
-export default function GameScoreboard({ game }: Prop) {
+export default function GameScoreboard({ game, index }: Prop) {
   const [showStats, setShowStats] = useState(false);
   return (
-    <VStack my="2" borderWidth="1" borderColor="emerald.400">
-      <HStack py="2" alignItems="center" backgroundColor="emerald.100">
-        <Text flex={2} textAlign="center" fontSize="md">
-          Game #{game.id}
+    <VStack my="2">
+      <HStack py="2" alignItems="center" backgroundColor="blueGray.600">
+        <Text flex={1} textAlign="center" fontSize="md" color="blueGray.200">
+          Game #{index + 1}
+        </Text>
+        <Text flex={1} textAlign="center" fontSize="xs" color="blueGray.200">
+          {game.date.slice(0, 10)}
         </Text>
         <VStack flex={1}>
-          <Text flex={1}>{game.active_players.length} players</Text>
-          <Text flex={1}>$ {game.sum_of_chips * game.chip_value}</Text>
+          <Text flex={1} textAlign="center" fontSize="xs" color="blueGray.200">
+            {game.active_players.length} players
+          </Text>
+          <Text flex={1} textAlign="center" fontSize="xs" color="blueGray.200">
+            $ {game.sum_of_chips * game.chip_value}
+          </Text>
         </VStack>
         <IconButton
           _icon={
@@ -25,13 +38,13 @@ export default function GameScoreboard({ game }: Prop) {
               ? {
                 as: AntDesign,
                 name: "caretup",
-                color: "blueGray.600",
+                color: "blueGray.200",
                 size: "md",
               }
               : {
                 as: AntDesign,
                 name: "caretdown",
-                color: "blueGray.600",
+                color: "blueGray.200",
                 size: "md",
               }
           }
@@ -42,7 +55,7 @@ export default function GameScoreboard({ game }: Prop) {
         <VStack>
           <HStack
             space={2}
-            backgroundColor="emerald.600"
+            backgroundColor="teal.600"
             p={1}
             alignItems="center"
           >
@@ -55,50 +68,33 @@ export default function GameScoreboard({ game }: Prop) {
             >
               PLAYER
             </Text>
-            <Text
-              color="white"
-              fontWeight="semibold"
-              flex={1}
-              textAlign="center"
-              fontSize="xs"
-            >
-              R
+            <Text flex={1} textAlign="center">
+              <FontAwesome5 flex={1} name="plus" size={14} color="white" />
             </Text>
-            <Text
-              color="white"
-              fontWeight="semibold"
-              flex={1}
-              textAlign="center"
-              fontSize="xs"
-            >
-              I
+            <Text flex={1} textAlign="center">
+              <FontAwesome name="database" size={14} color="white" />
             </Text>
-            <Text
-              color="white"
-              fontWeight="semibold"
-              flex={1}
-              textAlign="center"
-              fontSize="xs"
-            >
-              P
+            <Text flex={1} textAlign="center">
+              <FontAwesome5
+                flex={1}
+                name="percentage"
+                size={14}
+                color="white"
+              />
             </Text>
-            <Text
-              color="white"
-              fontWeight="semibold"
-              flex={1}
-              textAlign="center"
-              fontSize="xs"
-            >
-              $
+            <Text flex={1} textAlign="center">
+              <FontAwesome5
+                flex={1}
+                name="arrow-down"
+                size={14}
+                color="white"
+              />
             </Text>
-            <Text
-              color="white"
-              fontWeight="semibold"
-              flex={1}
-              textAlign="center"
-              fontSize="xs"
-            >
-              %
+            <Text flex={1} textAlign="center">
+              <FontAwesome5 flex={1} name="arrow-up" size={14} color="white" />
+            </Text>
+            <Text flex={1} textAlign="center">
+              <Entypo flex={1} name="credit" size={16} color="white" />
             </Text>
           </HStack>
           {game.active_players
@@ -116,26 +112,31 @@ export default function GameScoreboard({ game }: Prop) {
                   key={idx}
                   space={2}
                   p={1}
-                  backgroundColor={idx % 2 === 0 ? "white" : "coolGray.100"}
-                  lineHeight="xl"
+                  backgroundColor={idx % 2 === 0 ? "white" : "teal.50"}
+                  borderWidth="0"
+                  alignItems="center"
+                  lineHeight={14}
                 >
                   <Text flex={2} fontSize="xs">
                     {myName.toUpperCase()}
                   </Text>
-                  <Text flex={1} textAlign="center" fontSize="xs">
+                  <Text flex={1} textAlign="center" fontSize="10">
                     {player.quantity_rebuy}
                   </Text>
-                  <Text flex={1} textAlign="center" fontSize="xs">
+                  <Text flex={1} textAlign="center" fontSize="10">
+                    {player.chips}
+                  </Text>
+                  <Text flex={1} textAlign="center" fontSize="10">
+                    {player.equity.toFixed(2)}
+                  </Text>
+                  <Text flex={1} textAlign="center" fontSize="10">
                     {player.investment}
                   </Text>
-                  <Text flex={1} textAlign="center" fontSize="xs">
+                  <Text flex={1} textAlign="center" fontSize="10">
                     {player.prize.toFixed(2)}
                   </Text>
-                  <Text flex={1} textAlign="center" fontSize="xs">
+                  <Text flex={1} textAlign="center" fontSize="10" bold>
                     {player.profit.toFixed(2)}
-                  </Text>
-                  <Text flex={1} textAlign="center" fontSize="xs">
-                    {player.equity.toFixed(2)}
                   </Text>
                 </HStack>
               );
