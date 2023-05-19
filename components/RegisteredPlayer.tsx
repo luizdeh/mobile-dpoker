@@ -1,17 +1,15 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { useState } from "react";
 import { Text, Box, IconButton, HStack } from "native-base";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TextInput } from "react-native";
 import { PlayerList } from "../lib/types";
 import { updatePlayer } from "../utils/updatePlayer";
-import { getPlayers } from "../utils/fetchPlayers";
 
 interface Prop {
   player: PlayerList;
-  updatePlayers: Dispatch<SetStateAction<PlayerList[]>>;
 }
 
-export default function RegisteredPlayer({ player, updatePlayers }: Prop) {
+export default function RegisteredPlayer({ player }: Prop) {
   const [me, setMe] = useState(player);
   const [enableEdit, setEnableEdit] = useState(false);
 
@@ -31,17 +29,6 @@ export default function RegisteredPlayer({ player, updatePlayers }: Prop) {
     }
   };
 
-  const handleDelete = async () => {
-    const msg = confirm(`you are about to delete ${me.name}`);
-    if (msg) {
-      // delete the player
-
-      // update the parent component
-      const players = await getPlayers();
-      if (players) updatePlayers(players);
-    }
-  };
-
   return (
     <HStack
       alignItems="center"
@@ -53,7 +40,6 @@ export default function RegisteredPlayer({ player, updatePlayers }: Prop) {
       borderRadius="lg"
       px={2}
     >
-      <Text flex={1}>{me.id}.</Text>
       <Box flex={5}>
         <TextInput
           style={{ borderWidth: 0, padding: 4 }}
@@ -62,6 +48,9 @@ export default function RegisteredPlayer({ player, updatePlayers }: Prop) {
           editable={enableEdit}
         />
       </Box>
+      <Text flex={1} fontSize="xs">
+        ID: {me.id}
+      </Text>
       <IconButton
         flex={1}
         colorScheme="tertiary"
@@ -89,7 +78,7 @@ export default function RegisteredPlayer({ player, updatePlayers }: Prop) {
             name: "cancel",
             size: "xl",
           }}
-          onPress={() => (enableEdit ? handleCancelEdit() : handleDelete())}
+          onPress={handleCancelEdit}
         />
       ) : null}
     </HStack>
