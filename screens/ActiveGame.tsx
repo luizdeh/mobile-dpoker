@@ -12,28 +12,21 @@ import {
 } from "native-base";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import ActivePlayer from "../components/ActivePlayer";
-import { getGamePlayers } from "../utils/getGamePlayers";
-import { gameStatus } from "../utils/gameStatus";
-import { addPlayerToGame } from "../utils/addPlayerToGame";
-import { Player, PlayerList, ParamsList } from "../lib/types";
-import { updateChips } from "../utils/updateChips";
-import { endGame } from "../utils/endGame";
+import { getGamePlayers } from "../utils/db/getGamePlayers";
+import { gameStatus } from "../utils/db/gameStatus";
+import { addPlayerToGame } from "../utils/db/addPlayerToGame";
+import { Player, PlayerList, GameParamsNavigation } from "../lib/types";
+import { updateChips } from "../utils/db/updateChips";
+import { endGame } from "../utils/db/endGame";
 
 // TODO:
 // interact with database with confirmations
-
-// TODO:
-// closing the game
-// 1. create the function to update chips for each player
-// 2. create the function to close the game in the db -> done
-// 3. render the button
-// 4. create the modal to update chips for each player
 
 export default function ActiveGame() {
   const [showInactivesModal, setShowInactivesModal] = useState(false);
   const [showChipCountModal, setShowChipCountModal] = useState(false);
 
-  const route = useRoute<RouteProp<ParamsList, "Info">>();
+  const route = useRoute<RouteProp<GameParamsNavigation, "ActiveGame">>();
 
   const game = route.params.game;
   const players = route.params.players;

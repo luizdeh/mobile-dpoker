@@ -3,7 +3,7 @@ import { Text, Box, IconButton, HStack } from "native-base";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TextInput } from "react-native";
 import { PlayerList } from "../lib/types";
-import { updatePlayer } from "../utils/updatePlayer";
+import { updatePlayer } from "../utils/db/updatePlayer";
 
 interface Prop {
   player: PlayerList;

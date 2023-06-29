@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Text, Center, Box, Spinner, VStack, HStack } from "native-base";
-import { getAllGames } from "../utils/getAllGames";
-import { getPlayers } from "../utils/fetchPlayers";
-import { Game, GamePlayer, PlayerList } from "../lib/types";
-import { getGamePlayers } from "../utils/getGamePlayers";
-import { ScrollView } from "react-native";
-import { IconButton } from "native-base";
-import { Entypo } from "@expo/vector-icons";
-import GameScoreboard from "../components/GameScoreboard";
+import React, { useEffect, useState } from 'react';
+import { Center, Box, Spinner } from 'native-base';
+import { getAllGames } from '../utils/db/getAllGames';
+import { getPlayers } from '../utils/db/fetchPlayers';
+import { Game, GamePlayer, PlayerList } from '../lib/types';
+import { getGamePlayers } from '../utils/db/getGamePlayers';
+import { ScrollView } from 'react-native';
+import GameScoreboard from '../components/GameScoreboard';
+import { getStats } from '../utils/stats';
 
 export default function GamesPlayed() {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,50 +19,24 @@ export default function GamesPlayed() {
 
   const [stats, setStats] = useState<any[]>([]);
 
-  const [showLegends, setShowLegends] = useState(false);
-
   useEffect(() => {
     (async () => {
       const fetchPlayers = await getPlayers();
       if (fetchPlayers) setPlayers(fetchPlayers);
 
       const fetchGames = await getAllGames();
-      if (fetchGames)
-        setGames(fetchGames.filter((game: Game) => game.status === "CLOSED"));
+      if (fetchGames) setGames(fetchGames.filter((game: Game) => game.status === 'CLOSED'));
 
       const fetchGamePlayers = await getGamePlayers();
       if (fetchGamePlayers) setGamePlayers(fetchGamePlayers);
 
-      if (fetchGames.length && fetchPlayers.length && fetchGamePlayers.length)
-        setInitialFetch(true);
+      if (fetchGames.length && fetchPlayers.length && fetchGamePlayers.length) setInitialFetch(true);
     })();
   }, []);
 
   useEffect(() => {
     if (initialFetch) {
-      const gamesPlayed = games.map((game: Game) => {
-        const game_played = gamePlayers.filter(
-          (item: GamePlayer) => item.game_id === game.id
-        );
-        let sum_of_chips = 0;
-        game_played.length >= 1
-          ? (sum_of_chips = game_played.reduce((a, b) => a + b.chips, 0))
-          : 0;
-        const active_players = game_played.map((player: GamePlayer) => {
-          const equity = player.chips / sum_of_chips || 0;
-          const investment =
-            (game.buy_in_value + player.quantity_rebuy * game.re_buy_value) *
-            game.chip_value;
-          const name = players.find(
-            (playerName: PlayerList) => playerName.id === player.person_id
-          )?.name;
-          const prize = player.chips * game.chip_value;
-          const profit = prize - investment;
-          return { ...player, equity, investment, name, prize, profit };
-        });
-        const playerIds = active_players.map((item: any) => item.person_id);
-        return { ...game, active_players, sum_of_chips, playerIds };
-      });
+      const gamesPlayed = getStats(games, gamePlayers, players);
       setStats(gamesPlayed);
     }
   }, [initialFetch]);
@@ -72,7 +45,20 @@ export default function GamesPlayed() {
     if (stats.length) {
       setIsLoading(false);
     }
-    console.log(stats);
+    const getTheStats = (id: number, stat: string, mod: string, array: Game[], limit?: number, overUnder?: string) => {
+      const games = array
+        .filter((game: any) => game.playerIds.includes(id))
+        .map((item: any) => item.active_players.find((player: any) => player.person_id === id))
+        .filter((item: any) => (mod === 'positive' ? item[stat] > 0 : item[stat] < 0));
+      let limits: any[] = [];
+      if (limit) {
+        limits = games.filter((game: any) => (overUnder === 'over' ? game[stat] > limit : game[stat] < limit));
+      }
+      return limits.length ? limits : games;
+    };
+    const gamesPlayedByPlayer = (array: Game[], id: number) => array.filter((game: any) => game.playerIds.includes(id));
+    console.log(getTheStats(9, 'prize', 'positive', stats).length, gamesPlayedByPlayer(stats, 9).length);
+    console.log(getTheStats(9, 'investment', 'positive', stats).length);
   }, [stats]);
 
   return (

@@ -19,7 +19,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   useEffect(() => {
     setInterval(() => {
       setIsLoading(!isLoading);
-    }, 5000);
+    }, 1500);
   }, []);
 
   return (

@@ -9,8 +9,8 @@ import {
   HStack,
   Input,
 } from "native-base";
-import { getPlayers } from "../utils/fetchPlayers";
-import { addPlayer } from "../utils/addPlayer";
+import { getPlayers } from "../utils/db/fetchPlayers";
+import { addPlayer } from "../utils/db/addPlayer";
 import { MaterialIcons, Entypo } from "@expo/vector-icons";
 import { PlayerList } from "../lib/types";
 import RegisteredPlayer from "../components/RegisteredPlayer";

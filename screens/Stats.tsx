@@ -8,10 +8,10 @@ import {
   HStack,
   Button,
 } from "native-base";
-import { getAllGames } from "../utils/getAllGames";
-import { getPlayers } from "../utils/fetchPlayers";
+import { getAllGames } from "../utils/db/getAllGames";
+import { getPlayers } from "../utils/db/fetchPlayers";
 import { Game, GamePlayer, PlayerList } from "../lib/types";
-import { getGamePlayers } from "../utils/getGamePlayers";
+import { getGamePlayers } from "../utils/db/getGamePlayers";
 import { ScrollView } from "react-native";
 
 export default function OverallStats() {
@@ -213,8 +213,48 @@ export default function OverallStats() {
     }
   }, [initialFetch]);
 
+  // TODO: render ranking
+  const ranking = (stats: any[]) => {
+    const filtered = stats.filter(
+      (item: any) => item.type === "per game" && item.name !== "rebuys per game"
+    );
+
+    const newMap = players.map((player: PlayerList) => {
+      let pos: any = [];
+      for (const stat of filtered) {
+        for (let i = 0; i < stat.stats.length; i++) {
+          if (stat.stats[i].person_id === player.id) {
+            pos.push({
+              ...player,
+              games: stat.stats[i].games,
+              position: i + 1,
+            });
+          }
+        }
+      }
+      if (pos.length) {
+        const reducedPos = pos.reduce((a: any, b: any) => {
+          return a + b.position;
+        }, 0);
+        const qualifier = games.length - pos[0].games;
+        return {
+          ...player,
+          pos,
+          qualifier: qualifier,
+          reducedPos,
+          newPos: reducedPos - pos[0].games * 1.5,
+        };
+      }
+    });
+    newMap.sort((a: any, b: any) => a.newPos - b.newPos);
+    console.log(newMap);
+  };
+
   useEffect(() => {
-    if (stats.length === 11) setIsLoading(false);
+    if (stats.length === 11) {
+      setIsLoading(false);
+      ranking(stats);
+    }
   }, [stats]);
 
   return (

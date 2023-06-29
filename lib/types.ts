@@ -49,3 +49,12 @@ export type GameParams = {
   chip_value: number;
   status: string;
 };
+
+export type DataContextType = {
+  games: Game[] | null;
+  players: PlayerList[] | null;
+  gamesPlayed: GamePlayer[] | null;
+  setGames: (games: Game[]) => void;
+  setPlayers: (players: PlayerList[]) => void;
+  setGamesPlayed: (gamesPlayed: GamePlayer[]) => void;
+};

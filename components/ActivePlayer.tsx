@@ -1,7 +1,7 @@
 import React, { useState, SetStateAction, Dispatch } from "react";
 import { HStack, Text, IconButton } from "native-base";
 import { Entypo } from "@expo/vector-icons";
-import { addRebuy } from "../utils/addRebuy";
+import { addRebuy } from "../utils/db/addRebuy";
 import { Player } from "../lib/types";
 
 // TODO:

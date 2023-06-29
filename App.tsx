@@ -2,7 +2,6 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NativeBaseProvider, extendTheme } from "native-base";
-import { Image } from "react-native";
 import HomeScreen from "./screens/Home";
 import PlayersList from "./screens/Players";
 import OverallStats from "./screens/Stats";
@@ -27,13 +26,6 @@ declare module "native-base" {
 
 const Stack = createNativeStackNavigator();
 
-// const LogoTitle = () => (
-//   <Image
-//     style={{ width: "70%", height: "70%" }}
-//     source={require("./assets/logo_small.png")}
-//   />
-// );
-
 export default function App() {
   return (
     <NativeBaseProvider>
@@ -49,7 +41,6 @@ export default function App() {
               fontWeight: "bold",
               fontSize: 16,
             },
-            // headerRight: () => <LogoTitle />,
             headerTitleAlign: "center",
           }}
         >

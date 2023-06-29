@@ -8,14 +8,10 @@ import {
   HStack,
   Button,
 } from "native-base";
-import { getAllGames } from "../utils/getAllGames";
-import { getPlayers } from "../utils/fetchPlayers";
+import { getAllGames } from "../utils/db/getAllGames";
+import { getPlayers } from "../utils/db/fetchPlayers";
 import { Game, GamePlayer, Player, PlayerList } from "../lib/types";
-import { getGamePlayers } from "../utils/getGamePlayers";
-import { ScrollView } from "react-native";
-import { IconButton } from "native-base";
-import { Entypo } from "@expo/vector-icons";
-import GameScoreboard from "../components/GameScoreboard";
+import { getGamePlayers } from "../utils/db/getGamePlayers";
 import PlayersCheckboxes from "../components/PlayersCheckboxes";
 
 export default function GamesPlayed() {
@@ -28,8 +24,6 @@ export default function GamesPlayed() {
   const [initialFetch, setInitialFetch] = useState(false);
 
   const [stats, setStats] = useState<any[]>([]);
-
-  const [showLegends, setShowLegends] = useState(false);
 
   const [filteredStats, setFilteredStats] = useState<any[]>([]);
 
@@ -146,6 +140,7 @@ export default function GamesPlayed() {
       }
       return result;
     }, {});
+
     const summedArray = Object.values(summedObjects).sort(
       (a: any, b: any) => b.profit - a.profit
     );
