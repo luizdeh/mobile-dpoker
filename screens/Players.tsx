@@ -1,70 +1,38 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Text,
-  Center,
-  VStack,
-  Button,
-  Box,
-  IconButton,
-  HStack,
-  Input,
-} from "native-base";
-import { getPlayers } from "../utils/db/fetchPlayers";
-import { addPlayer } from "../utils/db/addPlayer";
-import { MaterialIcons, Entypo } from "@expo/vector-icons";
-import { PlayerList } from "../lib/types";
-import RegisteredPlayer from "../components/RegisteredPlayer";
-import { ScrollView } from "react-native";
+import React, { useContext, useRef, useState } from 'react';
+import { Text, Center, VStack, Button, Box, IconButton, HStack, Input } from 'native-base';
+import { MaterialIcons, Entypo } from '@expo/vector-icons';
+import { PlayerList } from '../lib/types';
+import RegisteredPlayer from '../components/RegisteredPlayer';
+import { ScrollView } from 'react-native';
+import { GamesContext } from '../context/GamesContext';
 
 export default function PlayersList() {
-  const [playerList, setPlayerList] = useState<PlayerList[]>([]);
-  const [refState, setRefState] = useState(false);
+  const { players, addPerson } = useContext(GamesContext);
+
   const [showAddPlayerButton, setShowAddPlayerButton] = useState(false);
+  const [name, setName] = useState('');
   const ref = useRef<HTMLInputElement | null>(null);
 
   const onClear = () => {
-    ref.current!.value = "";
-    setRefState(false);
+    ref.current!.value = '';
+    setName('');
   };
 
-  const handleNewInput = () => {
-    const player = ref.current;
-    if (player?.value) setRefState(true);
-  };
-
-  useEffect(() => {
-    (async () => {
-      const players = await getPlayers();
-      if (players) setPlayerList(players);
-    })();
-  }, []);
-
-  const addPerson = async () => {
-    const name = ref.current?.value;
-    if (name) {
-      await addPlayer(name);
-      const players = await getPlayers();
-      if (players) setPlayerList(players);
-    }
-    onClear();
+  const handleNewInput = (e: any) => {
+    setName(e.target.value);
   };
 
   return (
     <Box backgroundColor="black" px={4} py={2} flex={1}>
       {showAddPlayerButton ? (
         <Center>
-          <HStack
-            my={2}
-            space={6}
-            justifyItems="space-between"
-            alignItems="center"
-          >
+          <HStack my={2} space={6} justifyItems="space-between" alignItems="center">
             <Input
               style={{
                 height: 40,
                 paddingLeft: 6,
                 borderWidth: 1,
-                backgroundColor: "white",
+                backgroundColor: 'white',
               }}
               ref={ref}
               autoFocus={true}
@@ -75,26 +43,31 @@ export default function PlayersList() {
             <IconButton
               _icon={{
                 as: Entypo,
-                name: "erase",
-                color: "blueGray.400",
-                size: "lg",
+                name: 'erase',
+                color: 'blueGray.400',
+                size: 'lg',
               }}
               onPress={() => onClear()}
-              isDisabled={!refState}
+              isDisabled={!name.length}
             />
             <IconButton
               _icon={{
                 as: MaterialIcons,
-                name: "clear",
-                color: "rose.400",
-                size: "xl",
+                name: 'clear',
+                color: 'rose.400',
+                size: 'xl',
               }}
-              onPress={() => setShowAddPlayerButton(false)}
+              onPress={() => {
+                setShowAddPlayerButton(false);
+                onClear();
+              }}
             />
           </HStack>
           <Button
-            onPress={() => addPerson()}
-            isDisabled={!refState}
+            onPress={() => {
+              addPerson(name!, onClear);
+            }}
+            isDisabled={!name.length}
             width="80%"
             colorScheme="blueGray"
             my="2"
@@ -118,12 +91,10 @@ export default function PlayersList() {
       <br />
       <ScrollView>
         <VStack space={2} alignItems="center" width="100%">
-          {playerList ? (
-            playerList
+          {players ? (
+            players
               .sort((a, b) => a.name.localeCompare(b.name))
-              .map((item: PlayerList) => (
-                <RegisteredPlayer key={item.id} player={item} />
-              ))
+              .map((item: PlayerList) => <RegisteredPlayer key={item.id} player={item} />)
           ) : (
             <Text>No players registered yet.</Text>
           )}
