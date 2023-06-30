@@ -57,7 +57,7 @@ export type DataContextType = {
   setGames?: (games: Game[]) => void;
   setPlayers?: (players: PlayerList[]) => void;
   setGamePlayers?: (gamesPlayed: GamePlayer[]) => void;
-  stats: any[];
-  gamesPlayed: any[];
-  addPerson: (name: string, callback: () => void) => void;
+  stats: any[] | null;
+  gamesPlayed: any[] | null;
+  addNewPlayer: (name: string, callback: () => void) => void;
 };
