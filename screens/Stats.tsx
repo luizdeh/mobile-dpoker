@@ -11,7 +11,7 @@ export default function OverallStats() {
   const [showAllTime, setShowAllTime] = useState(true);
 
   useEffect(() => {
-    if (games?.length && gamePlayers?.length && players?.length) {
+    if (games?.length && gamePlayers?.length && players?.length && stats?.length) {
       setAlternatingStats(stats);
       setIsLoading(false);
     }
