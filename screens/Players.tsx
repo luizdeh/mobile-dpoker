@@ -7,7 +7,7 @@ import { ScrollView } from 'react-native';
 import { GamesContext } from '../context/GamesContext';
 
 export default function PlayersList() {
-  const { players, addPerson } = useContext(GamesContext);
+  const { players, addNewPlayer } = useContext(GamesContext);
 
   const [showAddPlayerButton, setShowAddPlayerButton] = useState(false);
   const [name, setName] = useState('');
@@ -65,7 +65,7 @@ export default function PlayersList() {
           </HStack>
           <Button
             onPress={() => {
-              addPerson(name!, onClear);
+              addNewPlayer(name!, onClear);
             }}
             isDisabled={!name.length}
             width="80%"
