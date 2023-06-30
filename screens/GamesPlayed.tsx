@@ -11,7 +11,7 @@ export default function GamesPlayed() {
   const [stats, setStats] = useState<any[]>([]);
 
   useEffect(() => {
-    if (games?.length && gamePlayers?.length && players?.length) {
+    if (games?.length && gamePlayers?.length && players?.length && gamesPlayed?.length) {
       setStats(gamesPlayed);
       setIsLoading(false);
     }
