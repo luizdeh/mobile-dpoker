@@ -4,23 +4,23 @@ import { addPlayer } from '../utils/db/addPlayer';
 import { getPlayers } from '../utils/db/fetchPlayers';
 import { getAllGames } from '../utils/db/getAllGames';
 import { getGamePlayers } from '../utils/db/getGamePlayers';
+import { getStats, makeOverallStats } from '../utils/stats';
 
 export const GamesContext = createContext<DataContextType>({
   games: null,
   players: null,
-  gamesPlayed: null,
+  gamePlayers: null,
+  stats: null,
   addPerson: () => { },
 });
-// export const GamesContext = createContext<any>({});
-
-// interface Props {
-//   children: React.ReactNode;
-// }
 
 export const GamesContextProvider = ({ children }: any) => {
-  const [games, setGames] = useState<Game[] | null>(null);
-  const [players, setPlayers] = useState<PlayerList[] | null>(null);
-  const [gamesPlayed, setGamesPlayed] = useState<GamePlayer[] | null>(null);
+  const [games, setGames] = useState<Game[]>([]);
+  const [players, setPlayers] = useState<PlayerList[]>([]);
+  const [gamePlayers, setGamePlayers] = useState<GamePlayer[]>([]);
+  const [initialFetch, setInitialFetch] = useState(false);
+  const [stats, setStats] = useState<any[]>([]);
+  const [gamesPlayed, setGamesPlayed] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -31,9 +31,20 @@ export const GamesContextProvider = ({ children }: any) => {
       if (fetchGames.length) setGames(fetchGames.filter((game: Game) => game.status === 'CLOSED'));
 
       const fetchGamePlayers = await getGamePlayers();
-      if (fetchGamePlayers.length) setGamesPlayed(fetchGamePlayers);
+      if (fetchGamePlayers.length) setGamePlayers(fetchGamePlayers);
+
+      if (fetchGames.length && fetchPlayers.length && fetchGamePlayers.length) setInitialFetch(true);
     })();
   }, []);
+
+  useEffect(() => {
+    if (initialFetch) {
+      const overall = makeOverallStats(games, gamePlayers, players);
+      setStats(overall);
+      const gamesPlayed = getStats(games, gamePlayers, players);
+      setGamesPlayed(gamesPlayed);
+    }
+  }, [initialFetch]);
 
   const addPerson = async (name: string, callback: () => void) => {
     if (name) {
@@ -47,10 +58,12 @@ export const GamesContextProvider = ({ children }: any) => {
   const value = {
     games,
     players,
-    gamesPlayed,
+    gamePlayers,
     setGames,
     setPlayers,
-    setGamesPlayed,
+    setGamePlayers,
+    stats,
+    gamesPlayed,
     addPerson,
   };
 

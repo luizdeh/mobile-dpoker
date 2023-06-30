@@ -53,9 +53,11 @@ export type GameParams = {
 export type DataContextType = {
   games: Game[] | null;
   players: PlayerList[] | null;
-  gamesPlayed: GamePlayer[] | null;
+  gamePlayers: GamePlayer[] | null;
   setGames?: (games: Game[]) => void;
   setPlayers?: (players: PlayerList[]) => void;
-  setGamesPlayed?: (gamesPlayed: GamePlayer[]) => void;
+  setGamePlayers?: (gamesPlayed: GamePlayer[]) => void;
+  stats: any[];
+  gamesPlayed: any[];
   addPerson: (name: string, callback: () => void) => void;
 };
