@@ -24,14 +24,22 @@ export default function GamesPlayed() {
           <Spinner size="lg" color="emerald.600" />
         </Center>
       ) : (
-        <ScrollView>
-          {stats
-            .sort((a, b) => a.date.localeCompare(b.date))
-            .map((game: any, index: number) => {
-              return <GameScoreboard key={index} game={game} index={index} />;
-            })}
-        </ScrollView>
+        <SafeAreaView style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
+          <ScrollView style={{ marginHorizontal: 10 }}>
+            {stats
+              .sort((a, b) => a.date.localeCompare(b.date))
+              .map((game: any, index: number) => {
+                return (
+                  <GameScoreboard
+                    key={index}
+                    game={game}
+                    index={index}
+                  />
+                )
+              })}
+          </ScrollView>
+        </SafeAreaView>
       )}
     </Box>
-  );
+  )
 }

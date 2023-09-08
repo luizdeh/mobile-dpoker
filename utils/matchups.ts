@@ -50,5 +50,5 @@ export const checkedPlayerScores = (checkboxes: any, stats: any) => {
     return result;
   }, {});
 
-  return Object.values(summedObjects).sort((a: any, b: any) => b.profit - a.profit);
-};
+  return Object.values(summedObjects).sort((a: any, b: any) => b.profit - a.profit)
+}
