@@ -65,7 +65,7 @@ export const GamesContextProvider = ({ children }: any) => {
     setGamePlayers,
     stats,
     gamesPlayed,
-    addPerson: addNewPlayer,
+    addNewPlayer,
   };
 
   return <GamesContext.Provider value={value}>{children}</GamesContext.Provider>;

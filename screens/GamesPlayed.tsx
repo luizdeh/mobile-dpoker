@@ -1,21 +1,21 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Center, Box, Spinner } from 'native-base';
-import { ScrollView } from 'react-native';
-import GameScoreboard from '../components/GameScoreboard';
-import { GamesContext } from '../context/GamesContext';
+import { useContext, useEffect, useState } from 'react'
+import { Center, Box, Spinner } from 'native-base'
+import { SafeAreaView, ScrollView, StatusBar } from 'react-native'
+import GameScoreboard from '../components/GameScoreboard'
+import { GamesContext } from '../context/GamesContext'
 
 export default function GamesPlayed() {
-  const { games, players, gamePlayers, gamesPlayed } = useContext(GamesContext);
+  const { games, players, gamePlayers, gamesPlayed } = useContext(GamesContext)
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState<any[]>([])
 
   useEffect(() => {
     if (games?.length && gamePlayers?.length && players?.length && gamesPlayed?.length) {
-      setStats(gamesPlayed);
-      setIsLoading(false);
+      setStats(gamesPlayed)
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   return (
     <Box h="100%" px="2" py="2" backgroundColor="black">
