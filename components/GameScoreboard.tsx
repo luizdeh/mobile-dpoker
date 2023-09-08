@@ -1,12 +1,7 @@
-import React, { useState } from "react";
-import { Text, VStack, HStack } from "native-base";
-import { IconButton } from "native-base";
-import {
-  AntDesign,
-  Entypo,
-  FontAwesome5,
-  FontAwesome,
-} from "@expo/vector-icons";
+import { AntDesign, Entypo, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { Button, HStack, IconButton, Text, View, VStack } from 'native-base';
+import React, { useEffect, useState } from 'react';
+import { doItAll } from '../utils/payments';
 
 interface Prop {
   game: any;
