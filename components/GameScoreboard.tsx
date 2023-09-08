@@ -32,15 +32,15 @@ export default function GameScoreboard({ game, index }: Prop) {
             showStats
               ? {
                 as: AntDesign,
-                name: "caretup",
-                color: "blueGray.200",
-                size: "md",
+                name: 'caretup',
+                color: 'blueGray.200',
+                size: 'md',
               }
               : {
                 as: AntDesign,
-                name: "caretdown",
-                color: "blueGray.200",
-                size: "md",
+                name: 'caretdown',
+                color: 'blueGray.200',
+                size: 'md',
               }
           }
           onPress={() => setShowStats((state) => !state)}
