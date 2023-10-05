@@ -10,6 +10,11 @@ export const GamesContext = createContext<DataContextType>({
   games: null,
   players: null,
   gamePlayers: null,
+  fetchGames: () => { },
+  fetchPlayers: () => { },
+  setGames: () => { },
+  setPlayers: () => { },
+  setGamePlayers: () => { },
   stats: null,
   gamesPlayed: null,
   addNewPlayer: () => { },
@@ -23,20 +28,34 @@ export const GamesContextProvider = ({ children }: any) => {
   const [stats, setStats] = useState<any[]>([]);
   const [gamesPlayed, setGamesPlayed] = useState<any[]>([]);
 
+  const fetchGames = async () => {
+    const fetchGames = await getAllGames();
+    if (fetchGames.length) setGames(fetchGames.filter((game: Game) => game.status === 'CLOSED'));
+  }
+
+  const fetchPlayers = async () => {
+    const fetchPlayers = await getPlayers();
+    if (fetchPlayers.length) setPlayers(fetchPlayers);
+  }
+
+  const fetchGamePlayers = async () => {
+    const fetchGamePlayers = await getGamePlayers();
+    if (fetchGamePlayers.length) setGamePlayers(fetchGamePlayers);
+  }
+
   useEffect(() => {
     (async () => {
-      const fetchPlayers = await getPlayers();
-      if (fetchPlayers.length) setPlayers(fetchPlayers);
-
-      const fetchGames = await getAllGames();
-      if (fetchGames.length) setGames(fetchGames.filter((game: Game) => game.status === 'CLOSED'));
-
-      const fetchGamePlayers = await getGamePlayers();
-      if (fetchGamePlayers.length) setGamePlayers(fetchGamePlayers);
-
-      if (fetchGames.length && fetchPlayers.length && fetchGamePlayers.length) setInitialFetch(true);
+      await fetchPlayers()
+      await fetchGames()
+      await fetchGamePlayers()
     })();
   }, []);
+
+  useEffect(() => {
+    if (players.length && games.length && gamePlayers.length) {
+      setInitialFetch(true);
+    }
+  }, [players, games, gamePlayers]);
 
   useEffect(() => {
     if (initialFetch) {
@@ -60,6 +79,8 @@ export const GamesContextProvider = ({ children }: any) => {
     games,
     players,
     gamePlayers,
+    fetchGames,
+    fetchPlayers,
     setGames,
     setPlayers,
     setGamePlayers,

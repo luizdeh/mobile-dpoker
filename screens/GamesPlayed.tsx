@@ -2,10 +2,10 @@ import { useContext, useEffect, useState } from 'react'
 import { Center, Box, Spinner } from 'native-base'
 import { SafeAreaView, ScrollView, StatusBar } from 'react-native'
 import GameScoreboard from '../components/GameScoreboard'
-import { GamesContext } from '../context/GamesContext'
+import useGamesContext from '../context/useGamesContext'
 
 export default function GamesPlayed() {
-  const { games, players, gamePlayers, gamesPlayed } = useContext(GamesContext)
+  const { games, players, gamePlayers, gamesPlayed } = useGamesContext()
 
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState<any[]>([])

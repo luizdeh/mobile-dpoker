@@ -1,4 +1,4 @@
-import { Game, GamePlayer, PlayerList } from '../lib/types';
+import { type Game, type GamePlayer, type PlayerList } from '../lib/types';
 
 export const getStats = (games: Game[], gamePlayer: GamePlayer[], players: PlayerList[]) => {
   return games.map((game: Game) => {
@@ -66,6 +66,7 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
     const idx = obj.findIndex((idx: any) => idx.id === item.game_id);
     const copyObj = [...obj];
     const foundGame = copyObj[idx];
+    // console.log({ foundGame })
     const { buy_in_value, re_buy_value, chip_value, sum_of_chips } = foundGame;
     const equity = item.chips / sum_of_chips;
     const investment = (buy_in_value + item.quantity_rebuy * re_buy_value) * chip_value;
@@ -224,3 +225,24 @@ export const filterStats = (
   // console.log(getTheStats(9, 'prize', 'positive', stats).length, gamesPlayedByPlayer(stats, 9).length);
   // console.log(getTheStats(9, 'investment', 'positive', stats).length);
 };
+
+export const makeSummary = (games: Game[], players: PlayerList[]) => {
+  let arr: any[] = []
+  for (const player of players) {
+    const stats = singlePlayerStats(player.id, games);
+    const withName = { ...stats, name: player.name }
+    stats.games > 1 ? arr.push(withName) : null
+  }
+  return arr
+}
+
+export const singlePlayerStats = (id: number, array: Game[]) => {
+  const g = array
+    .filter((game: any) => game.playerIds.includes(id))
+    .map((item: any) => item.active_players.find((player: any) => player.person_id === id))
+  const positive = g.filter((game: any) => game.profit > 0).length
+  const ratio = positive / g.length
+  const rebuys = g.reduce((a: any, b: any) => a + b.quantity_rebuy, 0)
+  const equity = g.reduce((a: any, b: any) => a + b.equity, 0) / g.length
+  return { id, positive, ratio: Number(ratio.toFixed(2)), rebuys, equity: Number(equity.toFixed(2)), games: g.length };
+}

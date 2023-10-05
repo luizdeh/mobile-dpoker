@@ -1,15 +1,18 @@
-import React, { useState } from "react";
-import { Text, Box, IconButton, HStack } from "native-base";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Box, HStack, IconButton, Text } from "native-base";
+import React, { useState } from "react";
 import { TextInput } from "react-native";
-import { PlayerList } from "../lib/types";
+import { type PlayerWithGames } from "../lib/types";
 import { updatePlayer } from "../utils/db/updatePlayer";
 
-interface Prop {
-  player: PlayerList;
+
+type RegisteredPlayerProps = {
+  player: PlayerWithGames;
+  idx: number;
 }
 
-export default function RegisteredPlayer({ player }: Prop) {
+export default function RegisteredPlayer({ player, idx }: RegisteredPlayerProps) {
+
   const [me, setMe] = useState(player);
   const [enableEdit, setEnableEdit] = useState(false);
 
@@ -29,6 +32,14 @@ export default function RegisteredPlayer({ player }: Prop) {
     }
   };
 
+  const oddOrEven = (index: number) => index % 2 === 0
+
+  // useEffect(() => {
+  //   if (me.id === 9) {
+  //     console.log(games)
+  //   }
+  // }, [])
+
   return (
     <HStack
       alignItems="center"
@@ -36,7 +47,7 @@ export default function RegisteredPlayer({ player }: Prop) {
       height="12"
       flex={1}
       w="100%"
-      bgColor="tertiary.100"
+      bgColor={oddOrEven(idx) ? 'tertiary.100' : 'tertiary.50'}
       borderRadius="lg"
       px={2}
     >
@@ -49,7 +60,7 @@ export default function RegisteredPlayer({ player }: Prop) {
         />
       </Box>
       <Text flex={1} fontSize="xs">
-        ID: {me.id}
+        GP: {player?.games_played}
       </Text>
       <IconButton
         flex={1}

@@ -1,8 +1,9 @@
-import React, { useState, SetStateAction, Dispatch } from "react";
+import React, { useState, SetStateAction, Dispatch, useEffect } from "react";
 import { HStack, Text, IconButton } from "native-base";
 import { Entypo } from "@expo/vector-icons";
 import { addRebuy } from "../utils/db/addRebuy";
-import { Player } from "../lib/types";
+import { type Player } from "../lib/types";
+import RebuyDialog from "./RebuyDialog";
 
 // TODO:
 // set up modals for confirmation of adding a rebuy
@@ -14,10 +15,10 @@ interface Props {
 
 export default function ActivePlayer({ player, updateActivePlayers }: Props) {
   const [me, setMe] = useState(player);
+  const [isOpen, setIsOpen] = useState(false);
+  const [confirm, setConfirm] = useState(false);
 
   const handleRebuy = async () => {
-    // confirmation
-
     // send to db
     await addRebuy(me.id);
     // update self
@@ -34,30 +35,38 @@ export default function ActivePlayer({ player, updateActivePlayers }: Props) {
       newPlayers[idx] = updatedMe;
       return newPlayers;
     });
+    setIsOpen(false)
   };
 
+  useEffect(() => {
+    if (isOpen && confirm) handleRebuy()
+  }, [isOpen, confirm])
+
   return (
-    <HStack
-      space={6}
-      justifyItems="space-between"
-      alignItems="center"
-      lineHeight="2xl"
-    >
-      <Text flex={3}>{me.name.toUpperCase()}</Text>
-      <HStack flex={2} alignItems="center" justifyItems="space-between">
-        <Text fontSize="lg" flex={1} textAlign="center">
-          {me.quantity_rebuy}
+    <>
+      <RebuyDialog player={me.name.toUpperCase()} isOpen={isOpen} onClose={() => setIsOpen(false)} setConfirm={setConfirm} />
+      <HStack
+        space={6}
+        justifyItems="space-between"
+        alignItems="center"
+        lineHeight="2xl"
+      >
+        <Text flex={3}>{me.name.toUpperCase()}</Text>
+        <HStack flex={2} alignItems="center" justifyItems="space-between">
+          <Text fontSize="md" flex={1} textAlign="center">
+            {me.quantity_rebuy}
+          </Text>
+          <IconButton
+            colorScheme="muted"
+            _icon={{ as: Entypo, name: "plus" }}
+            flex={1}
+            onPress={() => setIsOpen(true)}
+          />
+        </HStack>
+        <Text flex={1} textAlign="right">
+          {me.chips}
         </Text>
-        <IconButton
-          colorScheme="muted"
-          _icon={{ as: Entypo, name: "plus" }}
-          flex={1}
-          onPress={() => handleRebuy()}
-        />
       </HStack>
-      <Text flex={1} textAlign="center">
-        {me.chips}
-      </Text>
-    </HStack>
+    </>
   );
 }

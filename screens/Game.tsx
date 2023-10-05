@@ -8,6 +8,7 @@ import {
   Input,
   Stack,
   Center,
+  View,
 } from "native-base";
 import { getPlayers } from "../utils/db/fetchPlayers";
 import { createNewGame } from "../utils/db/createNewGame";
@@ -16,8 +17,12 @@ import { useNavigation } from "@react-navigation/native";
 import { PlayerList, GameParamsNavigation, GameParams } from "../lib/types";
 import { ScrollView } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import useGamesContext from "../context/useGamesContext";
 
 export default function NewGame() {
+
+  const { players } = useGamesContext()
+
   const [playerList, setPlayerList] = useState<PlayerList[]>([]);
   const [gameParams, setGameParams] = useState<GameParams>({
     buy_in_value: 1000,
@@ -31,10 +36,9 @@ export default function NewGame() {
     useNavigation<NativeStackNavigationProp<GameParamsNavigation>>();
 
   useEffect(() => {
-    (async () => {
-      const players = await getPlayers();
-      if (players) setPlayerList(players);
-    })();
+    // if (players) setPlayerList(players);
+    if (players) setPlayerList(players.filter((item: PlayerList) => item.is_active === 1));
+    console.log({ players });
   }, []);
 
   const toggleRegisterPlayer = (id: number) => {
@@ -96,48 +100,7 @@ export default function NewGame() {
       <VStack space={1} alignItems="center" flex={1} mt={4}>
         <HStack px={2} mb={4} space={1}>
           <VStack
-            minW="50%"
-            flex={1}
-            borderRadius="lg"
-            backgroundColor="blueGray.600"
-            px={1}
-            pt={1}
-            pb={0}
-            space={2}
-          >
-            <VStack flex={2} alignItems="center">
-              <Text fontSize="xs" color="blueGray.300" bold>
-                REGISTERED PLAYERS
-              </Text>
-              <Text fontSize="2xl" color="teal.400">
-                {playerList.filter((item: PlayerList) => item.active === true)
-                  .length ?? 0}
-              </Text>
-            </VStack>
-            <Center pb={1}>
-              <Button
-                size="xs"
-                variant="solid"
-                width="100%"
-                borderRadius="md"
-                px={0}
-                py={1}
-                _text={{ fontSize: 10 }}
-                isDisabled={
-                  playerList.filter((item: PlayerList) => item.active === true)
-                    .length
-                    ? false
-                    : true
-                }
-                onPress={clearPlayers}
-                colorScheme="blueGray"
-              >
-                CLEAR PLAYERS
-              </Button>
-            </Center>
-          </VStack>
-          <VStack
-            minW="50%"
+            minW="70%"
             flex={1}
             borderRadius="lg"
             backgroundColor="blueGray.600"
@@ -160,7 +123,7 @@ export default function NewGame() {
               </Text>
               <Input
                 size="xs"
-                p={0}
+                p={1}
                 flex={1}
                 textAlign="center"
                 fontWeight="semibold"
@@ -185,7 +148,7 @@ export default function NewGame() {
               </Text>
               <Input
                 size="xs"
-                p={0}
+                p={1}
                 flex={1}
                 textAlign="center"
                 fontWeight="semibold"
@@ -210,7 +173,7 @@ export default function NewGame() {
               </Text>
               <Input
                 size="xs"
-                p={0}
+                p={1}
                 flex={1}
                 textAlign="center"
                 fontWeight="semibold"
@@ -228,10 +191,11 @@ export default function NewGame() {
               <Button
                 size="xs"
                 variant="solid"
-                width="100%"
+                width="50%"
                 borderRadius="md"
                 px={0}
                 py={1}
+                mb={1}
                 _text={{ fontSize: 10 }}
                 isDisabled={enableResetGameParams() ? false : true}
                 onPress={() =>
@@ -248,13 +212,52 @@ export default function NewGame() {
               </Button>
             </Center>
           </VStack>
+          <VStack
+            minW="30%"
+            flex={1}
+            borderRadius="lg"
+            backgroundColor="blueGray.600"
+            px={1}
+            pt={1}
+            pb={0}
+            space={2}
+          >
+            <VStack flex={1} alignItems="center" justifyContent="space-evenly">
+              <Text fontSize="xs" color="blueGray.300" bold>
+                PLAYERS
+              </Text>
+              <Text fontSize="4xl" color="teal.400">
+                {playerList.filter((item: PlayerList) => item.active === true)
+                  .length ?? 0}
+              </Text>
+              <Button
+                size="xs"
+                variant="solid"
+                width="80%"
+                borderRadius="md"
+                px={4}
+                py={1}
+                _text={{ fontSize: 10 }}
+                isDisabled={
+                  playerList.filter((item: PlayerList) => item.active === true)
+                    .length
+                    ? false
+                    : true
+                }
+                onPress={clearPlayers}
+                colorScheme="teal"
+              >
+                CLEAR
+              </Button>
+            </VStack>
+          </VStack>
         </HStack>
         <ScrollView style={{ width: "100%" }}>
-          <Stack alignItems="center" w="100%">
+          <View alignItems="center" w="100%" flexWrap="wrap" flexDirection="row" justifyContent="center">
             {playerList
               ? playerList
                 .sort((a, b) => a.name.localeCompare(b.name))
-                .map((player: PlayerList) => {
+                .map((player: PlayerList, idx: number) => {
                   return (
                     <Button
                       onPress={() => {
@@ -262,16 +265,17 @@ export default function NewGame() {
                       }}
                       key={player.id}
                       variant={player.active ? "solid" : "subtle"}
-                      width="90%"
-                      colorScheme="teal"
-                      my={1.5}
+                      width="40%"
+                      colorScheme="emerald"
+                      m={1}
+                      py={4}
                     >
-                      {player.name.toUpperCase()}
+                      <Text fontSize="xs" fontWeight={player.active ? "bold" : "normal"} color={player.active ? "white" : "green.900"}>{player.name.toUpperCase()}</Text>
                     </Button>
                   );
                 })
               : null}
-          </Stack>
+          </View>
         </ScrollView>
       </VStack>
       <Box safeArea mt={2}>

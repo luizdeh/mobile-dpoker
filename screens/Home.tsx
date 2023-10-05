@@ -4,11 +4,11 @@ import { Image } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 
 const navLinks = [
-  { link: "Game", title: "CREATE NEW GAME" },
   { link: "Games", title: "GAMES" },
   { link: "Players", title: "PLAYERS" },
   { link: "Stats", title: "STATISTICS" },
   { link: "Matchups", title: "MATCHUPS" },
+  { link: "Game", title: "CREATE NEW GAME" },
 ];
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
@@ -55,9 +55,10 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   <Button
                     key={idx}
                     variant="solid"
-                    colorScheme="blueGray"
+                    colorScheme={idx === 4 ? "emerald" : "blueGray"}
                     width="90%"
                     p="4"
+                    mt={idx === 4 ? 4 : 0}
                     onPress={() => navigation.navigate(name)}
                   >
                     {item.title}

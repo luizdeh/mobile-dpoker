@@ -1,26 +1,53 @@
-import React, { useContext, useRef, useState } from 'react';
-import { Text, Center, VStack, Button, Box, IconButton, HStack, Input } from 'native-base';
-import { MaterialIcons, Entypo } from '@expo/vector-icons';
-import { PlayerList } from '../lib/types';
-import RegisteredPlayer from '../components/RegisteredPlayer';
+import { Entypo, AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { Box, Button, Center, HStack, IconButton, Input, Text, View, VStack } from 'native-base';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
-import { GamesContext } from '../context/GamesContext';
+import RegisteredPlayer from '../components/RegisteredPlayer';
+import useGamesContext from '../context/useGamesContext';
+import { type PlayerWithGames } from '../lib/types';
+
 
 export default function PlayersList() {
-  const { players, addNewPlayer } = useContext(GamesContext);
+  const { players, addNewPlayer, fetchPlayers, gamesPlayed } = useGamesContext();
 
   const [showAddPlayerButton, setShowAddPlayerButton] = useState(false);
   const [name, setName] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'gp'>('name')
+
+  const [gotPlayers, setGotPlayers] = useState(players?.map((item: any) => {
+    const games = gamesPlayed?.filter((game: any) => game.playerIds.includes(item.id)).length
+    return { ...item, games_played: games }
+  })
+    .sort((a, b) => a.name.localeCompare(b.name)))
+
   const ref = useRef<HTMLInputElement | null>(null);
 
   const onClear = () => {
     ref.current!.value = '';
     setName('');
+    setShowAddPlayerButton(false);
+    fetchPlayers()
   };
 
   const handleNewInput = (e: any) => {
     setName(e.target.value);
   };
+
+  const filterino = ((player: any, games: any) => {
+    return games.filter((game: any) => {
+      return game.playerIds.includes(player.id);
+    })
+  })
+
+  const handleSort = () =>
+    sortBy === 'name'
+      ? setGotPlayers((prev) => prev?.sort((a: any, b: any) => b.games_played - a.games_played))
+      : setGotPlayers((prev) => prev?.sort((a: any, b: any) => a.name.localeCompare(b.name)))
+
+
+  useEffect(() => {
+    handleSort()
+  }, [sortBy])
 
   return (
     <Box backgroundColor="black" px={4} py={2} flex={1}>
@@ -88,13 +115,16 @@ export default function PlayersList() {
           </Button>
         </Center>
       )}
-      <br />
+      <Center py={4} alignItems="center" justifyContent="space-between">
+        <Button onPress={() => { sortBy === 'name' ? setSortBy('gp') : setSortBy('name') }} width="80%" colorScheme="blueGray">{sortBy === 'name' ? 'SORT BY GAMES PLAYED' : 'SORT BY NAME'}</Button>
+      </Center>
       <ScrollView>
         <VStack space={2} alignItems="center" width="100%">
-          {players ? (
-            players
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .map((item: PlayerList) => <RegisteredPlayer key={item.id} player={item} />)
+          {gotPlayers ? (
+            gotPlayers
+              .map((item: PlayerWithGames, idx: number) => {
+                return <RegisteredPlayer key={item.id} player={item} idx={idx} />
+              })
           ) : (
             <Text>No players registered yet.</Text>
           )}

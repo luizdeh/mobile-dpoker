@@ -18,11 +18,12 @@ import { addPlayerToGame } from "../utils/db/addPlayerToGame";
 import { Player, PlayerList, GameParamsNavigation } from "../lib/types";
 import { updateChips } from "../utils/db/updateChips";
 import { endGame } from "../utils/db/endGame";
-
-// TODO:
-// interact with database with confirmations
+import useGamesContext from "../context/useGamesContext";
 
 export default function ActiveGame() {
+
+  const { fetchGames } = useGamesContext();
+
   const [showInactivesModal, setShowInactivesModal] = useState(false);
   const [showChipCountModal, setShowChipCountModal] = useState(false);
 
@@ -183,7 +184,7 @@ export default function ActiveGame() {
     }
     if (results.length === 0) {
       await endGame(game.id);
-      console.log("game ended");
+      await fetchGames();
       navigation.navigate("Home");
     } else {
       console.log({ results });
@@ -282,7 +283,7 @@ export default function ActiveGame() {
       {renderInactivesModal()}
       {renderChipCountModal()}
       <Box flex={1} p={8}>
-        <VStack>
+        <VStack flex={1}>
           <HStack space={6} justifyItems="space-between" alignItems="center">
             <Text flex={3} fontWeight="bold">
               PLAYER
@@ -303,30 +304,30 @@ export default function ActiveGame() {
               bg: "muted.50",
             }}
           />
-          {activePlayers
-            ? activePlayers.map((player: Player) => (
-              <ActivePlayer
-                key={player.id}
-                player={player}
-                updateActivePlayers={setActivePlayers}
-              />
-            ))
-            : null}
+          <VStack w="100%" space={2}>
+            {activePlayers
+              ? activePlayers.map((player: Player) => (
+                <ActivePlayer
+                  key={player.id}
+                  player={player}
+                  updateActivePlayers={setActivePlayers}
+                />
+              ))
+              : null}
+          </VStack>
           <Center>
             <Button
               onPress={() => setShowInactivesModal(true)}
               variant="subtle"
               width="60%"
               colorScheme="tertiary"
-              my="2"
+              mt={4}
             >
               ADD PLAYER
             </Button>
           </Center>
         </VStack>
-        <br />
-        <br />
-        <VStack space={4}>
+        <VStack space={4} justifyContent="center">
           <HStack space={8} justifyItems="space-between" alignItems="center">
             <Text flex={4} fontSize="xl">
               TOTAL CHIPS
@@ -355,7 +356,7 @@ export default function ActiveGame() {
           borderRadius="none"
           onPress={() => setShowChipCountModal(true)}
         >
-          GO TO CHIP COUNT
+          CHIP COUNT & END GAME
         </Button>
       </Box>
     </Box>

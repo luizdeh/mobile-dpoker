@@ -15,8 +15,11 @@ export type Player = {
 export type PlayerList = {
   id: number;
   name: string;
-  active: boolean;
+  is_active: 0 | 1;
+  active?: boolean;
 };
+
+export type PlayerWithGames = PlayerList & { games_played: number }
 
 export type Game = {
   id: number;
@@ -54,6 +57,8 @@ export type DataContextType = {
   games: Game[] | null;
   players: PlayerList[] | null;
   gamePlayers: GamePlayer[] | null;
+  fetchGames: () => void;
+  fetchPlayers: () => void;
   setGames?: (games: Game[]) => void;
   setPlayers?: (players: PlayerList[]) => void;
   setGamePlayers?: (gamesPlayed: GamePlayer[]) => void;
