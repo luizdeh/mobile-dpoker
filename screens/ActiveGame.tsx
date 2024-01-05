@@ -9,6 +9,7 @@ import {
   Center,
   Modal,
   Input,
+  ScrollView
 } from "native-base";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import ActivePlayer from "../components/ActivePlayer";
@@ -283,50 +284,52 @@ export default function ActiveGame() {
       {renderInactivesModal()}
       {renderChipCountModal()}
       <Box flex={1} p={8}>
-        <VStack flex={1}>
-          <HStack space={6} justifyItems="space-between" alignItems="center">
-            <Text flex={3} fontWeight="bold">
-              PLAYER
-            </Text>
-            <Text flex={2} fontWeight="bold" textAlign="center">
-              RE-BUYS
-            </Text>
-            <Text flex={1} fontWeight="bold" textAlign="center">
-              CHIPS
-            </Text>
-          </HStack>
-          <Divider
-            my="2"
-            _light={{
-              bg: "muted.800",
-            }}
-            _dark={{
-              bg: "muted.50",
-            }}
-          />
-          <VStack w="100%" space={2}>
-            {activePlayers
-              ? activePlayers.map((player: Player) => (
-                <ActivePlayer
-                  key={player.id}
-                  player={player}
-                  updateActivePlayers={setActivePlayers}
-                />
-              ))
-              : null}
+        <ScrollView h='75%'>
+          <VStack flex={1}>
+            <HStack space={6} justifyItems="space-between" alignItems="center">
+              <Text flex={3} fontWeight="bold">
+                PLAYER
+              </Text>
+              <Text flex={2} fontWeight="bold" textAlign="center">
+                RE-BUYS
+              </Text>
+              <Text flex={1} fontWeight="bold" textAlign="center">
+                CHIPS
+              </Text>
+            </HStack>
+            <Divider
+              my="2"
+              _light={{
+                bg: "muted.800",
+              }}
+              _dark={{
+                bg: "muted.50",
+              }}
+            />
+            <VStack w="100%" space={2}>
+              {activePlayers
+                ? activePlayers.map((player: Player) => (
+                  <ActivePlayer
+                    key={player.id}
+                    player={player}
+                    updateActivePlayers={setActivePlayers}
+                  />
+                ))
+                : null}
+            </VStack>
+            <Center>
+              <Button
+                onPress={() => setShowInactivesModal(true)}
+                variant="subtle"
+                width="60%"
+                colorScheme="tertiary"
+                mt={4}
+              >
+                ADD PLAYER
+              </Button>
+            </Center>
           </VStack>
-          <Center>
-            <Button
-              onPress={() => setShowInactivesModal(true)}
-              variant="subtle"
-              width="60%"
-              colorScheme="tertiary"
-              mt={4}
-            >
-              ADD PLAYER
-            </Button>
-          </Center>
-        </VStack>
+        </ScrollView>
         <VStack space={4} justifyContent="center">
           <HStack space={8} justifyItems="space-between" alignItems="center">
             <Text flex={4} fontSize="xl">

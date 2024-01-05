@@ -13,8 +13,10 @@ export const getStats = (games: Game[], gamePlayer: GamePlayer[], players: Playe
       const profit = prize - investment;
       return { ...player, equity, investment, name, prize, profit };
     });
+    const rebuys = game_played.map((item: GamePlayer) => item.quantity_rebuy).reduce((a: any, b: any) => a + b, 0);
     const playerIds = active_players.map((item: any) => item.person_id);
-    return { ...game, active_players, sum_of_chips, playerIds };
+    const rebuyRatio = rebuys / game_played.length;
+    return { ...game, active_players, sum_of_chips, playerIds, rebuys, rebuyRatio };
   });
 };
 

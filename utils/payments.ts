@@ -1,3 +1,5 @@
+// import { pix } from "../lib/pix";
+
 interface Winners {
   player_id: number;
   player_name: string;
@@ -153,11 +155,21 @@ export function settlePayments(payments: any, paymentsObject: any) {
   const settle = [...winners.map((winner: any, idx: number) => {
     // return winner.transfer.map((item: any) => `${item.from_name.toUpperCase()} paga $${item.transfer.toFixed(2)} para ${winner.player_name.toUpperCase()}`)
     return winner.transfer.map((item: any) => {
-      return { transfer: item.transfer, from: item.from_name.toUpperCase(), to: winner.player_name.toUpperCase() }
+      // console.log(`${item.from_name.toUpperCase()} paga $${item.transfer.toFixed(2)} para ${winner.player_name.toUpperCase()}`)
+      return { transfer: item.transfer, from: item.from_name.toUpperCase(), to: winner.player_name.toUpperCase(), from_id: item.from_id, to_id: winner.player_id }
     })
   })]
 
   return settle.flat()
+}
+
+const copyContent = async (content: any) => {
+  try {
+    await navigator.clipboard.writeText(content);
+    console.log('Content copied to clipboard');
+  } catch (err) {
+    console.error('Failed to copy: ', err);
+  }
 }
 
 export const doItAll = (game: any) => {
@@ -170,7 +182,11 @@ export const doItAll = (game: any) => {
   const calc = someCalcs(winners, losers)
   // console.log({ calc })
   const settlement = settlePayments(calc, payments)
-  // console.log({ settlement })
+  const paymentText = settlement.map((item: any) => `${item.from} paga $${item.transfer} para ${item.to}`).flat().join('\n')
+  // const getPix = pix(item.to_id)
+  // return `${item.from} paga $${item.transfer} para ${item.to} ${getPix ? `( ${Number(getPix)} )` : null}`
+  copyContent(paymentText)
+  console.log(paymentText)
   clearArray(array)
   return settlement
 }

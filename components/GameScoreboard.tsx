@@ -15,11 +15,11 @@ export default function GameScoreboard({ game, index }: Prop) {
 
   useEffect(() => {
     if (showStats) {
-      console.log(`game #${index + 1}`)
-      console.log({ game })
+      // console.log(`game #${index + 1}`)
+      // console.log({ game })
       const all = doItAll(game)
       setPayments(all)
-      console.log({ all })
+      // console.log({ all })
     }
   }, [showStats])
 

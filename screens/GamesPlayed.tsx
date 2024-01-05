@@ -17,6 +17,12 @@ export default function GamesPlayed() {
     }
   }, [])
 
+  useEffect(() => {
+    if (stats) {
+      console.log(stats)
+    }
+  }, [stats])
+
   return (
     <Box h="100%" px="2" py="2" backgroundColor="black">
       {isLoading ? (
@@ -28,6 +34,7 @@ export default function GamesPlayed() {
           <ScrollView style={{ marginHorizontal: 10 }}>
             {stats
               .sort((a, b) => a.date.localeCompare(b.date))
+              // .sort((a, b) => b.rebuyRatio - a.rebuyRatio)
               .map((game: any, index: number) => {
                 return (
                   <GameScoreboard
