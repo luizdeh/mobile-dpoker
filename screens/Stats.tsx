@@ -57,7 +57,14 @@ export default function OverallStats() {
       })
       // console.log('filteredGames', filteredGames.length)
       const newStats = makeOverallStats(filteredGames, gamePlayers, players)
-      setAlternatingStats(newStats)
+      const newNewStats = newStats.map((item: Stats, index: number) => {
+        const statszera = index === 0 || index === 1
+        return {
+          ...item,
+          stats: statszera ? item.stats.splice(0, 10) : item.stats
+        }
+      })
+      setAlternatingStats(newNewStats)
 
       // const top = newStats.map((item: Stats) => {
       //   const statszera = item.name === 'top prizes in a game' || item.name === 'largest equities in a game' ? item.stats.splice(0, 10) : item.stats
@@ -72,23 +79,32 @@ export default function OverallStats() {
     }
     if (seasons === 0 && games?.length && gamePlayers?.length && players?.length && stats?.length && gamesPlayed?.length) {
       const newStats = makeOverallStats(games, gamePlayers, players)
-      setAlternatingStats(newStats)
+      const newNewStats = newStats.map((item: Stats, index: number) => {
+        const statszera = index === 0 || index === 1
+        return {
+          ...item,
+          stats: statszera ? item.stats.splice(0, 10) : item.stats
+        }
+      })
+      setAlternatingStats(newNewStats)
     }
   }, [seasons]);
 
-  useEffect(() => {
-    if (alternatingStats?.length) {
-      const top = alternatingStats.map((item: Stats) => {
-        const statszera = item.name === 'top prizes in a game' || item.name === 'largest equities in a game' ? item.stats.splice(0, 10) : item.stats
-        return {
-          ...item,
-          stats: statszera
-        }
-      })
-      setTopTen(top)
-      console.log({ top })
-    }
-  }, [alternatingStats]);
+  // useEffect(() => {
+  //   if (alternatingStats?.length) {
+  //     const top = alternatingStats.map((item: Stats, index: number) => {
+  //       // const statszera = item.name === 'top prizes in a game' || item.name === 'largest equities in a game'
+  //       const statszera = index === 0 || index === 1
+  //       return {
+  //         ...item,
+  //         stats: statszera ? item.stats.splice(0, 10) : item.stats
+  //       }
+  //     })
+  //     setTopTen(top)
+  //     console.log({ top })
+  //     console.log({ alternatingStats })
+  //   }
+  // }, [alternatingStats]);
 
 
   const abbreviateName = (player: string) => {
@@ -96,6 +112,30 @@ export default function OverallStats() {
     return lastName.length && player.length >= 11 ? `${name} ${lastName[0][0]}.` : `${name} ${lastName}`;
   }
 
+  // {topTen.length && (item.name === 'top prizes in a game' || item.name === 'largest equities in a game')
+  //   ? topTen.map((subItem: any, idx: number) => {
+  //     return (
+  //       <HStack
+  //         key={idx}
+  //         w="100%"
+  //         alignItems="center"
+  //         h="10"
+  //         backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'}
+  //         px="2"
+  //       >
+  //         <Text flex={3} fontSize="xs">
+  //           {idx + 1}. {subItem.name.toUpperCase()}
+  //         </Text>
+  //         <Text flex={1} fontSize="xs" textAlign="center" color="coolGray.400">
+  //           GP: {subItem.games}
+  //         </Text>
+  //         <Text flex={1} textAlign="right" fontSize="xs">
+  //           {subItem.stat.toFixed(2)}
+  //         </Text>
+  //       </HStack>
+  //     );
+  //   })
+  //
   return (
     <Box h="100%" backgroundColor="black">
       {isLoading ? (
@@ -218,51 +258,28 @@ export default function OverallStats() {
                     </Button>
                     {item.show ? (
                       <VStack w="95%" space={0}>
-                        {topTen.length && (item.name === 'top prizes in a game' || item.name === 'largest equities in a game')
-                          ? topTen.map((subItem: any, idx: number) => {
-                            return (
-                              <HStack
-                                key={idx}
-                                w="100%"
-                                alignItems="center"
-                                h="10"
-                                backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'}
-                                px="2"
-                              >
-                                <Text flex={3} fontSize="xs">
-                                  {idx + 1}. {subItem.name.toUpperCase()}
-                                </Text>
-                                <Text flex={1} fontSize="xs" textAlign="center" color="coolGray.400">
-                                  GP: {subItem.games}
-                                </Text>
-                                <Text flex={1} textAlign="right" fontSize="xs">
-                                  {subItem.stat.toFixed(2)}
-                                </Text>
-                              </HStack>
-                            );
-                          })
-                          : item.stats.map((subItem: any, idx: number) => {
-                            return (
-                              <HStack
-                                key={idx}
-                                w="100%"
-                                alignItems="center"
-                                h="10"
-                                backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'}
-                                px="2"
-                              >
-                                <Text flex={3} fontSize="xs">
-                                  {idx + 1}. {subItem.name.toUpperCase()}
-                                </Text>
-                                <Text flex={1} fontSize="xs" textAlign="center" color="coolGray.400">
-                                  GP: {subItem.games}
-                                </Text>
-                                <Text flex={1} textAlign="right" fontSize="xs">
-                                  {subItem.stat.toFixed(2)}
-                                </Text>
-                              </HStack>
-                            );
-                          })}
+                        {item.stats.map((subItem: any, idx: number) => {
+                          return (
+                            <HStack
+                              key={idx}
+                              w="100%"
+                              alignItems="center"
+                              h="10"
+                              backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'}
+                              px="2"
+                            >
+                              <Text flex={3} fontSize="xs">
+                                {idx + 1}. {subItem.name.toUpperCase()}
+                              </Text>
+                              <Text flex={1} fontSize="xs" textAlign="center" color="coolGray.400">
+                                GP: {subItem.games}
+                              </Text>
+                              <Text flex={1} textAlign="right" fontSize="xs">
+                                {subItem.stat.toFixed(2)}
+                              </Text>
+                            </HStack>
+                          );
+                        })}
                       </VStack>
                     ) : null}
                   </Box>

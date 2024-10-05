@@ -79,7 +79,7 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
     const prize = item.chips * chip_value;
     return { ...item, equity, investment, prize, name };
   });
-  console.log({ allGames });
+  // console.log({ allGames });
 
   const playerTotals = players.map((item: PlayerList) => {
     const myGames = allGames.filter((player: GamePlayer) => player.person_id === item.id);
@@ -105,7 +105,7 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
       average_equity,
     };
   });
-  console.log({ playerTotals });
+  // console.log({ playerTotals });
 
   const makeTop = (what: any) => {
     const temp = [...allGames];
@@ -124,8 +124,6 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
       })
       .sort((a, b) => b.stat - a.stat)
   };
-  const prizetest = makeTop('prize').splice(0, 10)
-  console.log({ prizetest })
 
   const makeStats = (what: string, order: string) => {
     return playerTotals
