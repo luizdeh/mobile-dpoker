@@ -56,14 +56,18 @@ export const ranking = (stats: any[], players: PlayerList[], games: Game[]) => {
 };
 
 export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], players: PlayerList[]) => {
+
   const obj = games.map((game: Game) => {
     const game_played = gamePlayers.filter((item: GamePlayer) => item.game_id === game.id);
-    let sum_of_chips = 0;
-    game_played.length >= 1 ? (sum_of_chips = game_played.reduce((a, b) => a + b.chips, 0)) : 0;
+    const sum_of_chips = game_played.length >= 1 ? game_played.reduce((a, b) => a + b.chips, 0) : 0
     return { ...game, game_played, sum_of_chips };
   });
+  // console.log({ obj });
 
-  const allGames = gamePlayers.map((item: any) => {
+  const gameIDs = obj.map((item: any) => item.id);
+  // console.log({ gameIDs });
+
+  const allGames = gamePlayers.filter((item: GamePlayer) => gameIDs.includes(item.game_id)).map((item: any) => {
     const name = players.find((playerName: PlayerList) => playerName.id === item.person_id)?.name;
     const idx = obj.findIndex((idx: any) => idx.id === item.game_id);
     const copyObj = [...obj];
@@ -75,6 +79,7 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
     const prize = item.chips * chip_value;
     return { ...item, equity, investment, prize, name };
   });
+  console.log({ allGames });
 
   const playerTotals = players.map((item: PlayerList) => {
     const myGames = allGames.filter((player: GamePlayer) => player.person_id === item.id);
@@ -100,8 +105,9 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
       average_equity,
     };
   });
+  console.log({ playerTotals });
 
-  const makeTopFive = (what: any) => {
+  const makeTop = (what: any) => {
     const temp = [...allGames];
     return temp
       .map((item: any) => {
@@ -117,8 +123,9 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
         };
       })
       .sort((a, b) => b.stat - a.stat)
-      .splice(0, 5);
   };
+  const prizetest = makeTop('prize').splice(0, 10)
+  console.log({ prizetest })
 
   const makeStats = (what: string, order: string) => {
     return playerTotals
@@ -139,13 +146,13 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
   return [
     {
       name: 'top prizes in a game',
-      stats: makeTopFive('prize'),
+      stats: makeTop('prize'),
       type: 'all time',
       show: false,
     },
     {
       name: 'largest equities in a game',
-      stats: makeTopFive('equity'),
+      stats: makeTop('equity'),
       type: 'all time',
       show: false,
     },
@@ -157,7 +164,7 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
     },
     {
       name: 'all-time investments',
-      stats: makeStats('investments', 'up'),
+      stats: makeStats('investments', 'down'),
       type: 'all time',
       show: false,
     },
@@ -169,7 +176,7 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
     },
     {
       name: 'all-time rebuys',
-      stats: makeStats('rebuys', 'up'),
+      stats: makeStats('rebuys', 'down'),
       type: 'all time',
       show: false,
     },
@@ -193,13 +200,13 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
     },
     {
       name: 'investment per game',
-      stats: makeStats('investments_per_game', 'up'),
+      stats: makeStats('investments_per_game', 'down'),
       type: 'per game',
       show: false,
     },
     {
       name: 'rebuys per game',
-      stats: makeStats('rebuys_per_game', 'up'),
+      stats: makeStats('rebuys_per_game', 'down'),
       type: 'per game',
       show: false,
     },

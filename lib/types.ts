@@ -66,3 +66,10 @@ export type DataContextType = {
   gamesPlayed: any[] | null;
   addNewPlayer: (name: string, callback: () => void) => void;
 };
+
+export type Stats = {
+  name: string;
+  stats: any[];
+  type: string;
+  show: boolean;
+}

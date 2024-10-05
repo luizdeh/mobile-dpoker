@@ -5,10 +5,10 @@ import { doItAll } from '../utils/payments';
 
 interface Prop {
   game: any;
-  index: number;
+  num: number;
 }
 
-export default function GameScoreboard({ game, index }: Prop) {
+export default function GameScoreboard({ game, num }: Prop) {
   const [showStats, setShowStats] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
   const [payments, setPayments] = useState<any[]>([]);
@@ -32,7 +32,7 @@ export default function GameScoreboard({ game, index }: Prop) {
     <VStack my="2">
       <HStack py="2" alignItems="center" backgroundColor="blueGray.600">
         <Text flex={1} textAlign="center" fontSize="md" color="blueGray.200">
-          Game #{index + 1}
+          Game #{num}
         </Text>
         <Text flex={1} textAlign="center" fontSize="xs" color="blueGray.200">
           {game.date.slice(0, 10)}

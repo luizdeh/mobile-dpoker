@@ -9,6 +9,7 @@ export default function GamesPlayed() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState<any[]>([])
+  const [statsLength, setStatsLength] = useState(0)
 
   useEffect(() => {
     if (games?.length && gamePlayers?.length && players?.length && gamesPlayed?.length) {
@@ -19,6 +20,7 @@ export default function GamesPlayed() {
 
   useEffect(() => {
     if (stats) {
+      setStatsLength(stats.length)
       console.log(stats)
     }
   }, [stats])
@@ -33,14 +35,15 @@ export default function GamesPlayed() {
         <SafeAreaView style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
           <ScrollView style={{ marginHorizontal: 10 }}>
             {stats
-              .sort((a, b) => a.date.localeCompare(b.date))
+              .sort((a, b) => b.date.localeCompare(a.date))
               // .sort((a, b) => b.rebuyRatio - a.rebuyRatio)
               .map((game: any, index: number) => {
+                const num = statsLength - index
                 return (
                   <GameScoreboard
                     key={index}
                     game={game}
-                    index={index}
+                    num={num}
                   />
                 )
               })}

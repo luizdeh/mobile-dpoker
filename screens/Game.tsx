@@ -63,6 +63,7 @@ export default function NewGame() {
   useEffect(() => {
     setGameParams((prev) => {
       const obj = { ...prev };
+      console.log({ gameParams });
       return { ...obj, chip_value: buyInAmount / gameParams.buy_in_value };
     });
   }, [buyInAmount]);

@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from 'react';
-import { Game, GamePlayer, PlayerList, DataContextType } from '../lib/types';
+import { Game, GamePlayer, PlayerList, DataContextType, Stats } from '../lib/types';
 import { addPlayer } from '../utils/db/addPlayer';
 import { getPlayers } from '../utils/db/fetchPlayers';
 import { getAllGames } from '../utils/db/getAllGames';
@@ -25,7 +25,7 @@ export const GamesContextProvider = ({ children }: any) => {
   const [players, setPlayers] = useState<PlayerList[]>([]);
   const [gamePlayers, setGamePlayers] = useState<GamePlayer[]>([]);
   const [initialFetch, setInitialFetch] = useState(false);
-  const [stats, setStats] = useState<any[]>([]);
+  const [stats, setStats] = useState<Stats[]>([]);
   const [gamesPlayed, setGamesPlayed] = useState<any[]>([]);
 
   const fetchGames = async () => {
