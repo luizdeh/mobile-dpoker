@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { TextInput } from "react-native";
 import { type PlayerWithGames } from "../lib/types";
 import { updatePlayer } from "../utils/db/updatePlayer";
+import useAuthContext from "../context/useAuthContext";
 
 
 type RegisteredPlayerProps = {
@@ -13,6 +14,7 @@ type RegisteredPlayerProps = {
 
 export default function RegisteredPlayer({ player, idx }: RegisteredPlayerProps) {
 
+  const { canManage } = useAuthContext();
   const [me, setMe] = useState(player);
   const [enableEdit, setEnableEdit] = useState(false);
 
@@ -62,25 +64,27 @@ export default function RegisteredPlayer({ player, idx }: RegisteredPlayerProps)
       <Text flex={1} fontSize="xs">
         GP: {player?.games_played}
       </Text>
-      <IconButton
-        flex={1}
-        colorScheme="tertiary"
-        _icon={
-          enableEdit
-            ? {
-              as: MaterialIcons,
-              name: "save",
-              size: "xl",
-            }
-            : {
-              as: MaterialIcons,
-              name: "edit",
-              size: "xl",
-            }
-        }
-        onPress={() => (enableEdit ? handleSave() : editName())}
-      />
-      {enableEdit ? (
+      {canManage ? (
+        <IconButton
+          flex={1}
+          colorScheme="tertiary"
+          _icon={
+            enableEdit
+              ? {
+                as: MaterialIcons,
+                name: "save",
+                size: "xl",
+              }
+              : {
+                as: MaterialIcons,
+                name: "edit",
+                size: "xl",
+              }
+          }
+          onPress={() => (enableEdit ? handleSave() : editName())}
+        />
+      ) : null}
+      {canManage && enableEdit ? (
         <IconButton
           flex={1}
           colorScheme="tertiary"

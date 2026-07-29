@@ -4,6 +4,7 @@ import { Entypo } from "@expo/vector-icons";
 import { addRebuy } from "../utils/db/addRebuy";
 import { type Player } from "../lib/types";
 import RebuyDialog from "./RebuyDialog";
+import useAuthContext from "../context/useAuthContext";
 
 // TODO:
 // set up modals for confirmation of adding a rebuy
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function ActivePlayer({ player, updateActivePlayers }: Props) {
+  const { canManage } = useAuthContext();
   const [me, setMe] = useState(player);
   const [isOpen, setIsOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -56,12 +58,14 @@ export default function ActivePlayer({ player, updateActivePlayers }: Props) {
           <Text fontSize="md" flex={1} textAlign="center">
             {me.quantity_rebuy}
           </Text>
-          <IconButton
-            colorScheme="muted"
-            _icon={{ as: Entypo, name: "plus" }}
-            flex={1}
-            onPress={() => setIsOpen(true)}
-          />
+          {canManage ? (
+            <IconButton
+              colorScheme="muted"
+              _icon={{ as: Entypo, name: "plus" }}
+              flex={1}
+              onPress={() => setIsOpen(true)}
+            />
+          ) : null}
         </HStack>
         <Text flex={1} textAlign="right">
           {me.chips}

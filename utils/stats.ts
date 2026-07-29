@@ -125,6 +125,24 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
       .sort((a, b) => b.stat - a.stat)
   };
 
+  const makeBottom = (what: any) => {
+    const temp = [...allGames];
+    return temp
+      .map((item: any) => {
+        const top = item[what];
+        const statName = what === 'prize' ? 'top prizes' : 'largest equities';
+        const games = playerTotals.find((player: any) => player.id === item.person_id)?.games_played;
+        return {
+          person_id: item.person_id,
+          name: item.name,
+          stat: top,
+          statName,
+          games,
+        };
+      })
+      .sort((a, b) => a.stat - b.stat)
+  };
+
   const makeStats = (what: string, order: string) => {
     return playerTotals
       .map((item: any) => {
@@ -151,6 +169,12 @@ export const makeOverallStats = (games: Game[], gamePlayers: GamePlayer[], playe
     {
       name: 'largest equities in a game',
       stats: makeTop('equity'),
+      type: 'all time',
+      show: false,
+    },
+    {
+      name: 'top losses in a game',
+      stats: makeBottom('prize'),
       type: 'all time',
       show: false,
     },

@@ -73,3 +73,13 @@ export type Stats = {
   type: string;
   show: boolean;
 }
+
+export type Role = 'admin' | 'operator' | null;
+
+export type AuthContextType = {
+  session: import('@supabase/supabase-js').Session | null;
+  role: Role;
+  canManage: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
+};

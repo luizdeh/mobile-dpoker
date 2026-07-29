@@ -1,11 +1,12 @@
-const url = "http://localhost:8080/api/gamePlayers";
+import { supabase } from "../../lib/supabase";
 
 export const getGamePlayers = async () => {
   try {
-    const res = await fetch(url);
-    const list = res.json();
-    return list;
-  } catch (error) {
+    const { data, error } = await supabase.from("game_players").select("*");
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
     console.log("[ERROR] getGamePlayers() =>", error.message);
+    return [];
   }
 };

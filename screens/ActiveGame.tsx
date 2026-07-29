@@ -20,10 +20,12 @@ import { Player, PlayerList, GameParamsNavigation } from "../lib/types";
 import { updateChips } from "../utils/db/updateChips";
 import { endGame } from "../utils/db/endGame";
 import useGamesContext from "../context/useGamesContext";
+import useAuthContext from "../context/useAuthContext";
 
 export default function ActiveGame() {
 
   const { fetchGames } = useGamesContext();
+  const { canManage } = useAuthContext();
 
   const [showInactivesModal, setShowInactivesModal] = useState(false);
   const [showChipCountModal, setShowChipCountModal] = useState(false);
@@ -317,17 +319,19 @@ export default function ActiveGame() {
                 ))
                 : null}
             </VStack>
-            <Center>
-              <Button
-                onPress={() => setShowInactivesModal(true)}
-                variant="subtle"
-                width="60%"
-                colorScheme="tertiary"
-                mt={4}
-              >
-                ADD PLAYER
-              </Button>
-            </Center>
+            {canManage ? (
+              <Center>
+                <Button
+                  onPress={() => setShowInactivesModal(true)}
+                  variant="subtle"
+                  width="60%"
+                  colorScheme="tertiary"
+                  mt={4}
+                >
+                  ADD PLAYER
+                </Button>
+              </Center>
+            ) : null}
           </VStack>
         </ScrollView>
         <VStack space={4} justifyContent="center">
@@ -349,19 +353,21 @@ export default function ActiveGame() {
           </HStack>
         </VStack>
       </Box>
-      <Box safeArea>
-        <Button
-          variant="subtle"
-          colorScheme="blueGray"
-          width="100%"
-          mb="0"
-          minHeight="16"
-          borderRadius="none"
-          onPress={() => setShowChipCountModal(true)}
-        >
-          CHIP COUNT & END GAME
-        </Button>
-      </Box>
+      {canManage ? (
+        <Box safeArea>
+          <Button
+            variant="subtle"
+            colorScheme="blueGray"
+            width="100%"
+            mb="0"
+            minHeight="16"
+            borderRadius="none"
+            onPress={() => setShowChipCountModal(true)}
+          >
+            CHIP COUNT & END GAME
+          </Button>
+        </Box>
+      ) : null}
     </Box>
   );
 }

@@ -1,17 +1,23 @@
-const url = "http://localhost:8080/api/gamePlayer/"
+import { supabase } from "../../lib/supabase";
 
 export const addRebuy = async (id: number) => {
-  const urlWithId = `${url}${id}/rebuy`
   try {
-    const res = await fetch(urlWithId, {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const addedRebuy = await res.json();
-    return addedRebuy;
-  } catch (error) {
+    const { data: current, error: fetchError } = await supabase
+      .from("game_players")
+      .select("quantity_rebuy")
+      .eq("id", id)
+      .single();
+    if (fetchError) throw fetchError;
+
+    const { data, error } = await supabase
+      .from("game_players")
+      .update({ quantity_rebuy: current.quantity_rebuy + 1 })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
     console.log("[ERROR] addRebuy() =>", error.message);
   }
 };

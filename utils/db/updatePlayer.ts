@@ -1,18 +1,16 @@
-const url = "http://localhost:8080/api/person/";
+import { supabase } from "../../lib/supabase";
 
 export const updatePlayer = async (id: number, name: string) => {
-  const urlWithId = `${url}${id}`;
   try {
-    const res = await fetch(urlWithId, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: name }),
-    });
-    const success = await res.json();
-    return success;
-  } catch (error) {
+    const { data, error } = await supabase
+      .from("players")
+      .update({ name })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
     console.log("[ERROR] updatePlayer() =>", error.message);
   }
 };

@@ -25,12 +25,12 @@ export default function NewGame() {
 
   const [playerList, setPlayerList] = useState<PlayerList[]>([]);
   const [gameParams, setGameParams] = useState<GameParams>({
-    buy_in_value: 1000,
-    re_buy_value: 1000,
+    buy_in_value: 1500,
+    re_buy_value: 1500,
     chip_value: 0.01,
     status: "LOBBY",
   });
-  const [buyInAmount, setBuyInAmount] = useState<number>(10);
+  const [buyInAmount, setBuyInAmount] = useState<number>(15);
 
   const navigation =
     useNavigation<NativeStackNavigationProp<GameParamsNavigation>>();
@@ -88,9 +88,9 @@ export default function NewGame() {
   const enableResetGameParams = () => {
     const temp = gameParams;
     if (
-      temp.buy_in_value !== 1000 ||
-      temp.re_buy_value !== 1000 ||
-      buyInAmount !== 10
+      temp.buy_in_value !== 1500 ||
+      temp.re_buy_value !== 1500 ||
+      buyInAmount !== 15
     ) {
       return true;
     }
@@ -201,8 +201,8 @@ export default function NewGame() {
                 isDisabled={enableResetGameParams() ? false : true}
                 onPress={() =>
                   setGameParams({
-                    buy_in_value: 1000,
-                    re_buy_value: 1000,
+                    buy_in_value: 1500,
+                    re_buy_value: 1500,
                     chip_value: 0.01,
                     status: "LOBBY",
                   })

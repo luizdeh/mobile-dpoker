@@ -2,17 +2,24 @@ import React, { useEffect, useRef, useState } from "react";
 import { Center, VStack, Button, Box } from "native-base";
 import { Image } from "react-native";
 import { Video, ResizeMode } from "expo-av";
+import useAuthContext from "../context/useAuthContext";
 
-const navLinks = [
+const baseNavLinks = [
   { link: "Games", title: "GAMES" },
   { link: "Players", title: "PLAYERS" },
   { link: "Stats", title: "STATISTICS" },
   { link: "Matchups", title: "MATCHUPS" },
-  { link: "Game", title: "CREATE NEW GAME" },
 ];
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const video = useRef(null);
+  const { session, canManage } = useAuthContext();
+
+  const navLinks = [
+    ...baseNavLinks,
+    ...(canManage ? [{ link: "Game", title: "CREATE NEW GAME", highlight: true }] : []),
+    { link: "Profile", title: session ? "ACCOUNT" : "SIGN IN" },
+  ];
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,10 +62,10 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   <Button
                     key={idx}
                     variant="solid"
-                    colorScheme={idx === 4 ? "emerald" : "blueGray"}
+                    colorScheme={item.highlight ? "emerald" : "blueGray"}
                     width="90%"
                     p="4"
-                    mt={idx === 4 ? 4 : 0}
+                    mt={item.highlight ? 4 : 0}
                     onPress={() => navigation.navigate(name)}
                   >
                     {item.title}

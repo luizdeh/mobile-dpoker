@@ -49,7 +49,7 @@ export default function OverallStats() {
   useEffect(() => {
     if (seasons !== 0 && games?.length && gamePlayers?.length && players?.length && stats?.length && gamesPlayed?.length) {
       const filteredGames = games.filter((item: Game) => {
-        const s = seasons === 1 ? '2023' : seasons === 2 ? '2024' : null
+        const s = seasons == 1 ? '2023' : seasons == 2 ? '2024' : seasons == 3 ? '2025' : seasons == 4 ? '2026' : null
         const getDate = item.date.slice(0, 4)
         if (s && getDate === s) {
           return item
@@ -146,12 +146,12 @@ export default function OverallStats() {
         <>
           <VStack>
             <Button
-              flex={1}
+              flex={0}
               borderRadius="none"
-              colorScheme="blueGray"
+              colorScheme="muted"
               variant={showSummary ? 'outline' : 'solid'}
               onPress={() => setShowSummary((state) => !state)}>
-              SHOW SUMMARY
+              TOGGLE RANKING
             </Button>
             {showSummary ?
               <VStack>
@@ -178,38 +178,62 @@ export default function OverallStats() {
               </VStack>
               : null}
           </VStack>
-          <HStack w="80%" mt={6} mb={2} alignSelf="center">
-            <Button
-              flex={1}
-              borderRadius="none"
-              colorScheme="blueGray"
-              variant={seasons === 0 ? 'subtle' : 'solid'}
-              onPress={() => setSeasons(0)}
-              w="33%"
-            >
-              ALL TIME
-            </Button>
-            <Button
-              flex={1}
-              borderRadius="none"
-              colorScheme="blueGray"
-              variant={seasons === 1 ? 'subtle' : 'solid'}
-              onPress={() => setSeasons(1)}
-              w="33%"
-            >
-              2023
-            </Button>
-            <Button
-              flex={1}
-              borderRadius="none"
-              colorScheme="blueGray"
-              variant={seasons === 2 ? 'subtle' : 'solid'}
-              onPress={() => setSeasons(2)}
-              w="33%"
-            >
-              2024
-            </Button>
-          </HStack>
+          <VStack >
+            <Center>
+              <Button
+                flex={1}
+                borderRadius="none"
+                colorScheme="blueGray"
+                variant={seasons === 0 ? 'subtle' : 'solid'}
+                onPress={() => setSeasons(0)}
+                w="50%"
+              >
+                ALL TIME
+              </Button>
+            </Center>
+            <HStack w="80%" mt={6} mb={2} alignSelf="center">
+              <Button
+                flex={1}
+                borderRadius="none"
+                colorScheme="blueGray"
+                variant={seasons === 1 ? 'subtle' : 'solid'}
+                onPress={() => setSeasons(1)}
+                w="25%"
+              >
+                2023
+              </Button>
+              <Button
+                flex={1}
+                borderRadius="none"
+                colorScheme="blueGray"
+                variant={seasons === 2 ? 'subtle' : 'solid'}
+                onPress={() => setSeasons(2)}
+                w="25"
+              >
+                2024
+              </Button>
+              <Button
+                flex={1}
+                borderRadius="none"
+                colorScheme="blueGray"
+                variant={seasons === 3 ? 'subtle' : 'solid'}
+                onPress={() => setSeasons(3)}
+                w="25%"
+              >
+                2025
+              </Button>
+              <Button
+                flex={1}
+                borderRadius="none"
+                colorScheme="blueGray"
+                variant={seasons === 4 ? 'subtle' : 'solid'}
+                onPress={() => setSeasons(4)}
+                w="25%"
+              >
+                2026
+              </Button>
+            </HStack>
+          </VStack>
           <ScrollView>
             <HStack w="100%" mt={6} mb={2}>
               <Button

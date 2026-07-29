@@ -4,11 +4,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import RegisteredPlayer from '../components/RegisteredPlayer';
 import useGamesContext from '../context/useGamesContext';
+import useAuthContext from '../context/useAuthContext';
 import { type PlayerWithGames } from '../lib/types';
 
 
 export default function PlayersList() {
   const { players, addNewPlayer, fetchPlayers, gamesPlayed } = useGamesContext();
+  const { canManage } = useAuthContext();
 
   const [showAddPlayerButton, setShowAddPlayerButton] = useState(false);
   const [name, setName] = useState('');
@@ -51,7 +53,8 @@ export default function PlayersList() {
 
   return (
     <Box backgroundColor="black" px={4} py={2} flex={1}>
-      {showAddPlayerButton ? (
+      {canManage ? (
+      showAddPlayerButton ? (
         <Center>
           <HStack my={2} space={6} justifyItems="space-between" alignItems="center">
             <Input
@@ -114,7 +117,8 @@ export default function PlayersList() {
             ADD NEW PLAYER
           </Button>
         </Center>
-      )}
+      )
+      ) : null}
       <Center py={4} alignItems="center" justifyContent="space-between">
         <Button onPress={() => { sortBy === 'name' ? setSortBy('gp') : setSortBy('name') }} width="80%" colorScheme="blueGray">{sortBy === 'name' ? 'SORT BY GAMES PLAYED' : 'SORT BY NAME'}</Button>
       </Center>

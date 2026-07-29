@@ -1,17 +1,15 @@
-const url = "http://localhost:8080/api/game";
+import { supabase } from "../../lib/supabase";
 
 export const createNewGame = async (gameData: {}) => {
   try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(gameData),
-    });
-    const game = await res.json();
-    return game;
-  } catch (error) {
+    const { data, error } = await supabase
+      .from("games")
+      .insert(gameData)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
     console.log("[ERROR] createNewGame() =>", error.message);
   }
 };
