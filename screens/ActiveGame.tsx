@@ -170,10 +170,14 @@ export default function ActiveGame() {
 
   const handleChange = (event: any, index: number) => {
     const { value } = event.target;
+    const digitsOnly = value.replace(/[^0-9]/g, "");
+    const final_chips = digitsOnly === "" ? 0 : Number(digitsOnly);
 
-    const newState = [...activePlayers];
-    newState[index] = { ...activePlayers[index], final_chips: Number(value) };
-    setActivePlayers(newState);
+    setActivePlayers((prev) => {
+      const newState = [...prev];
+      newState[index] = { ...prev[index], final_chips };
+      return newState;
+    });
   };
 
   const navigation = useNavigation();

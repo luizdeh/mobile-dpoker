@@ -1,11 +1,15 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Text, Center, Box, Spinner, VStack, HStack, Button } from 'native-base';
-import { Game, GamePlayer, Player, PlayerList } from '../lib/types';
-import PlayersCheckboxes from '../components/PlayersCheckboxes';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { Text, Center, Box, Spinner, VStack, HStack, Button, Select, IconButton, ScrollView } from 'native-base';
+import { AntDesign } from '@expo/vector-icons';
+import { PlayerList } from '../lib/types';
 import { GamesContext } from '../context/GamesContext';
 import { checkedPlayerScores, makeMatchups } from '../utils/matchups';
 
-export default function GamesPlayed() {
+const MIN_SLOTS = 2;
+const MAX_EXTRA_SLOTS = 7;
+const MAX_SLOTS = MIN_SLOTS + MAX_EXTRA_SLOTS;
+
+export default function Matchups() {
   const { games, players, gamePlayers } = useContext(GamesContext);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -14,13 +18,12 @@ export default function GamesPlayed() {
 
   const [filteredStats, setFilteredStats] = useState<any[]>([]);
 
-  const [playerCheckboxes, setPlayerCheckboxes] = useState<any[]>([]);
+  const [selections, setSelections] = useState<(number | null)[]>(Array(MIN_SLOTS).fill(null));
 
   useEffect(() => {
     if (games && gamePlayers && players) {
-      const { gamesPlayed, checkbox } = makeMatchups(games, gamePlayers, players);
+      const { gamesPlayed } = makeMatchups(games, gamePlayers, players);
       setStats(gamesPlayed);
-      setPlayerCheckboxes(checkbox);
     }
   }, []);
 
@@ -31,27 +34,48 @@ export default function GamesPlayed() {
     }
   }, [stats]);
 
+  const selectedIds = useMemo(
+    () => selections.filter((id): id is number => id !== null),
+    [selections]
+  );
+
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
   useEffect(() => {
-    const temp = [...playerCheckboxes];
-    const updated = temp.filter((item: any) => item.checkbox).map((subItem: any) => subItem.id);
-
-    const filter = stats.filter((game: any) => {
-      const playerIds = game.playerIds;
-      return updated.every((playerId: number) => playerIds.includes(playerId));
-    });
-
+    const filter = stats.filter((game: any) =>
+      selectedIds.every((playerId: number) => game.playerIds.includes(playerId))
+    );
     setFilteredStats(filter);
-  }, [playerCheckboxes]);
+  }, [selectedIds, stats]);
 
-  const cleanCheckboxes = () => {
-    const updatedCheckboxes = playerCheckboxes.map((checkbox: any) => {
-      return { ...checkbox, checkbox: false };
+  const isTakenElsewhere = (playerId: number, slotIndex: number) =>
+    selectedIdSet.has(playerId) && selections[slotIndex] !== playerId;
+
+  const updateSelection = (slotIndex: number, value: string) => {
+    const playerId = value === '' ? null : Number(value);
+    setSelections((prev) => {
+      const next = [...prev];
+      next[slotIndex] = playerId;
+      return next;
     });
-    setPlayerCheckboxes(updatedCheckboxes);
   };
 
+  const addSlot = () => {
+    setSelections((prev) => (prev.length < MAX_SLOTS ? [...prev, null] : prev));
+  };
+
+  const removeSlot = (slotIndex: number) => {
+    setSelections((prev) => prev.filter((_, idx) => idx !== slotIndex));
+  };
+
+  const clearSelections = () => {
+    setSelections((prev) => prev.map(() => null));
+  };
+
+  const hasSelections = selectedIds.length > 0;
+
   const renderCheckedPlayerScores = () => {
-    const summedArray = checkedPlayerScores(playerCheckboxes, filteredStats);
+    const summedArray = checkedPlayerScores(selectedIds, filteredStats);
     return summedArray.map((item: any, idx: number) => {
       const [name, ...lastName] = item.name.split(' ').filter(Boolean);
       const myName = lastName.length && item.name.length >= 11 ? `${name} ${lastName[0][0]}.` : `${name} ${lastName}`;
@@ -81,22 +105,60 @@ export default function GamesPlayed() {
           <Spinner size="lg" color="emerald.600" />
         </Center>
       ) : (
-        <>
-          <Box flexDirection="row" flexWrap="wrap">
-            {playerCheckboxes.map((player: PlayerList) => {
-              return <PlayersCheckboxes key={player.id} player={player} updateCheckboxes={setPlayerCheckboxes} />;
-            })}
-          </Box>
-          <br />
-          <VStack px={2}>
+        <ScrollView>
+          <VStack space={2}>
+            {selections.map((selectedId, idx) => (
+              <HStack key={idx} alignItems="center" space={2}>
+                <Select
+                  flex={1}
+                  selectedValue={selectedId !== null ? String(selectedId) : ''}
+                  placeholder={`PLAYER ${idx + 1}`}
+                  accessibilityLabel={`Player ${idx + 1}`}
+                  onValueChange={(value) => updateSelection(idx, value)}
+                >
+                  <Select.Item label="— CLEAR —" value="" />
+                  {players?.map((player: PlayerList) => (
+                    <Select.Item
+                      key={player.id}
+                      label={player.name.toUpperCase()}
+                      value={String(player.id)}
+                      isDisabled={isTakenElsewhere(player.id, idx)}
+                    />
+                  ))}
+                </Select>
+                {idx >= MIN_SLOTS ? (
+                  <IconButton
+                    variant="ghost"
+                    colorScheme="blueGray"
+                    _icon={{ as: AntDesign, name: 'closecircleo', size: 'sm' }}
+                    onPress={() => removeSlot(idx)}
+                  />
+                ) : null}
+              </HStack>
+            ))}
+          </VStack>
+          {selections.length < MAX_SLOTS ? (
+            <Button
+              onPress={addSlot}
+              variant="outline"
+              colorScheme="tertiary"
+              width="100%"
+              mt="4"
+              minHeight="10"
+              borderRadius="none"
+            >
+              + ADD PLAYER
+            </Button>
+          ) : null}
+          <VStack px={2} mt={4}>
             <HStack justifyItems="center">
               <Text>Games found: </Text>
               <Text bold>{filteredStats.length} </Text>
               <Text>/ {stats.length}</Text>
             </HStack>
             <Button
-              isDisabled={playerCheckboxes.some((item: any) => item.checkbox == true) ? false : true}
-              onPress={cleanCheckboxes}
+              isDisabled={!hasSelections}
+              onPress={clearSelections}
               variant="solid"
               colorScheme="blueGray"
               width="100%"
@@ -106,7 +168,7 @@ export default function GamesPlayed() {
             >
               CLEAN SEARCH
             </Button>
-            {playerCheckboxes.some((item: any) => item.checkbox == true) ? (
+            {hasSelections ? (
               <HStack borderBottomColor="black" borderBottomWidth="1" mt="4">
                 <Text flex={2} fontSize="xs" bold>
                   PLAYER
@@ -130,7 +192,7 @@ export default function GamesPlayed() {
               </Text>
             )}
           </VStack>
-        </>
+        </ScrollView>
       )}
     </Box>
   );
