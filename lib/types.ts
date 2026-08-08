@@ -19,7 +19,7 @@ export type PlayerList = {
   active?: boolean;
 };
 
-export type PlayerWithGames = PlayerList & { games_played: number }
+export type PlayerWithGames = PlayerList & { games_played: number; hasGameRecord?: boolean }
 
 export type Game = {
   id: number;
@@ -28,6 +28,9 @@ export type Game = {
   re_buy_value: number;
   chip_value: number;
   status: string;
+  locked_by?: string | null;
+  locked_at?: string | null;
+  created_by?: string | null;
 };
 
 export type GamePlayer = {
@@ -40,9 +43,13 @@ export type GamePlayer = {
 };
 
 export type GameParamsNavigation = {
+  Home: undefined;
   ActiveGame: {
     game: Game;
     players: any;
+  };
+  OpenGame: {
+    game: Game;
   };
 };
 
@@ -59,6 +66,7 @@ export type DataContextType = {
   gamePlayers: GamePlayer[] | null;
   fetchGames: () => void;
   fetchPlayers: () => void;
+  fetchGamePlayers: () => void;
   setGames?: (games: Game[]) => void;
   setPlayers?: (players: PlayerList[]) => void;
   setGamePlayers?: (gamesPlayed: GamePlayer[]) => void;
@@ -82,4 +90,5 @@ export type AuthContextType = {
   canManage: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  scheduleAutoLogout: () => void;
 };

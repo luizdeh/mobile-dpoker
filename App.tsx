@@ -7,6 +7,7 @@ import PlayersList from './screens/Players';
 import OverallStats from './screens/Stats';
 import Profile from './screens/Profile';
 import Game from './screens/Game';
+import OpenGame from './screens/OpenGame';
 import ActiveGame from './screens/ActiveGame';
 import GamesPlayed from './screens/GamesPlayed';
 import Matchups from './screens/Matchups';
@@ -51,8 +52,9 @@ export default function App() {
               <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Players" component={PlayersList} options={{ title: 'PLAYER LIST' }} />
               <Stack.Screen name="Stats" component={OverallStats} options={{ title: 'STATISTICS' }} />
-              <Stack.Screen name="Profile" component={Profile} options={{ title: 'SIGN IN' }} />
+              <Stack.Screen name="Profile" component={Profile} options={{ title: 'SETTINGS' }} />
               <Stack.Screen name="Game" component={Game} options={{ title: 'CREATE A GAME' }} />
+              <Stack.Screen name="OpenGame" component={OpenGame} options={{ title: 'OPEN GAME' }} />
               <Stack.Screen name="Games" component={GamesPlayed} options={{ title: 'GAMES PLAYED' }} />
               <Stack.Screen name="Matchups" component={Matchups} options={{ title: 'MATCHUPS' }} />
               <Stack.Screen name="ActiveGame" component={ActiveGame} options={{ title: 'ACTIVE GAME' }} />

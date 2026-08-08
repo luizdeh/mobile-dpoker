@@ -1,12 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Center, VStack, Button, Box } from "native-base";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Center, VStack, Button, Box, IconButton } from "native-base";
 import { Image } from "react-native";
 import { Video, ResizeMode } from "expo-av";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import useAuthContext from "../context/useAuthContext";
+import { getOpenGames } from "../utils/db/getOpenGames";
 
 const baseNavLinks = [
   { link: "Games", title: "GAMES" },
-  { link: "Players", title: "PLAYERS" },
   { link: "Stats", title: "STATISTICS" },
   { link: "Matchups", title: "MATCHUPS" },
 ];
@@ -15,19 +17,43 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const video = useRef(null);
   const { session, canManage } = useAuthContext();
 
-  const navLinks = [
-    ...baseNavLinks,
-    ...(canManage ? [{ link: "Game", title: "CREATE NEW GAME", highlight: true }] : []),
-    { link: "Profile", title: session ? "ACCOUNT" : "SIGN IN" },
-  ];
+  const navLinks = baseNavLinks;
 
   const [isLoading, setIsLoading] = useState(true);
+  const [openGame, setOpenGame] = useState<any>(null);
 
   useEffect(() => {
     setInterval(() => {
       setIsLoading(!isLoading);
     }, 1500);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!session || !canManage) {
+        setOpenGame(null);
+        return;
+      }
+      getOpenGames().then((games) => {
+        if (games.length) {
+          const mostRecent = [...games].sort(
+            (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )[0];
+          setOpenGame(mostRecent);
+        } else {
+          setOpenGame(null);
+        }
+      });
+    }, [session, canManage])
+  );
+
+  const handleCreateGamePress = () => {
+    if (openGame) {
+      navigation.navigate("OpenGame", { game: openGame });
+    } else {
+      navigation.navigate("Game");
+    }
+  };
 
   return (
     <>
@@ -72,7 +98,52 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   </Button>
                 );
               })}
+              {canManage && openGame ? (
+                <Button
+                  variant="solid"
+                  colorScheme="amber"
+                  width="90%"
+                  p="4"
+                  mt={4}
+                  onPress={() => navigation.navigate("OpenGame", { game: openGame })}
+                >
+                  RESUME GAME
+                </Button>
+              ) : null}
+              {canManage ? (
+                <Button
+                  variant="solid"
+                  colorScheme="emerald"
+                  width="90%"
+                  p="4"
+                  mt={4}
+                  onPress={handleCreateGamePress}
+                >
+                  CREATE NEW GAME
+                </Button>
+              ) : null}
+              {canManage ? (
+                <Button
+                  variant="solid"
+                  colorScheme="blueGray"
+                  width="90%"
+                  p="4"
+                  mt={8}
+                  onPress={() => navigation.navigate("Players")}
+                >
+                  PLAYERS
+                </Button>
+              ) : null}
             </VStack>
+          </Center>
+          <Center pb={6} pt={2}>
+            <IconButton
+              variant="ghost"
+              size="sm"
+              borderRadius="full"
+              icon={<Ionicons name="settings-sharp" size={40} color="#94a3b8" />}
+              onPress={() => navigation.navigate("Profile")}
+            />
           </Center>
         </Box>
       )}

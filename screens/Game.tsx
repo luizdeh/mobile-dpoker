@@ -9,6 +9,7 @@ import {
   Stack,
   Center,
   View,
+  useToast,
 } from "native-base";
 import { getPlayers } from "../utils/db/fetchPlayers";
 import { createNewGame } from "../utils/db/createNewGame";
@@ -18,10 +19,12 @@ import { PlayerList, GameParamsNavigation, GameParams } from "../lib/types";
 import { ScrollView } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import useGamesContext from "../context/useGamesContext";
+import { getDeviceId } from "../lib/deviceId";
 
 export default function NewGame() {
 
   const { players } = useGamesContext()
+  const toast = useToast();
 
   const [playerList, setPlayerList] = useState<PlayerList[]>([]);
   const [gameParams, setGameParams] = useState<GameParams>({
@@ -69,7 +72,17 @@ export default function NewGame() {
   }, [buyInAmount]);
 
   const startGame = async (players: any) => {
-    const createdGame = await createNewGame(gameParams);
+    const deviceId = await getDeviceId();
+    const { game: createdGame, alreadyOpen } = await createNewGame({
+      ...gameParams,
+      locked_by: deviceId,
+      locked_at: new Date().toISOString(),
+    });
+    if (alreadyOpen) {
+      toast.show({ description: "Another game was just opened. Redirecting you to it." });
+      navigation.navigate("Home");
+      return;
+    }
     if (createdGame) {
       for (const player of players) {
         if (player.active === true)

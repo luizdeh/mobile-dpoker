@@ -12,6 +12,7 @@ export const GamesContext = createContext<DataContextType>({
   gamePlayers: null,
   fetchGames: () => { },
   fetchPlayers: () => { },
+  fetchGamePlayers: () => { },
   setGames: () => { },
   setPlayers: () => { },
   setGamePlayers: () => { },
@@ -64,7 +65,7 @@ export const GamesContextProvider = ({ children }: any) => {
       const gamesPlayed = getStats(games, gamePlayers, players);
       setGamesPlayed(gamesPlayed);
     }
-  }, [initialFetch]);
+  }, [initialFetch, games, gamePlayers, players]);
 
   const addNewPlayer = async (name: string, callback: () => void) => {
     if (name) {
@@ -81,6 +82,7 @@ export const GamesContextProvider = ({ children }: any) => {
     gamePlayers,
     fetchGames,
     fetchPlayers,
+    fetchGamePlayers,
     setGames,
     setPlayers,
     setGamePlayers,

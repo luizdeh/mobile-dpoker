@@ -9,9 +9,11 @@ import {
   Center,
   Modal,
   Input,
-  ScrollView
+  ScrollView,
+  useToast,
 } from "native-base";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import ActivePlayer from "../components/ActivePlayer";
 import { getGamePlayers } from "../utils/db/getGamePlayers";
 import { gameStatus } from "../utils/db/gameStatus";
@@ -19,16 +21,20 @@ import { addPlayerToGame } from "../utils/db/addPlayerToGame";
 import { Player, PlayerList, GameParamsNavigation } from "../lib/types";
 import { updateChips } from "../utils/db/updateChips";
 import { endGame } from "../utils/db/endGame";
+import { releaseGameLock } from "../utils/db/releaseGameLock";
 import useGamesContext from "../context/useGamesContext";
 import useAuthContext from "../context/useAuthContext";
 
 export default function ActiveGame() {
 
-  const { fetchGames } = useGamesContext();
-  const { canManage } = useAuthContext();
+  const { fetchGames, fetchGamePlayers } = useGamesContext();
+  const { canManage, scheduleAutoLogout } = useAuthContext();
+  const toast = useToast();
 
   const [showInactivesModal, setShowInactivesModal] = useState(false);
   const [showChipCountModal, setShowChipCountModal] = useState(false);
+  const [closeGameError, setCloseGameError] = useState<string | null>(null);
+  const [isClosingGame, setIsClosingGame] = useState(false);
 
   const route = useRoute<RouteProp<GameParamsNavigation, "ActiveGame">>();
 
@@ -180,22 +186,36 @@ export default function ActiveGame() {
     });
   };
 
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<GameParamsNavigation>>();
 
-  const closeGame = async () => {
-    let results = [];
+  const closeGame = async (): Promise<boolean> => {
+    setIsClosingGame(true);
+    setCloseGameError(null);
+
+    const failedUpdates = [];
     for (const player of activePlayers) {
       const res = await updateChips(player.id, player.final_chips);
-      if (res.error)
-        results.push({ id: player.id, final_chips: player.final_chips });
+      if (res?.error) failedUpdates.push(player.name);
     }
-    if (results.length === 0) {
-      await endGame(game.id);
-      await fetchGames();
-      navigation.navigate("Home");
-    } else {
-      console.log({ results });
+    if (failedUpdates.length > 0) {
+      setIsClosingGame(false);
+      setCloseGameError(`Failed to save chip counts for: ${failedUpdates.join(", ")}. Please try again.`);
+      return false;
     }
+
+    const closedGame = await endGame(game.id);
+    if (!closedGame) {
+      setIsClosingGame(false);
+      setCloseGameError("Failed to close the game in Supabase. Please try again.");
+      return false;
+    }
+
+    await Promise.all([fetchGames(), fetchGamePlayers(), releaseGameLock(game.id)]);
+    setIsClosingGame(false);
+    scheduleAutoLogout();
+    toast.show({ description: "Game saved to Supabase successfully. You'll be signed out in 5 minutes." });
+    navigation.navigate("Home");
+    return true;
   };
 
   const renderChipCountModal = () => {
@@ -223,7 +243,7 @@ export default function ActiveGame() {
                       <Input
                         flex={2}
                         name="final_chips"
-                        value={item.final_chips}
+                        value={String(item.final_chips)}
                         keyboardType="numeric"
                         maxLength={5}
                         onChange={(e: any) => handleChange(e, index)}
@@ -248,26 +268,31 @@ export default function ActiveGame() {
                   </Text>
                 </HStack>
               </HStack>
+              {closeGameError ? (
+                <Text color="red.400" fontSize="xs" mt={2}>{closeGameError}</Text>
+              ) : null}
             </Modal.Body>
             <Modal.Footer>
               <Button.Group space={2}>
                 <Button
                   variant="ghost"
                   colorScheme="blueGray"
-                  onPress={() => setShowChipCountModal(false)}
+                  onPress={() => {
+                    setCloseGameError(null);
+                    setShowChipCountModal(false);
+                  }}
                 >
                   Cancel
                 </Button>
                 <Button
                   isDisabled={
-                    activePlayers.reduce((a, b) => a + b.final_chips, 0) ===
-                      totalChips()
-                      ? false
-                      : true
+                    activePlayers.reduce((a, b) => a + b.final_chips, 0) !==
+                      totalChips() || isClosingGame
                   }
-                  onPress={() => {
-                    closeGame();
-                    setShowChipCountModal(false);
+                  isLoading={isClosingGame}
+                  onPress={async () => {
+                    const success = await closeGame();
+                    if (success) setShowChipCountModal(false);
                   }}
                 >
                   SAVE
