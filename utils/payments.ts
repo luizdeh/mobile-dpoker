@@ -163,30 +163,25 @@ export function settlePayments(payments: any, paymentsObject: any) {
   return settle.flat()
 }
 
-const copyContent = async (content: any) => {
+export const copyPaymentsToClipboard = async (content: string) => {
   try {
     await navigator.clipboard.writeText(content);
-    console.log('Content copied to clipboard');
+    return true;
   } catch (err) {
     console.error('Failed to copy: ', err);
+    return false;
   }
 }
 
+export const paymentsToText = (settlement: any[]) =>
+  settlement.map((item: any) => `${item.from} paga $${item.transfer} para ${item.to}`).flat().join('\n')
+
 export const doItAll = (game: any) => {
   const payments = makePaymentsObject(game)
-  // console.log({ payments })
   const winners = makeValuesArray(payments.winners)
-  // console.log({ winners })
   const losers = makeValuesArray(payments.losers)
-  // console.log({ losers })
   const calc = someCalcs(winners, losers)
-  // console.log({ calc })
   const settlement = settlePayments(calc, payments)
-  const paymentText = settlement.map((item: any) => `${item.from} paga $${item.transfer} para ${item.to}`).flat().join('\n')
-  // const getPix = pix(item.to_id)
-  // return `${item.from} paga $${item.transfer} para ${item.to} ${getPix ? `( ${Number(getPix)} )` : null}`
-  copyContent(paymentText)
-  console.log(paymentText)
   clearArray(array)
   return settlement
 }

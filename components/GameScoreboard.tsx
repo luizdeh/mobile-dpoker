@@ -1,27 +1,30 @@
 import { AntDesign, Entypo, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
-import { Button, HStack, IconButton, Text, View, VStack } from 'native-base';
+import { Button, HStack, IconButton, Modal, Text, VStack, useToast } from 'native-base';
 import React, { useEffect, useState } from 'react';
-import { doItAll } from '../utils/payments';
+import { doItAll, paymentsToText, copyPaymentsToClipboard } from '../utils/payments';
 
 interface Prop {
   game: any;
   num: number;
 }
 
-export default function GameScoreboard({ game, num }: Prop) {
+function GameScoreboard({ game, num }: Prop) {
   const [showStats, setShowStats] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
   const [payments, setPayments] = useState<any[]>([]);
+  const toast = useToast();
 
   useEffect(() => {
     if (showStats) {
-      // console.log(`game #${index + 1}`)
-      // console.log({ game })
       const all = doItAll(game)
       setPayments(all)
-      // console.log({ all })
     }
   }, [showStats])
+
+  const handleCopyPayments = async () => {
+    const success = await copyPaymentsToClipboard(paymentsToText(payments));
+    toast.show({ description: success ? "Copied to clipboard." : "Failed to copy to clipboard." });
+  };
 
   const abbreviateName = (player: string) => {
     const [name, ...lastName] = player.split(' ').filter(Boolean);
@@ -86,7 +89,7 @@ export default function GameScoreboard({ game, num }: Prop) {
               <FontAwesome5 flex={1} name="arrow-up" size={14} color="white" />
             </Text>
             <Text flex={1} textAlign="center">
-              <Entypo flex={1} name="credit" size={16} color={showPayments ? 'white' : 'blueGray.200'} onPress={() => setShowPayments((state) => !state)} />
+              <Entypo flex={1} name="credit" size={16} color="blueGray.200" onPress={() => setShowPayments(true)} />
             </Text>
           </HStack>
           {game.active_players
@@ -126,30 +129,45 @@ export default function GameScoreboard({ game, num }: Prop) {
                 </HStack>
               );
             })}
-          {showPayments && payments ?
+        </VStack>
+      ) : null}
+      <Modal isOpen={showPayments} onClose={() => setShowPayments(false)}>
+        <Modal.Content maxWidth="400px">
+          <Modal.CloseButton />
+          <Modal.Header>
+            <Text fontSize="md" bold>Payment Plan - Game #{num}</Text>
+          </Modal.Header>
+          <Modal.Body>
             <VStack>
-              <View flex={1} backgroundColor="teal.800" py={2}>
-                <Text flex={1} textAlign="center" color="white" fontWeight="semibold" fontSize="xs" onPress={() => setShowPayments(false)}>PAYMENT PLAN</Text>
-              </View>
-              <HStack py={1} backgroundColor='teal.600' alignItems="center" space={2}>
+              <HStack py={1} backgroundColor="teal.600" alignItems="center" space={2}>
                 <Text flex={1} fontSize="xs" color="teal.100" marginLeft={2}>FROM</Text>
                 <Text flex={1} fontSize="xs" color="teal.100">TO</Text>
                 <Text flex={1} fontSize="xs" textAlign="right" color="teal.100" marginRight={2}>AMOUNT</Text>
               </HStack>
-              {payments.map((payment: any, idx: number) => {
-                return (
-                  <HStack key={idx} py={1} backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'}>
-                    <Text flex={1} fontSize="xs" color="teal.800" marginLeft={2}>{abbreviateName(payment.from)}</Text>
-                    <Text flex={1} fontSize="xs" color="teal.800">{abbreviateName(payment.to)}</Text>
-                    <Text flex={1} fontSize="xs" textAlign="right" color="teal.800" marginRight={2}>${payment.transfer}</Text>
-                  </HStack>
-                )
-              })}
+              {payments.length ? (
+                payments.map((payment: any, idx: number) => {
+                  return (
+                    <HStack key={idx} py={1} backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'}>
+                      <Text flex={1} fontSize="xs" color="teal.800" marginLeft={2}>{abbreviateName(payment.from).toUpperCase()}</Text>
+                      <Text flex={1} fontSize="xs" color="teal.800">{abbreviateName(payment.to).toUpperCase()}</Text>
+                      <Text flex={1} fontSize="xs" textAlign="right" color="teal.800" marginRight={2}>${payment.transfer}</Text>
+                    </HStack>
+                  )
+                })
+              ) : (
+                <Text fontSize="xs" textAlign="center" py={2}>No payments needed.</Text>
+              )}
             </VStack>
-            : null
-          }
-        </VStack>
-      ) : null}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button size="sm" colorScheme="teal" onPress={handleCopyPayments} isDisabled={!payments.length}>
+              COPY TO CLIPBOARD
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </VStack>
   );
 }
+
+export default React.memo(GameScoreboard);
