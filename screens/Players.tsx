@@ -9,7 +9,7 @@ import { type PlayerWithGames } from '../lib/types';
 
 
 export default function PlayersList() {
-  const { players, addNewPlayer, fetchPlayers, gamesPlayed } = useGamesContext();
+  const { players, addNewPlayer, fetchPlayers, gamesPlayed, gamePlayers, setPlayers } = useGamesContext();
   const { canManage } = useAuthContext();
 
   const [showAddPlayerButton, setShowAddPlayerButton] = useState(false);
@@ -18,9 +18,17 @@ export default function PlayersList() {
 
   const [gotPlayers, setGotPlayers] = useState(players?.map((item: any) => {
     const games = gamesPlayed?.filter((game: any) => game.playerIds.includes(item.id)).length
-    return { ...item, games_played: games }
+    // Checked against every game_players row (any status), since that's what
+    // actually blocks deletion at the DB level — not just closed-game stats.
+    const hasGameRecord = gamePlayers?.some((gp: any) => gp.person_id === item.id)
+    return { ...item, games_played: games, hasGameRecord }
   })
     .sort((a, b) => a.name.localeCompare(b.name)))
+
+  const handlePlayerDeleted = (id: number) => {
+    setGotPlayers((prev) => prev?.filter((item: any) => item.id !== id));
+    setPlayers?.((players ?? []).filter((item: any) => item.id !== id));
+  };
 
   const ref = useRef<HTMLInputElement | null>(null);
 
@@ -127,7 +135,7 @@ export default function PlayersList() {
           {gotPlayers ? (
             gotPlayers
               .map((item: PlayerWithGames, idx: number) => {
-                return <RegisteredPlayer key={item.id} player={item} idx={idx} />
+                return <RegisteredPlayer key={item.id} player={item} idx={idx} onDeleted={handlePlayerDeleted} />
               })
           ) : (
             <Text>No players registered yet.</Text>

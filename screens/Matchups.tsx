@@ -117,7 +117,9 @@ export default function Matchups() {
                   onValueChange={(value) => updateSelection(idx, value)}
                 >
                   <Select.Item label="— CLEAR —" value="" />
-                  {players?.map((player: PlayerList) => (
+                  {[...(players ?? [])]
+                    .sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name))
+                    .map((player: PlayerList) => (
                     <Select.Item
                       key={player.id}
                       label={player.name.toUpperCase()}

@@ -6,26 +6,30 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   setConfirm: (confirm: boolean) => void;
+  mode?: "add" | "remove";
 }
 
-export default function RebuyDialog({ player, isOpen, onClose, setConfirm }: Props) {
+export default function RebuyDialog({ player, isOpen, onClose, setConfirm, mode = "add" }: Props) {
   const cancelRef = useRef(null);
+
+  const isRemove = mode === "remove";
 
   return <Center>
     <AlertDialog leastDestructiveRef={cancelRef} isOpen={isOpen} onClose={onClose}>
       <AlertDialog.Content>
         <AlertDialog.CloseButton />
-        <AlertDialog.Header>Confirm Rebuy</AlertDialog.Header>
+        <AlertDialog.Header>{isRemove ? "Remove Rebuy" : "Confirm Rebuy"}</AlertDialog.Header>
         <AlertDialog.Body>
-          Once added, a rebuy cannot be undone. Confirm rebuy for:
-          {player}
+          {isRemove
+            ? `Remove one rebuy from: ${player}`
+            : `Confirm rebuy for: ${player}`}
         </AlertDialog.Body>
         <AlertDialog.Footer>
           <Button.Group space={2}>
             <Button variant="unstyled" colorScheme="coolGray" onPress={onClose} ref={cancelRef}>
               CANCEL
             </Button>
-            <Button colorScheme="emerald" onPress={() => setConfirm(true)}>
+            <Button colorScheme={isRemove ? "danger" : "emerald"} onPress={() => setConfirm(true)}>
               CONFIRM
             </Button>
           </Button.Group>
