@@ -88,9 +88,13 @@ function GameScoreboard({ game, num }: Prop) {
             <Text flex={1} textAlign="center">
               <FontAwesome5 flex={1} name="arrow-up" size={14} color="white" />
             </Text>
-            <Text flex={1} textAlign="center">
-              <Entypo flex={1} name="credit" size={16} color="blueGray.200" onPress={() => setShowPayments(true)} />
-            </Text>
+            <IconButton
+              flex={1}
+              variant="unstyled"
+              p={0}
+              _icon={{ as: Entypo, name: 'credit', color: 'amber.400', size: 'md' }}
+              onPress={() => setShowPayments(true)}
+            />
           </HStack>
           {game.active_players
             .sort((a: any, b: any) => b.profit - a.profit)
