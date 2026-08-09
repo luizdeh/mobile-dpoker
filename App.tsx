@@ -11,6 +11,7 @@ import OpenGame from './screens/OpenGame';
 import ActiveGame from './screens/ActiveGame';
 import GamesPlayed from './screens/GamesPlayed';
 import Matchups from './screens/Matchups';
+import PlayerStats from './screens/PlayerStats';
 import { GamesContextProvider } from './context/GamesContext';
 import { AuthContextProvider } from './context/AuthContext';
 
@@ -57,6 +58,7 @@ export default function App() {
               <Stack.Screen name="OpenGame" component={OpenGame} options={{ title: 'OPEN GAME' }} />
               <Stack.Screen name="Games" component={GamesPlayed} options={{ title: 'GAMES PLAYED' }} />
               <Stack.Screen name="Matchups" component={Matchups} options={{ title: 'MATCHUPS' }} />
+              <Stack.Screen name="PlayerStats" component={PlayerStats} options={{ title: 'PLAYER STATS' }} />
               <Stack.Screen name="ActiveGame" component={ActiveGame} options={{ title: 'ACTIVE GAME' }} />
             </Stack.Navigator>
           </NavigationContainer>

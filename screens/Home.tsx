@@ -10,6 +10,7 @@ import { getOpenGames } from "../utils/db/getOpenGames";
 const baseNavLinks = [
   { link: "Games", title: "GAMES" },
   { link: "Stats", title: "STATISTICS" },
+  { link: "PlayerStats", title: "PLAYER STATS" },
   { link: "Matchups", title: "MATCHUPS" },
 ];
 

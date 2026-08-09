@@ -79,7 +79,11 @@ export type Stats = {
   name: string;
   stats: any[];
   type: string;
+  category: string;
   show: boolean;
+  limit?: number;
+  decimals?: number;
+  currentOnly?: boolean;
 }
 
 export type Role = 'admin' | 'operator' | null;

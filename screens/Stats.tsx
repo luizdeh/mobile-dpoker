@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { Text, Center, Box, Spinner, VStack, HStack, Button } from 'native-base';
 import { SafeAreaView, ScrollView, View } from 'react-native';
 import { GamesContext } from '../context/GamesContext';
@@ -6,16 +6,49 @@ import { makeSummary, singlePlayerStats } from '../utils/stats';
 import { Game, Stats } from '../lib/types';
 import { makeOverallStats } from '../utils/stats';
 
+// Ranking panel is disabled for now (kept for a possible future re-enable).
+const RANKING_ENABLED = false;
+
+const STAT_CATEGORIES = ['Single-Game Records', 'All-Time Totals', 'Streaks', 'Per-Game Averages'];
+const CATEGORY_LABELS: Record<string, string> = {
+  'Single-Game Records': 'RECORDS',
+  'All-Time Totals': 'TOTALS',
+  Streaks: 'STREAKS',
+  'Per-Game Averages': 'AVERAGES',
+};
+
 export default function OverallStats() {
   const { games, players, gamePlayers, stats, gamesPlayed } = useContext(GamesContext);
 
   const [isLoading, setIsLoading] = useState(true);
   const [alternatingStats, setAlternatingStats] = useState<Stats[]>([]);
-  const [showAllTime, setShowAllTime] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>(STAT_CATEGORIES[0]);
   const [summary, setSummary] = useState<any[] | null>(null)
   const [showSummary, setShowSummary] = useState(false);
   const [topTen, setTopTen] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<number>(0);
+  const [seasons, setSeasons] = useState<string | null>(null);
+  const [seasonInitialized, setSeasonInitialized] = useState(false);
+
+  const currentYear = String(new Date().getFullYear());
+  const isCurrentSeason = seasons === null || seasons === currentYear;
+
+  const years = useMemo(
+    () => Array.from(new Set((games ?? []).map((game: Game) => game.date.slice(0, 4)))).sort().reverse(),
+    [games]
+  );
+
+  const seasonSummary = useMemo(() => {
+    const filteredGames = seasons
+      ? (games ?? []).filter((game: Game) => game.date.slice(0, 4) === seasons)
+      : (games ?? []);
+    const gameIds = new Set(filteredGames.map((game: Game) => game.id));
+    const playerIds = new Set(
+      (gamePlayers ?? [])
+        .filter((gp: any) => gameIds.has(gp.game_id))
+        .map((gp: any) => gp.person_id)
+    );
+    return { games: filteredGames.length, players: playerIds.size };
+  }, [games, gamePlayers, seasons]);
 
   useEffect(() => {
     if (games?.length && gamePlayers?.length && players?.length && stats?.length && gamesPlayed?.length) {
@@ -47,48 +80,26 @@ export default function OverallStats() {
   }, []);
 
   useEffect(() => {
-    if (seasons !== 0 && games?.length && gamePlayers?.length && players?.length && stats?.length && gamesPlayed?.length) {
-      const filteredGames = games.filter((item: Game) => {
-        const s = seasons == 1 ? '2023' : seasons == 2 ? '2024' : seasons == 3 ? '2025' : seasons == 4 ? '2026' : null
-        const getDate = item.date.slice(0, 4)
-        if (s && getDate === s) {
-          return item
-        }
-      })
-      // console.log('filteredGames', filteredGames.length)
-      const newStats = makeOverallStats(filteredGames, gamePlayers, players)
-      const newNewStats = newStats.map((item: Stats, index: number) => {
-        const statszera = index === 0 || index === 1
-        return {
-          ...item,
-          stats: statszera ? item.stats.splice(0, 10) : item.stats
-        }
-      })
-      setAlternatingStats(newNewStats)
+    if (!seasonInitialized && games?.length) {
+      const hasCurrentYearGames = games.some((game: Game) => game.date.slice(0, 4) === currentYear);
+      if (hasCurrentYearGames) setSeasons(currentYear);
+      setSeasonInitialized(true);
+    }
+  }, [seasonInitialized, games]);
 
-      // const top = newStats.map((item: Stats) => {
-      //   const statszera = item.name === 'top prizes in a game' || item.name === 'largest equities in a game' ? item.stats.splice(0, 10) : item.stats
-      //   console.log({ statszera })
-      //   return {
-      //     ...item,
-      //     stats: statszera
-      //   }
-      // })
-      // //console.log(top)
-      // setTopTen(top)
-    }
-    if (seasons === 0 && games?.length && gamePlayers?.length && players?.length && stats?.length && gamesPlayed?.length) {
-      const newStats = makeOverallStats(games, gamePlayers, players)
-      const newNewStats = newStats.map((item: Stats, index: number) => {
-        const statszera = index === 0 || index === 1
-        return {
-          ...item,
-          stats: statszera ? item.stats.splice(0, 10) : item.stats
-        }
-      })
+  useEffect(() => {
+    if (games?.length && gamePlayers?.length && players?.length && stats?.length && gamesPlayed?.length) {
+      const filteredGames = seasons
+        ? games.filter((item: Game) => item.date.slice(0, 4) === seasons)
+        : games
+      const newStats = makeOverallStats(filteredGames, gamePlayers, players)
+      const newNewStats = newStats.map((item: Stats) => ({
+        ...item,
+        stats: item.limit ? item.stats.splice(0, item.limit) : item.stats,
+      }))
       setAlternatingStats(newNewStats)
     }
-  }, [seasons]);
+  }, [seasons, games, gamePlayers, players, stats, gamesPlayed]);
 
   // useEffect(() => {
   //   if (alternatingStats?.length) {
@@ -143,123 +154,98 @@ export default function OverallStats() {
           <Spinner size="lg" color="emerald.200" />
         </Center>
       ) : (
-        <>
-          <VStack>
-            <Button
-              flex={0}
-              borderRadius="none"
-              colorScheme="muted"
-              variant={showSummary ? 'outline' : 'solid'}
-              onPress={() => setShowSummary((state) => !state)}>
-              TOGGLE RANKING
-            </Button>
-            {showSummary ?
-              <VStack>
-                <HStack backgroundColor='teal.600' py={2}>
-                  <Text flex={1.5} fontSize='xs' ml={1}>PLAYER</Text>
-                  <Text flex={1} textAlign='right' fontSize='xs'>GP</Text>
-                  <Text flex={1} textAlign='right' fontSize='xs'>R</Text>
-                  <Text flex={1} textAlign='right' fontSize='xs'>Pos</Text>
-                  <Text flex={1} textAlign='right' fontSize='xs'>Rat</Text>
-                  <Text flex={1} textAlign='right' fontSize='xs' mr={1}>Eq</Text>
-                </HStack>
-                {summary?.map((item: any, idx: number) => {
-                  return (
-                    <HStack key={idx} backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'} py={2}>
-                      <Text flex={1.5} fontSize='xs' ml={1}>{abbreviateName(item.name).toUpperCase()}</Text>
-                      <Text flex={1} textAlign='right' fontSize='xs'>{item.games}</Text>
-                      <Text flex={1} textAlign='right' fontSize='xs'>{item.rebuys}</Text>
-                      <Text flex={1} textAlign='right' fontSize='xs'>{item.positive}</Text>
-                      <Text flex={1} textAlign='right' fontSize='xs'>{item.ratio}</Text>
-                      <Text flex={1} textAlign='right' fontSize='xs' mr={1}>{item.equity}</Text>
-                    </HStack>
-                  )
-                })}
-              </VStack>
-              : null}
+        <ScrollView>
+          {RANKING_ENABLED ? (
+            <VStack>
+              <Button
+                flex={0}
+                borderRadius="none"
+                colorScheme="muted"
+                variant={showSummary ? 'outline' : 'solid'}
+                onPress={() => setShowSummary((state) => !state)}>
+                TOGGLE RANKING
+              </Button>
+              {showSummary ?
+                <VStack>
+                  <HStack backgroundColor='teal.600' py={2}>
+                    <Text flex={1.5} fontSize='xs' ml={1}>PLAYER</Text>
+                    <Text flex={1} textAlign='right' fontSize='xs'>GP</Text>
+                    <Text flex={1} textAlign='right' fontSize='xs'>R</Text>
+                    <Text flex={1} textAlign='right' fontSize='xs'>Pos</Text>
+                    <Text flex={1} textAlign='right' fontSize='xs'>Rat</Text>
+                    <Text flex={1} textAlign='right' fontSize='xs' mr={1}>Eq</Text>
+                  </HStack>
+                  {summary?.map((item: any, idx: number) => {
+                    return (
+                      <HStack key={idx} backgroundColor={idx % 2 === 0 ? 'white' : 'teal.50'} py={2}>
+                        <Text flex={1.5} fontSize='xs' ml={1}>{abbreviateName(item.name).toUpperCase()}</Text>
+                        <Text flex={1} textAlign='right' fontSize='xs'>{item.games}</Text>
+                        <Text flex={1} textAlign='right' fontSize='xs'>{item.rebuys}</Text>
+                        <Text flex={1} textAlign='right' fontSize='xs'>{item.positive}</Text>
+                        <Text flex={1} textAlign='right' fontSize='xs'>{item.ratio}</Text>
+                        <Text flex={1} textAlign='right' fontSize='xs' mr={1}>{item.equity}</Text>
+                      </HStack>
+                    )
+                  })}
+                </VStack>
+                : null}
+            </VStack>
+          ) : null}
+          <VStack space={1} px={3} pt={4}>
+            <Text fontSize="10" color="blueGray.400" ml={1}>SEASON</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <HStack space={1}>
+                <Button
+                  minW="24"
+                  px={3}
+                  size="sm"
+                  borderRadius="none"
+                  colorScheme="blueGray"
+                  variant={seasons === null ? 'subtle' : 'solid'}
+                  onPress={() => setSeasons(null)}
+                >
+                  ALL SEASONS
+                </Button>
+                {years.map((year: string) => (
+                  <Button
+                    key={year}
+                    minW="16"
+                    px={3}
+                    size="sm"
+                    borderRadius="none"
+                    colorScheme="blueGray"
+                    variant={seasons === year ? 'subtle' : 'solid'}
+                    onPress={() => setSeasons(year)}
+                  >
+                    {year}
+                  </Button>
+                ))}
+              </HStack>
+            </ScrollView>
+            <Text fontSize="xs" color="blueGray.400" mt={1} ml={1}>
+              {(seasons ?? 'ALL SEASONS').toUpperCase()} · {seasonSummary.games} GAMES · {seasonSummary.players} PLAYERS
+            </Text>
           </VStack>
-          <VStack >
-            <Center>
-              <Button
-                flex={1}
-                borderRadius="none"
-                colorScheme="blueGray"
-                variant={seasons === 0 ? 'subtle' : 'solid'}
-                onPress={() => setSeasons(0)}
-                w="50%"
-              >
-                ALL TIME
-              </Button>
-            </Center>
-            <HStack w="80%" mt={6} mb={2} alignSelf="center">
-              <Button
-                flex={1}
-                borderRadius="none"
-                colorScheme="blueGray"
-                variant={seasons === 1 ? 'subtle' : 'solid'}
-                onPress={() => setSeasons(1)}
-                w="25%"
-              >
-                2023
-              </Button>
-              <Button
-                flex={1}
-                borderRadius="none"
-                colorScheme="blueGray"
-                variant={seasons === 2 ? 'subtle' : 'solid'}
-                onPress={() => setSeasons(2)}
-                w="25"
-              >
-                2024
-              </Button>
-              <Button
-                flex={1}
-                borderRadius="none"
-                colorScheme="blueGray"
-                variant={seasons === 3 ? 'subtle' : 'solid'}
-                onPress={() => setSeasons(3)}
-                w="25%"
-              >
-                2025
-              </Button>
-              <Button
-                flex={1}
-                borderRadius="none"
-                colorScheme="blueGray"
-                variant={seasons === 4 ? 'subtle' : 'solid'}
-                onPress={() => setSeasons(4)}
-                w="25%"
-              >
-                2026
-              </Button>
+          <VStack space={1} px={3} pt={6} pb={2}>
+            <Text fontSize="10" color="blueGray.400" ml={1}>CATEGORY</Text>
+            <HStack space={1}>
+              {STAT_CATEGORIES.map((category) => (
+                <Button
+                  key={category}
+                  flex={1}
+                  size="sm"
+                  borderRadius="none"
+                  colorScheme="blueGray"
+                  variant={activeCategory === category ? 'subtle' : 'solid'}
+                  onPress={() => setActiveCategory(category)}
+                >
+                  {CATEGORY_LABELS[category]}
+                </Button>
+              ))}
             </HStack>
           </VStack>
-          <ScrollView>
-            <HStack w="100%" mt={6} mb={2}>
-              <Button
-                flex={1}
-                borderRadius="none"
-                colorScheme="blueGray"
-                variant={showAllTime ? 'subtle' : 'solid'}
-                onPress={() => setShowAllTime((state) => !state)}
-                w="50%"
-              >
-                ALL TIME
-              </Button>
-              <Button
-                flex={1}
-                borderRadius="none"
-                colorScheme="blueGray"
-                variant={showAllTime ? 'solid' : 'subtle'}
-                onPress={() => setShowAllTime((state) => !state)}
-                w="50%"
-              >
-                PER GAME
-              </Button>
-            </HStack>
-            {alternatingStats.map((item: any, index: number) => {
-              const type = showAllTime ? 'all time' : 'per game';
-              if (item.type === type)
+          {alternatingStats.map((item: any, index: number) => {
+              if (item.category === activeCategory && (!item.currentOnly || isCurrentSeason))
                 return (
                   <Box alignItems="center" key={index}>
                     <Button
@@ -299,8 +285,13 @@ export default function OverallStats() {
                                 GP: {subItem.games}
                               </Text>
                               <Text flex={1} textAlign="right" fontSize="xs">
-                                {subItem.stat.toFixed(2)}
+                                {subItem.stat.toFixed(item.decimals ?? 2)}
                               </Text>
+                              {subItem.secondaryStat !== undefined ? (
+                                <Text flex={1.5} textAlign="right" fontSize="xs" color="coolGray.400">
+                                  {subItem.secondaryStat.toFixed(2)}
+                                </Text>
+                              ) : null}
                             </HStack>
                           );
                         })}
@@ -309,8 +300,7 @@ export default function OverallStats() {
                   </Box>
                 );
             })}
-          </ScrollView>
-        </>
+        </ScrollView>
       )}
     </Box>
   );
