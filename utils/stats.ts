@@ -20,6 +20,31 @@ export const getStats = (games: Game[], gamePlayer: GamePlayer[], players: Playe
   });
 };
 
+// A player is "active" if they've played more than one game all-time and at
+// least one of those games falls in the current calendar year — a fixed,
+// global property of the player, independent of whatever season is being
+// viewed on screen.
+export const getActivePlayerIds = (games: Game[], gamePlayers: GamePlayer[], players: PlayerList[]): Set<number> => {
+  const currentYear = new Date().getFullYear();
+  const yearByGameId = new Map(games.map((game: Game) => [game.id, new Date(game.date).getFullYear()]));
+
+  const gamesPlayed = new Map<number, number>();
+  const playedThisYear = new Set<number>();
+
+  gamePlayers.forEach((gp: GamePlayer) => {
+    const year = yearByGameId.get(gp.game_id);
+    if (year === undefined) return;
+    gamesPlayed.set(gp.person_id, (gamesPlayed.get(gp.person_id) ?? 0) + 1);
+    if (year === currentYear) playedThisYear.add(gp.person_id);
+  });
+
+  return new Set(
+    players
+      .filter((player: PlayerList) => (gamesPlayed.get(player.id) ?? 0) > 1 && playedThisYear.has(player.id))
+      .map((player: PlayerList) => player.id)
+  );
+};
+
 export const ranking = (stats: any[], players: PlayerList[]) => {
   // "investment per game" and "rebuys per game" aren't performance metrics
   // (buying in for more isn't good or bad), so they're excluded from the

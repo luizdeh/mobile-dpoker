@@ -1,9 +1,10 @@
-import React, { useContext, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Box, Button, Center, HStack, Select, Text, VStack } from 'native-base';
 import { ScrollView } from 'react-native';
 import { GamesContext } from '../context/GamesContext';
-import { makePlayerCard, ranking } from '../utils/stats';
+import { getActivePlayerIds, makePlayerCard, ranking } from '../utils/stats';
 import { PlayerList, Stats } from '../lib/types';
+import ActivePlayersToggle from '../components/ActivePlayersToggle';
 
 const formatMoney = (value: number) => value.toFixed(2);
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
@@ -27,15 +28,23 @@ function StatTile({ label, value, color = 'white' }: { label: string; value: str
   );
 }
 
-// One row per streak type (attendance/win/loss), with CURRENT/LONGEST as
-// shared column headers above instead of repeating labels per type — a
-// compact 4-line table instead of 3 separate title+row blocks.
+// STREAKS title shares its row with the CURRENT/LONGEST column headers
+// (same flex widths as StreakRow below) instead of sitting on its own line —
+// a compact 4-line table instead of a title line plus 3 separate rows.
 function StreakTableHeader() {
   return (
-    <HStack justifyContent="space-between" mb={1}>
-      <Text flex={1.2} />
-      <Text flex={1} fontSize="9" color="blueGray.500" textAlign="right">CURRENT</Text>
-      <Text flex={1} fontSize="9" color="blueGray.500" textAlign="right">LONGEST</Text>
+    <HStack
+      justifyContent="space-between"
+      alignItems="center"
+      backgroundColor="blueGray.800"
+      borderRadius="sm"
+      px={2}
+      py={1}
+      mb={2}
+    >
+      <Text flex={1.2} fontSize="xs" lineHeight="16" color="teal.300" bold letterSpacing="lg">STREAKS</Text>
+      <Text flex={1} fontSize="9" lineHeight="16" color="blueGray.400" bold letterSpacing="md" textAlign="right">CURRENT</Text>
+      <Text flex={1} fontSize="9" lineHeight="16" color="blueGray.400" bold letterSpacing="md" textAlign="right">LONGEST</Text>
     </HStack>
   );
 }
@@ -90,10 +99,28 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
 
-  const sortedPlayers = useMemo(
-    () => [...(players ?? [])].sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name)),
-    [players]
+  const [onlyActive, setOnlyActive] = useState(false);
+
+  const activePlayerIds = useMemo(
+    () => getActivePlayerIds(games ?? [], gamePlayers ?? [], players ?? []),
+    [games, gamePlayers, players]
   );
+
+  const eligiblePlayers = useMemo(
+    () => (onlyActive ? (players ?? []).filter((player: PlayerList) => activePlayerIds.has(player.id)) : players ?? []),
+    [players, onlyActive, activePlayerIds]
+  );
+
+  const sortedPlayers = useMemo(
+    () => [...eligiblePlayers].sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name)),
+    [eligiblePlayers]
+  );
+
+  useEffect(() => {
+    if (selectedPlayerId !== null && onlyActive && !activePlayerIds.has(selectedPlayerId)) {
+      setSelectedPlayerId(null);
+    }
+  }, [selectedPlayerId, onlyActive, activePlayerIds]);
 
   const card = useMemo(() => {
     if (!selectedPlayerId || !games?.length || !gamePlayers?.length || !players?.length) return null;
@@ -101,16 +128,16 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
   }, [selectedPlayerId, games, gamePlayers, players]);
 
   const rankedPlayers = useMemo(() => {
-    if (!stats?.length || !players?.length) return [];
-    return ranking(stats, players);
-  }, [stats, players]);
+    if (!stats?.length || !eligiblePlayers.length) return [];
+    return ranking(stats, eligiblePlayers);
+  }, [stats, eligiblePlayers]);
 
   const rankIndex = card ? rankedPlayers.findIndex((item: any) => item.id === card.id) : -1;
 
   const topPerformers = useMemo(() => {
-    if (!players?.length || !gamePlayers?.length || !stats?.length) return null;
+    if (!eligiblePlayers.length || !gamePlayers?.length || !stats?.length) return null;
 
-    const gamesPlayedCounts = players.map((player: PlayerList) => ({
+    const gamesPlayedCounts = eligiblePlayers.map((player: PlayerList) => ({
       name: player.name,
       stat: gamePlayers.filter((gp: any) => gp.person_id === player.id).length,
     }));
@@ -130,7 +157,8 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
     // leaderboards list every individual run, so a player can hold several
     // runs tied at the same length — dedupe down to one line per player.
     const topOf = (categoryName: string): { name: string; stat: number; date?: string }[] => {
-      const list = stats.find((item: Stats) => item.name === categoryName)?.stats ?? [];
+      const fullList = stats.find((item: Stats) => item.name === categoryName)?.stats ?? [];
+      const list = onlyActive ? fullList.filter((row: any) => activePlayerIds.has(row.person_id)) : fullList;
       if (!list.length) return [];
       const topStat = list[0].stat;
       const seen = new Set<number>();
@@ -152,7 +180,7 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
       bestGame: topOf('top profits in a game'),
       worstGame: topOf('top losses in a game'),
     };
-  }, [players, gamePlayers, stats, rankedPlayers]);
+  }, [eligiblePlayers, gamePlayers, stats, rankedPlayers, onlyActive, activePlayerIds]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -161,15 +189,19 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
           <Button variant="ghost" size="sm" colorScheme="teal" onPress={() => setSelectedPlayerId(null)}>
             CLEAR
           </Button>
-        ) : null,
+        ) : (
+          <ActivePlayersToggle value={onlyActive} onChange={setOnlyActive} />
+        ),
     });
-  }, [navigation, selectedPlayerId]);
+  }, [navigation, selectedPlayerId, onlyActive]);
 
   return (
     <Box h="100%" backgroundColor="black" px={4} py={4}>
       <VStack space={1} mb={4}>
         <Text fontSize="10" color="blueGray.400" ml={1}>PLAYER</Text>
         <Select
+          color="white"
+          placeholderTextColor="blueGray.400"
           selectedValue={selectedPlayerId !== null ? String(selectedPlayerId) : ''}
           placeholder="SELECT A PLAYER"
           onValueChange={(value) => setSelectedPlayerId(value ? Number(value) : null)}
@@ -287,7 +319,6 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
           </VStack>
 
           <VStack>
-            <SectionHeader title="STREAKS" />
             <StreakTableHeader />
             <StreakRow
               label="ATTENDANCE"

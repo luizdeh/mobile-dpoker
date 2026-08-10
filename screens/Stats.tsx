@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Text, Center, Box, Spinner, VStack, HStack, Button } from 'native-base';
 import { SafeAreaView, ScrollView, View } from 'react-native';
 import { GamesContext } from '../context/GamesContext';
-import { makeSummary, singlePlayerStats } from '../utils/stats';
+import { getActivePlayerIds, makeSummary, singlePlayerStats } from '../utils/stats';
 import { Game, Stats } from '../lib/types';
 import { makeOverallStats } from '../utils/stats';
+import ActivePlayersToggle from '../components/ActivePlayersToggle';
 
 // Ranking panel is disabled for now (kept for a possible future re-enable).
 const RANKING_ENABLED = false;
@@ -17,7 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   'Per-Game Averages': 'AVERAGES',
 };
 
-export default function OverallStats() {
+export default function OverallStats({ navigation }: { navigation: any }) {
   const { games, players, gamePlayers, stats, gamesPlayed } = useContext(GamesContext);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +29,18 @@ export default function OverallStats() {
   const [topTen, setTopTen] = useState<any[]>([]);
   const [seasons, setSeasons] = useState<string | null>(null);
   const [seasonInitialized, setSeasonInitialized] = useState(false);
+  const [onlyActive, setOnlyActive] = useState(false);
+
+  const activePlayerIds = useMemo(
+    () => getActivePlayerIds(games ?? [], gamePlayers ?? [], players ?? []),
+    [games, gamePlayers, players]
+  );
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <ActivePlayersToggle value={onlyActive} onChange={setOnlyActive} />,
+    });
+  }, [navigation, onlyActive]);
 
   const currentYear = String(new Date().getFullYear());
   const isCurrentSeason = seasons === null || seasons === currentYear;
@@ -93,13 +106,19 @@ export default function OverallStats() {
         ? games.filter((item: Game) => item.date.slice(0, 4) === seasons)
         : games
       const newStats = makeOverallStats(filteredGames, gamePlayers, players)
-      const newNewStats = newStats.map((item: Stats) => ({
+      const activeFiltered = onlyActive
+        ? newStats.map((item: Stats) => ({
+            ...item,
+            stats: item.stats.filter((row: any) => activePlayerIds.has(row.person_id)),
+          }))
+        : newStats;
+      const newNewStats = activeFiltered.map((item: Stats) => ({
         ...item,
         stats: item.limit ? item.stats.splice(0, item.limit) : item.stats,
       }))
       setAlternatingStats(newNewStats)
     }
-  }, [seasons, games, gamePlayers, players, stats, gamesPlayed]);
+  }, [seasons, games, gamePlayers, players, stats, gamesPlayed, onlyActive, activePlayerIds]);
 
   // useEffect(() => {
   //   if (alternatingStats?.length) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   Text,
   VStack,
@@ -9,8 +9,11 @@ import {
   Stack,
   Center,
   View,
+  Pressable,
+  Icon,
   useToast,
 } from "native-base";
+import { AntDesign } from "@expo/vector-icons";
 import { getPlayers } from "../utils/db/fetchPlayers";
 import { createNewGame } from "../utils/db/createNewGame";
 import { addPlayerToGame } from "../utils/db/addPlayerToGame";
@@ -20,13 +23,16 @@ import { ScrollView } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import useGamesContext from "../context/useGamesContext";
 import { getDeviceId } from "../lib/deviceId";
+import { getActivePlayerIds } from "../utils/stats";
+import ActivePlayersToggle from "../components/ActivePlayersToggle";
 
 export default function NewGame() {
 
-  const { players } = useGamesContext()
+  const { players, games, gamePlayers } = useGamesContext()
   const toast = useToast();
 
   const [playerList, setPlayerList] = useState<PlayerList[]>([]);
+  const [onlyActive, setOnlyActive] = useState(true);
   const [gameParams, setGameParams] = useState<GameParams>({
     buy_in_value: 1500,
     re_buy_value: 1500,
@@ -34,9 +40,42 @@ export default function NewGame() {
     status: "LOBBY",
   });
   const [buyInAmount, setBuyInAmount] = useState<number>(15);
+  const [search, setSearch] = useState('');
 
   const navigation =
     useNavigation<NativeStackNavigationProp<GameParamsNavigation>>();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <ActivePlayersToggle value={onlyActive} onChange={setOnlyActive} />,
+    });
+  }, [navigation, onlyActive]);
+
+  const activePlayerIds = useMemo(
+    () => getActivePlayerIds(games ?? [], gamePlayers ?? [], players ?? []),
+    [games, gamePlayers, players]
+  );
+
+  const visiblePlayers = useMemo(
+    () => (onlyActive ? playerList.filter((player: PlayerList) => activePlayerIds.has(player.id)) : playerList),
+    [playerList, onlyActive, activePlayerIds]
+  );
+
+  const searchedPlayers = useMemo(
+    () =>
+      [...visiblePlayers]
+        .filter((player: PlayerList) => player.name.toLowerCase().includes(search.trim().toLowerCase()))
+        .sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name)),
+    [visiblePlayers, search]
+  );
+
+  const selectedPlayers = useMemo(
+    () =>
+      [...playerList]
+        .filter((player: PlayerList) => player.active === true)
+        .sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name)),
+    [playerList]
+  );
 
   useEffect(() => {
     // if (players) setPlayerList(players);
@@ -266,31 +305,72 @@ export default function NewGame() {
             </VStack>
           </VStack>
         </HStack>
-        <ScrollView style={{ width: "100%" }}>
-          <View alignItems="center" w="100%" flexWrap="wrap" flexDirection="row" justifyContent="center">
-            {playerList
-              ? playerList
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((player: PlayerList, idx: number) => {
-                  return (
-                    <Button
-                      onPress={() => {
-                        toggleRegisterPlayer(player.id);
-                      }}
-                      key={player.id}
-                      variant={player.active ? "solid" : "subtle"}
-                      width="40%"
-                      colorScheme="emerald"
-                      m={1}
-                      py={4}
-                    >
-                      <Text fontSize="xs" fontWeight={player.active ? "bold" : "normal"} color={player.active ? "white" : "green.900"}>{player.name.toUpperCase()}</Text>
-                    </Button>
-                  );
-                })
-              : null}
-          </View>
-        </ScrollView>
+        <VStack style={{ width: "100%" }} flex={1} px={2}>
+          <Input
+            value={search}
+            onChangeText={setSearch}
+            placeholder="SEARCH PLAYERS"
+            color="white"
+            placeholderTextColor="blueGray.400"
+            borderColor="blueGray.700"
+            mb={2}
+            InputRightElement={
+              search ? (
+                <Pressable onPress={() => setSearch('')} px={3} py={2}>
+                  <Icon as={AntDesign} name="close" size="xs" color="blueGray.400" />
+                </Pressable>
+              ) : undefined
+            }
+          />
+          {selectedPlayers.length ? (
+            <HStack flexWrap="wrap" mb={2}>
+              {selectedPlayers.map((player: PlayerList) => (
+                <Button
+                  key={player.id}
+                  onPress={() => toggleRegisterPlayer(player.id)}
+                  size="xs"
+                  borderRadius="full"
+                  colorScheme="teal"
+                  variant="solid"
+                  m={0.5}
+                  rightIcon={<Icon as={AntDesign} name="close" size="2xs" />}
+                >
+                  {player.name.toUpperCase()}
+                </Button>
+              ))}
+            </HStack>
+          ) : null}
+          <ScrollView style={{ flex: 1, width: "100%" }}>
+            {searchedPlayers.map((player: PlayerList) => {
+              const isSelected = player.active === true;
+              return (
+                <Pressable key={player.id} onPress={() => toggleRegisterPlayer(player.id)}>
+                  <HStack
+                    justifyContent="space-between"
+                    alignItems="center"
+                    px={3}
+                    py={3}
+                    borderBottomWidth={1}
+                    borderColor="blueGray.800"
+                    backgroundColor={isSelected ? 'blueGray.800' : 'transparent'}
+                  >
+                    <Text color={isSelected ? 'teal.300' : 'white'} bold={isSelected} fontSize="sm">
+                      {player.name.toUpperCase()}
+                    </Text>
+                    {isSelected ? (
+                      <Icon as={AntDesign} name="checkcircle" size="sm" color="teal.300" />
+                    ) : null}
+                  </HStack>
+                </Pressable>
+              );
+            })}
+            {!searchedPlayers.length ? (
+              <Text textAlign="center" fontSize="xs" color="blueGray.400" mt={4}>
+                No players match "{search}".
+              </Text>
+            ) : null}
+          </ScrollView>
+        </VStack>
       </VStack>
       <Box safeArea mt={2}>
         <Button

@@ -1,15 +1,15 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { Text, Center, Box, Spinner, VStack, HStack, Button, Select, IconButton, ScrollView } from 'native-base';
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { Text, Center, Box, Spinner, VStack, HStack, Button, Input, Pressable, Icon, ScrollView } from 'native-base';
 import { AntDesign } from '@expo/vector-icons';
 import { PlayerList } from '../lib/types';
 import { GamesContext } from '../context/GamesContext';
 import { checkedPlayerScores, makeMatchups } from '../utils/matchups';
+import { getActivePlayerIds } from '../utils/stats';
+import ActivePlayersToggle from '../components/ActivePlayersToggle';
 
-const MIN_SLOTS = 2;
-const MAX_EXTRA_SLOTS = 7;
-const MAX_SLOTS = MIN_SLOTS + MAX_EXTRA_SLOTS;
+const MAX_SLOTS = 9;
 
-export default function Matchups() {
+export default function Matchups({ navigation }: { navigation: any }) {
   const { games, players, gamePlayers } = useContext(GamesContext);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +18,42 @@ export default function Matchups() {
 
   const [filteredStats, setFilteredStats] = useState<any[]>([]);
 
-  const [selections, setSelections] = useState<(number | null)[]>(Array(MIN_SLOTS).fill(null));
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  const [search, setSearch] = useState('');
+
+  const [onlyActive, setOnlyActive] = useState(false);
+
+  const activePlayerIds = useMemo(
+    () => getActivePlayerIds(games ?? [], gamePlayers ?? [], players ?? []),
+    [games, gamePlayers, players]
+  );
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <ActivePlayersToggle value={onlyActive} onChange={setOnlyActive} />,
+    });
+  }, [navigation, onlyActive]);
+
+  const sortedPlayers = useMemo(() => {
+    const eligible = onlyActive ? (players ?? []).filter((player: PlayerList) => activePlayerIds.has(player.id)) : players ?? [];
+    return [...eligible].sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name));
+  }, [players, onlyActive, activePlayerIds]);
+
+  useEffect(() => {
+    if (!onlyActive) return;
+    setSelectedIds((prev) => prev.filter((id) => activePlayerIds.has(id)));
+  }, [onlyActive, activePlayerIds]);
+
+  const visiblePlayers = useMemo(
+    () => sortedPlayers.filter((player: PlayerList) => player.name.toLowerCase().includes(search.trim().toLowerCase())),
+    [sortedPlayers, search]
+  );
+
+  const selectedPlayers = useMemo(
+    () => sortedPlayers.filter((player: PlayerList) => selectedIds.includes(player.id)),
+    [sortedPlayers, selectedIds]
+  );
 
   useEffect(() => {
     if (games && gamePlayers && players) {
@@ -34,11 +69,6 @@ export default function Matchups() {
     }
   }, [stats]);
 
-  const selectedIds = useMemo(
-    () => selections.filter((id): id is number => id !== null),
-    [selections]
-  );
-
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
   useEffect(() => {
@@ -48,28 +78,16 @@ export default function Matchups() {
     setFilteredStats(filter);
   }, [selectedIds, stats]);
 
-  const isTakenElsewhere = (playerId: number, slotIndex: number) =>
-    selectedIdSet.has(playerId) && selections[slotIndex] !== playerId;
-
-  const updateSelection = (slotIndex: number, value: string) => {
-    const playerId = value === '' ? null : Number(value);
-    setSelections((prev) => {
-      const next = [...prev];
-      next[slotIndex] = playerId;
-      return next;
+  const togglePlayer = (playerId: number) => {
+    setSelectedIds((prev) => {
+      if (prev.includes(playerId)) return prev.filter((id) => id !== playerId);
+      if (prev.length >= MAX_SLOTS) return prev;
+      return [...prev, playerId];
     });
   };
 
-  const addSlot = () => {
-    setSelections((prev) => (prev.length < MAX_SLOTS ? [...prev, null] : prev));
-  };
-
-  const removeSlot = (slotIndex: number) => {
-    setSelections((prev) => prev.filter((_, idx) => idx !== slotIndex));
-  };
-
   const clearSelections = () => {
-    setSelections((prev) => prev.map(() => null));
+    setSelectedIds([]);
   };
 
   const hasSelections = selectedIds.length > 0;
@@ -80,7 +98,7 @@ export default function Matchups() {
       const [name, ...lastName] = item.name.split(' ').filter(Boolean);
       const myName = lastName.length && item.name.length >= 11 ? `${name} ${lastName[0][0]}.` : `${name} ${lastName}`;
       return (
-        <HStack key={idx} py={1} backgroundColor={idx % 2 === 0 ? 'white' : 'blueGray.100'}>
+        <HStack key={idx} px={2} py={1} backgroundColor={idx % 2 === 0 ? 'white' : 'blueGray.100'}>
           <Text flex={2} fontSize="xs">
             {myName.toUpperCase()}
           </Text>
@@ -99,64 +117,92 @@ export default function Matchups() {
   };
 
   return (
-    <Box h="100%" px="4" py="2" backgroundColor="white">
+    <Box h="100%" px="4" py="2" backgroundColor="black">
       {isLoading ? (
         <Center flex={1}>
           <Spinner size="lg" color="emerald.600" />
         </Center>
       ) : (
-        <ScrollView>
-          <VStack space={2}>
-            {selections.map((selectedId, idx) => (
-              <HStack key={idx} alignItems="center" space={2}>
-                <Select
-                  flex={1}
-                  selectedValue={selectedId !== null ? String(selectedId) : ''}
-                  placeholder={`PLAYER ${idx + 1}`}
-                  accessibilityLabel={`Player ${idx + 1}`}
-                  onValueChange={(value) => updateSelection(idx, value)}
-                >
-                  <Select.Item label="— CLEAR —" value="" />
-                  {[...(players ?? [])]
-                    .sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name))
-                    .map((player: PlayerList) => (
-                    <Select.Item
-                      key={player.id}
-                      label={player.name.toUpperCase()}
-                      value={String(player.id)}
-                      isDisabled={isTakenElsewhere(player.id, idx)}
-                    />
-                  ))}
-                </Select>
-                {idx >= MIN_SLOTS ? (
-                  <IconButton
-                    variant="ghost"
-                    colorScheme="blueGray"
-                    _icon={{ as: AntDesign, name: 'closecircleo', size: 'sm' }}
-                    onPress={() => removeSlot(idx)}
-                  />
-                ) : null}
+        <>
+        <VStack flex={1}>
+          <VStack space={2} pb={2}>
+            <HStack justifyContent="space-between" alignItems="baseline" px={1}>
+              <Text fontSize="10" color="blueGray.400">PLAYERS</Text>
+              <Text fontSize="10" color="blueGray.400">{selectedIds.length} / {MAX_SLOTS} SELECTED</Text>
+            </HStack>
+            <Input
+              value={search}
+              onChangeText={setSearch}
+              placeholder="SEARCH PLAYERS"
+              color="white"
+              placeholderTextColor="blueGray.400"
+              borderColor="blueGray.700"
+              InputRightElement={
+                search ? (
+                  <Pressable onPress={() => setSearch('')} px={3} py={2}>
+                    <Icon as={AntDesign} name="close" size="xs" color="blueGray.400" />
+                  </Pressable>
+                ) : undefined
+              }
+            />
+            {selectedPlayers.length ? (
+              <HStack flexWrap="wrap">
+                {selectedPlayers.map((player: PlayerList) => (
+                  <Button
+                    key={player.id}
+                    onPress={() => togglePlayer(player.id)}
+                    size="xs"
+                    borderRadius="full"
+                    colorScheme="teal"
+                    variant="solid"
+                    m={0.5}
+                    rightIcon={<Icon as={AntDesign} name="close" size="2xs" />}
+                  >
+                    {player.name.toUpperCase()}
+                  </Button>
+                ))}
               </HStack>
-            ))}
+            ) : null}
           </VStack>
-          {selections.length < MAX_SLOTS ? (
-            <Button
-              onPress={addSlot}
-              variant="outline"
-              colorScheme="tertiary"
-              width="100%"
-              mt="4"
-              minHeight="10"
-              borderRadius="none"
-            >
-              + ADD PLAYER
-            </Button>
-          ) : null}
+          <ScrollView flex={1}>
+            {visiblePlayers.map((player: PlayerList) => {
+              const isSelected = selectedIdSet.has(player.id);
+              const isDisabled = !isSelected && selectedIds.length >= MAX_SLOTS;
+              return (
+                <Pressable key={player.id} onPress={() => togglePlayer(player.id)} isDisabled={isDisabled}>
+                  <HStack
+                    justifyContent="space-between"
+                    alignItems="center"
+                    px={3}
+                    py={3}
+                    borderBottomWidth={1}
+                    borderColor="blueGray.800"
+                    backgroundColor={isSelected ? 'blueGray.800' : 'transparent'}
+                    opacity={isDisabled ? 0.4 : 1}
+                  >
+                    <Text color={isSelected ? 'teal.300' : 'white'} bold={isSelected} fontSize="sm">
+                      {player.name.toUpperCase()}
+                    </Text>
+                    {isSelected ? (
+                      <Icon as={AntDesign} name="checkcircle" size="sm" color="teal.300" />
+                    ) : null}
+                  </HStack>
+                </Pressable>
+              );
+            })}
+            {!visiblePlayers.length ? (
+              <Text textAlign="center" fontSize="xs" color="blueGray.400" mt={4}>
+                No players match "{search}".
+              </Text>
+            ) : null}
+          </ScrollView>
+        </VStack>
+        <ScrollView maxH="45%">
           <VStack px={2} mt={4}>
             <HStack justifyItems="center">
-              <Text>Games found: </Text>
-              <Text bold>{filteredStats.length} </Text>
-              <Text>/ {stats.length}</Text>
+              <Text color="blueGray.400">Games found: </Text>
+              <Text color="white" bold>{filteredStats.length} </Text>
+              <Text color="blueGray.400">/ {stats.length}</Text>
             </HStack>
             <Button
               isDisabled={!hasSelections}
@@ -171,17 +217,17 @@ export default function Matchups() {
               CLEAN SEARCH
             </Button>
             {hasSelections ? (
-              <HStack borderBottomColor="black" borderBottomWidth="1" mt="4">
-                <Text flex={2} fontSize="xs" bold>
+              <HStack backgroundColor="blueGray.800" borderRadius="sm" px={2} py={1.5} mt="4">
+                <Text flex={2} fontSize="xs" bold color="teal.300" letterSpacing="lg">
                   PLAYER
                 </Text>
-                <Text flex={1} fontSize="xs" textAlign="center" bold>
+                <Text flex={1} fontSize="xs" textAlign="center" bold color="teal.300" letterSpacing="lg">
                   REBUYS
                 </Text>
-                <Text flex={1} fontSize="xs" textAlign="center" bold>
+                <Text flex={1} fontSize="xs" textAlign="center" bold color="teal.300" letterSpacing="lg">
                   PROFIT
                 </Text>
-                <Text flex={1} fontSize="xs" textAlign="center" bold>
+                <Text flex={1} fontSize="xs" textAlign="center" bold color="teal.300" letterSpacing="lg">
                   EQUITY
                 </Text>
               </HStack>
@@ -189,12 +235,13 @@ export default function Matchups() {
             {filteredStats.length ? (
               renderCheckedPlayerScores()
             ) : (
-              <Text textAlign="center" fontSize="xs" my="1">
+              <Text textAlign="center" fontSize="xs" my="1" color="blueGray.400">
                 No games played between selected players.
               </Text>
             )}
           </VStack>
         </ScrollView>
+        </>
       )}
     </Box>
   );
