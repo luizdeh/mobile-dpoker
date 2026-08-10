@@ -31,6 +31,12 @@ View how players fare against other players (matchups)
 
 ---
 
+##### To-do
+
+- Most common lineups: surface the most frequent 4/5/6/7/8/9-player groupings (which players tend to play together) as a stat, once there's a good place for it in the UI.
+
+---
+
 ##### Contributors
 
 @azedo - also known as my mentor and React Native dev extraordinaire
