@@ -99,7 +99,7 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
 
-  const [onlyActive, setOnlyActive] = useState(false);
+  const [onlyActive, setOnlyActive] = useState(true);
 
   const activePlayerIds = useMemo(
     () => getActivePlayerIds(games ?? [], gamePlayers ?? [], players ?? []),

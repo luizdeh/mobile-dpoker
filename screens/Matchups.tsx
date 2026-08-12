@@ -22,7 +22,7 @@ export default function Matchups({ navigation }: { navigation: any }) {
 
   const [search, setSearch] = useState('');
 
-  const [onlyActive, setOnlyActive] = useState(false);
+  const [onlyActive, setOnlyActive] = useState(true);
 
   const activePlayerIds = useMemo(
     () => getActivePlayerIds(games ?? [], gamePlayers ?? [], players ?? []),

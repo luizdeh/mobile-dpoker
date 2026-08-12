@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { Text, Center, Box, Spinner, VStack, HStack, Button } from 'native-base';
+import { Text, Center, Box, Spinner, VStack, HStack, Button, Select } from 'native-base';
 import { SafeAreaView, ScrollView, View } from 'react-native';
 import { GamesContext } from '../context/GamesContext';
 import { getActivePlayerIds, makeSummary, singlePlayerStats } from '../utils/stats';
@@ -29,7 +29,7 @@ export default function OverallStats({ navigation }: { navigation: any }) {
   const [topTen, setTopTen] = useState<any[]>([]);
   const [seasons, setSeasons] = useState<string | null>(null);
   const [seasonInitialized, setSeasonInitialized] = useState(false);
-  const [onlyActive, setOnlyActive] = useState(false);
+  const [onlyActive, setOnlyActive] = useState(true);
 
   const activePlayerIds = useMemo(
     () => getActivePlayerIds(games ?? [], gamePlayers ?? [], players ?? []),
@@ -212,37 +212,21 @@ export default function OverallStats({ navigation }: { navigation: any }) {
           ) : null}
           <VStack space={1} px={3} pt={4}>
             <Text fontSize="10" color="blueGray.400" ml={1}>SEASON</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <HStack space={1}>
-                <Button
-                  minW="24"
-                  px={3}
-                  size="sm"
-                  borderRadius="none"
-                  colorScheme="blueGray"
-                  variant={seasons === null ? 'subtle' : 'solid'}
-                  onPress={() => setSeasons(null)}
-                >
-                  ALL SEASONS
-                </Button>
-                {years.map((year: string) => (
-                  <Button
-                    key={year}
-                    minW="16"
-                    px={3}
-                    size="sm"
-                    borderRadius="none"
-                    colorScheme="blueGray"
-                    variant={seasons === year ? 'subtle' : 'solid'}
-                    onPress={() => setSeasons(year)}
-                  >
-                    {year}
-                  </Button>
-                ))}
-              </HStack>
-            </ScrollView>
+            <Select
+              color="white"
+              placeholderTextColor="blueGray.400"
+              borderRadius="none"
+              borderColor="blueGray.700"
+              selectedValue={seasons ?? 'ALL'}
+              onValueChange={(value) => setSeasons(value === 'ALL' ? null : value)}
+            >
+              <Select.Item label="ALL SEASONS" value="ALL" />
+              {years.map((year: string) => (
+                <Select.Item key={year} label={year} value={year} />
+              ))}
+            </Select>
             <Text fontSize="xs" color="blueGray.400" mt={1} ml={1}>
-              {(seasons ?? 'ALL SEASONS').toUpperCase()} · {seasonSummary.games} GAMES · {seasonSummary.players} PLAYERS
+              {seasonSummary.games} GAMES · {seasonSummary.players} PLAYERS
             </Text>
           </VStack>
           <VStack space={1} px={3} pt={6} pb={2}>
