@@ -88,11 +88,20 @@ export type Stats = {
 
 export type Role = 'admin' | 'operator' | null;
 
+export interface Profile {
+  id: string;
+  role: 'admin' | 'operator';
+  display_name: string | null;
+  email: string | null;
+  created_at: string;
+}
+
 export type AuthContextType = {
   session: import('@supabase/supabase-js').Session | null;
   role: Role;
   canManage: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  changePassword: (password: string) => Promise<{ error: string | null }>;
   scheduleAutoLogout: () => void;
 };

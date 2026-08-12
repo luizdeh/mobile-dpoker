@@ -11,6 +11,7 @@ export const AuthContext = createContext<AuthContextType>({
   canManage: false,
   signIn: async () => ({ error: 'not ready' }),
   signOut: async () => { },
+  changePassword: async () => ({ error: 'not ready' }),
   scheduleAutoLogout: () => { },
 });
 
@@ -77,12 +78,18 @@ export const AuthContextProvider = ({ children }: any) => {
     await supabase.auth.signOut();
   };
 
+  const changePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error?.message ?? null };
+  };
+
   const value = {
     session,
     role,
     canManage: role === 'admin' || role === 'operator',
     signIn,
     signOut,
+    changePassword,
     scheduleAutoLogout,
   };
 
