@@ -99,40 +99,27 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   </Button>
                 );
               })}
-              {canManage && openGame ? (
-                <Button
-                  variant="solid"
-                  colorScheme="amber"
-                  width="90%"
-                  p="4"
-                  mt={4}
-                  onPress={() => navigation.navigate("OpenGame", { game: openGame })}
-                >
-                  RESUME GAME
-                </Button>
-              ) : null}
-              {canManage ? (
-                <Button
-                  variant="solid"
-                  colorScheme="emerald"
-                  width="90%"
-                  p="4"
-                  mt={4}
-                  onPress={handleCreateGamePress}
-                >
-                  CREATE NEW GAME
-                </Button>
-              ) : null}
               {canManage ? (
                 <Button
                   variant="solid"
                   colorScheme="blueGray"
                   width="90%"
                   p="4"
-                  mt={8}
                   onPress={() => navigation.navigate("Players")}
                 >
                   PLAYERS
+                </Button>
+              ) : null}
+              {canManage ? (
+                <Button
+                  variant="solid"
+                  colorScheme={openGame ? "amber" : "emerald"}
+                  width="90%"
+                  p="4"
+                  mt={4}
+                  onPress={handleCreateGamePress}
+                >
+                  {openGame ? "RESUME GAME" : "CREATE NEW GAME"}
                 </Button>
               ) : null}
             </VStack>
