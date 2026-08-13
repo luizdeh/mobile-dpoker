@@ -10,6 +10,7 @@ export type Player = {
   re_buy_value: number;
   buy_in_value: number;
   final_chips: number;
+  chips_counted?: boolean;
 };
 
 export type PlayerList = {
