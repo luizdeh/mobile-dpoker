@@ -574,14 +574,19 @@ export default function Cash() {
                   <Text color="white" fontSize="sm" flexShrink={1} isTruncated>
                     {(playerNameById.get(item.personId) ?? "").toUpperCase()}
                   </Text>
-                  {item.unpaidRake > 0 ? (
-                    <Text color="orange.400" fontSize="sm" bold>
-                      {formatAmount(item.unpaidRake)}
+                  <HStack space={2} alignItems="center">
+                    {item.unpaidRake > 0 ? (
+                      <>
+                        <Text color="orange.400" fontSize="sm" bold>
+                          {formatAmount(item.unpaidRake)}
+                        </Text>
+                        <Text color="blueGray.600" fontSize="sm">|</Text>
+                      </>
+                    ) : null}
+                    <Text color="teal.300" fontSize="sm" bold>
+                      {formatAmount(item.total)}
                     </Text>
-                  ) : null}
-                  <Text color="teal.300" fontSize="sm" bold>
-                    {formatAmount(item.total)}
-                  </Text>
+                  </HStack>
                 </HStack>
               ))}
               {!playerContributions.length ? (
