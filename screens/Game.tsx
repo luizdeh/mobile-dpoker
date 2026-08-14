@@ -120,6 +120,7 @@ export default function NewGame() {
     const deviceId = await getDeviceId();
     const { game: createdGame, alreadyOpen } = await createNewGame({
       ...gameParams,
+      rake_value: Number.isFinite(gameParams.rake_value) ? gameParams.rake_value : 5,
       locked_by: deviceId,
       locked_at: new Date().toISOString(),
     });
@@ -264,10 +265,11 @@ export default function NewGame() {
                 value={gameParams.rake_value.toString()}
                 keyboardType="number-pad"
                 onChangeText={(val) => {
-                  setGameParams((prev) => {
-                    const obj = { ...prev };
-                    return { ...obj, rake_value: Number(val) };
-                  });
+                  const parsed = Number(val);
+                  setGameParams((prev) => ({
+                    ...prev,
+                    rake_value: Number.isFinite(parsed) ? parsed : prev.rake_value,
+                  }));
                 }}
               />
             </HStack>
