@@ -1,5 +1,6 @@
 import { AlertDialog, Button, Center, Divider, HStack, Text, VStack } from "native-base";
 import React, { useRef } from "react";
+import { formatDateBR } from "../lib/formatDate";
 
 interface Props {
   game: any;
@@ -23,7 +24,7 @@ export default function DeleteGameDialog({ game, players, isOpen, onClose, onCon
             <VStack space={2}>
               <Text>This permanently deletes the game below and all of its player records. This cannot be undone.</Text>
               <Divider my={1} />
-              <Text bold>Game #{game.id} — {game.date.slice(0, 10)}</Text>
+              <Text bold>Game #{game.id} — {formatDateBR(game.date)}</Text>
               <Text fontSize="xs">Buy-in: {game.buy_in_value} | Re-buy: {game.re_buy_value} | Chip value: {game.chip_value}</Text>
               <Text fontSize="xs" bold mt={1}>Players ({players.length}):</Text>
               {players.map((player: any) => (

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Center, VStack, Text, Button, Divider, ScrollView, Spinner } from "native-base";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { GameParamsNavigation } from "../lib/types";
+import { formatDateBR } from "../lib/formatDate";
 import useGamesContext from "../context/useGamesContext";
 import { getGamePlayers } from "../utils/db/getGamePlayers";
 import { deleteGame } from "../utils/db/deleteGame";
@@ -98,7 +99,7 @@ export default function OpenGame() {
               This game was started but never finished.
             </Text>
             <Divider my={2} />
-            <Text color="white" bold>Game #{game.id} — {game.date.slice(0, 10)}</Text>
+            <Text color="white" bold>Game #{game.id} — {formatDateBR(game.date)}</Text>
             <Text color="blueGray.300" fontSize="xs">Status: {game.status}</Text>
             <Text color="blueGray.300" fontSize="xs">
               Buy-in: {game.buy_in_value} | Re-buy: {game.re_buy_value} | Chip value: {game.chip_value}

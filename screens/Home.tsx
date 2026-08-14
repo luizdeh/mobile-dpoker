@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Center, VStack, Button, Box, IconButton } from "native-base";
+import { Center, HStack, VStack, Button, Box, IconButton } from "native-base";
 import { Image } from "react-native";
 import { Video, ResizeMode } from "expo-av";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import useAuthContext from "../context/useAuthContext";
 import { getOpenGames } from "../utils/db/getOpenGames";
@@ -102,17 +102,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               {canManage ? (
                 <Button
                   variant="solid"
-                  colorScheme="blueGray"
-                  width="90%"
-                  p="4"
-                  onPress={() => navigation.navigate("Players")}
-                >
-                  PLAYERS
-                </Button>
-              ) : null}
-              {canManage ? (
-                <Button
-                  variant="solid"
                   colorScheme={openGame ? "amber" : "emerald"}
                   width="90%"
                   p="4"
@@ -125,13 +114,31 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             </VStack>
           </Center>
           <Center pb={6} pt={2}>
-            <IconButton
-              variant="ghost"
-              size="sm"
-              borderRadius="full"
-              icon={<Ionicons name="settings-sharp" size={40} color="#94a3b8" />}
-              onPress={() => navigation.navigate("Profile")}
-            />
+            <HStack space={canManage ? 12 : 16} alignItems="center">
+              <IconButton
+                variant="ghost"
+                size="sm"
+                borderRadius="full"
+                icon={<MaterialIcons name="monetization-on" size={40} color="#94a3b8" />}
+                onPress={() => navigation.navigate("Cash")}
+              />
+              {canManage ? (
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  borderRadius="full"
+                  icon={<Ionicons name="people" size={40} color="#94a3b8" />}
+                  onPress={() => navigation.navigate("Players")}
+                />
+              ) : null}
+              <IconButton
+                variant="ghost"
+                size="sm"
+                borderRadius="full"
+                icon={<Ionicons name="settings-sharp" size={40} color="#94a3b8" />}
+                onPress={() => navigation.navigate("Profile")}
+              />
+            </HStack>
           </Center>
         </Box>
       )}

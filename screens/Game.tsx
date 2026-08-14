@@ -33,11 +33,17 @@ export default function NewGame() {
 
   const [playerList, setPlayerList] = useState<PlayerList[]>([]);
   const [onlyActive, setOnlyActive] = useState(true);
-  const [gameParams, setGameParams] = useState<GameParams>({
-    buy_in_value: 1500,
-    re_buy_value: 1500,
-    chip_value: 0.01,
-    status: "LOBBY",
+  const [gameParams, setGameParams] = useState<GameParams>(() => {
+    const mostRecent = games?.length
+      ? [...games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+      : null;
+    return {
+      buy_in_value: 1500,
+      re_buy_value: 1500,
+      chip_value: 0.01,
+      rake_value: mostRecent?.rake_value ?? 5,
+      status: "LOBBY",
+    };
   });
   const [buyInAmount, setBuyInAmount] = useState<number>(15);
   const [search, setSearch] = useState('');
@@ -240,6 +246,31 @@ export default function NewGame() {
                 onChangeText={(val) => setBuyInAmount(Number(val))}
               />
             </HStack>
+            <HStack flex={1} alignItems="center">
+              <Text color="teal.300" fontSize="10" flex={2} bold>
+                RAKE (R$)
+              </Text>
+              <Input
+                size="xs"
+                p={1}
+                flex={1}
+                textAlign="center"
+                fontWeight="semibold"
+                fontSize="10"
+                variant="filled"
+                color="teal.400"
+                borderColor="blueGray.800"
+                backgroundColor="blueGray.800"
+                value={gameParams.rake_value.toString()}
+                keyboardType="number-pad"
+                onChangeText={(val) => {
+                  setGameParams((prev) => {
+                    const obj = { ...prev };
+                    return { ...obj, rake_value: Number(val) };
+                  });
+                }}
+              />
+            </HStack>
             <Center>
               <Button
                 size="xs"
@@ -252,12 +283,13 @@ export default function NewGame() {
                 _text={{ fontSize: 10 }}
                 isDisabled={enableResetGameParams() ? false : true}
                 onPress={() =>
-                  setGameParams({
+                  setGameParams((prev) => ({
+                    ...prev,
                     buy_in_value: 1500,
                     re_buy_value: 1500,
                     chip_value: 0.01,
                     status: "LOBBY",
-                  })
+                  }))
                 }
                 colorScheme="teal"
               >

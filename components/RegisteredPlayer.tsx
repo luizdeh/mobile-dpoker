@@ -55,50 +55,51 @@ export default function RegisteredPlayer({ player, idx, onDeleted }: RegisteredP
 
   const oddOrEven = (index: number) => index % 2 === 0
 
-  // useEffect(() => {
-  //   if (me.id === 9) {
-  //     console.log(games)
-  //   }
-  // }, [])
-
   return (
     <VStack w="100%">
       <HStack
         alignItems="center"
         justifyContent="space-between"
-        height="12"
-        flex={1}
         w="100%"
-        bgColor={oddOrEven(idx) ? 'tertiary.100' : 'tertiary.50'}
-        borderRadius="lg"
+        backgroundColor={oddOrEven(idx) ? 'blueGray.900' : 'transparent'}
         px={2}
+        py={2}
       >
-        <Box flex={5}>
+        <Box flex={1}>
           <TextInput
-            style={{ borderWidth: 0, padding: 4 }}
+            style={{
+              borderWidth: 0,
+              padding: 4,
+              color: 'white',
+              fontSize: 14,
+              backgroundColor: enableEdit ? '#1e293b' : 'transparent',
+              borderRadius: 4,
+            }}
             value={me.name.toUpperCase()}
             onChange={handleChange}
             editable={enableEdit}
           />
         </Box>
-        <Text flex={1} fontSize="xs">
+        <Text color="blueGray.400" fontSize="xs" mr={2}>
           GP: {player?.games_played}
         </Text>
         {canManage ? (
           <IconButton
-            flex={1}
-            colorScheme="tertiary"
+            size="sm"
+            variant="ghost"
             _icon={
               enableEdit
                 ? {
                   as: MaterialIcons,
                   name: "save",
-                  size: "xl",
+                  size: "md",
+                  color: "teal.400",
                 }
                 : {
                   as: MaterialIcons,
                   name: "edit",
-                  size: "xl",
+                  size: "md",
+                  color: "blueGray.400",
                 }
             }
             onPress={() => (enableEdit ? handleSave() : editName())}
@@ -106,25 +107,27 @@ export default function RegisteredPlayer({ player, idx, onDeleted }: RegisteredP
         ) : null}
         {canManage && enableEdit ? (
           <IconButton
-            flex={1}
-            colorScheme="tertiary"
+            size="sm"
+            variant="ghost"
             _icon={{
               as: MaterialIcons,
               name: "cancel",
-              size: "xl",
+              size: "md",
+              color: "blueGray.400",
             }}
             onPress={handleCancelEdit}
           />
         ) : null}
         {role === "admin" ? (
           <IconButton
-            flex={1}
-            colorScheme="danger"
+            size="sm"
+            variant="ghost"
             isDisabled={!!player.hasGameRecord}
             _icon={{
               as: MaterialIcons,
               name: "delete",
-              size: "xl",
+              size: "md",
+              color: player.hasGameRecord ? "blueGray.700" : "rose.400",
             }}
             onPress={() => setDeleteDialogOpen(true)}
           />

@@ -5,6 +5,7 @@ import { GamesContext } from '../context/GamesContext';
 import { getActivePlayerIds, makePlayerCard, ranking } from '../utils/stats';
 import { PlayerList, Stats } from '../lib/types';
 import ActivePlayersToggle from '../components/ActivePlayersToggle';
+import { formatDateBR } from '../lib/formatDate';
 
 const formatMoney = (value: number) => value.toFixed(2);
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
@@ -259,7 +260,7 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
                 category="BEST GAME"
                 entries={topPerformers.bestGame.map((item) => ({
                   name: item.name,
-                  value: `${formatMoney(item.stat)} (${item.date?.slice(0, 10)})`,
+                  value: `${formatMoney(item.stat)} (${item.date ? formatDateBR(item.date) : ''})`,
                 }))}
                 valueColor="emerald.400"
               />
@@ -267,7 +268,7 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
                 category="WORST GAME"
                 entries={topPerformers.worstGame.map((item) => ({
                   name: item.name,
-                  value: `${formatMoney(item.stat)} (${item.date?.slice(0, 10)})`,
+                  value: `${formatMoney(item.stat)} (${item.date ? formatDateBR(item.date) : ''})`,
                 }))}
                 valueColor="red.400"
               />
@@ -344,12 +345,12 @@ export default function PlayerStatsScreen({ navigation }: { navigation: any }) {
             <HStack flexWrap="wrap" justifyContent="space-between">
               <StatTile
                 label="BEST GAME"
-                value={card.best_game ? `${formatMoney(card.best_game.profit)} (${card.best_game.date.slice(0, 10)})` : 'N/A'}
+                value={card.best_game ? `${formatMoney(card.best_game.profit)} (${formatDateBR(card.best_game.date)})` : 'N/A'}
                 color="emerald.400"
               />
               <StatTile
                 label="WORST GAME"
-                value={card.worst_game ? `${formatMoney(card.worst_game.profit)} (${card.worst_game.date.slice(0, 10)})` : 'N/A'}
+                value={card.worst_game ? `${formatMoney(card.worst_game.profit)} (${formatDateBR(card.worst_game.date)})` : 'N/A'}
                 color="red.400"
               />
             </HStack>

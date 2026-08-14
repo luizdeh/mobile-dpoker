@@ -2,6 +2,7 @@ import { AntDesign, Entypo, FontAwesome, FontAwesome5 } from '@expo/vector-icons
 import { Button, HStack, IconButton, Modal, Text, VStack, useToast } from 'native-base';
 import React, { useEffect, useState } from 'react';
 import { doItAll, paymentsToText, copyPaymentsToClipboard } from '../utils/payments';
+import { formatDateBR } from '../lib/formatDate';
 
 interface Prop {
   game: any;
@@ -38,7 +39,7 @@ function GameScoreboard({ game, num }: Prop) {
           Game #{num}
         </Text>
         <Text flex={1} textAlign="center" fontSize="xs" color="blueGray.200">
-          {game.date.slice(0, 10)}
+          {formatDateBR(game.date)}
         </Text>
         <VStack flex={1}>
           <Text flex={1} textAlign="center" fontSize="xs" color="blueGray.200">

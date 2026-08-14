@@ -28,6 +28,8 @@ export type Game = {
   buy_in_value: number;
   re_buy_value: number;
   chip_value: number;
+  rake_value: number | null;
+  rake_waived: boolean;
   status: string;
   locked_by?: string | null;
   locked_at?: string | null;
@@ -40,6 +42,7 @@ export type GamePlayer = {
   person_id: number;
   quantity_rebuy: number;
   chips: number;
+  rake_paid: boolean;
   name?: string;
 };
 
@@ -58,7 +61,26 @@ export type GameParams = {
   buy_in_value: number;
   re_buy_value: number;
   chip_value: number;
+  rake_value: number;
   status: string;
+};
+
+export type Expense = {
+  id: number;
+  description: string;
+  amount: number;
+  date: string;
+  created_by?: string | null;
+  created_at: string;
+};
+
+export type Donation = {
+  id: number;
+  person_id: number;
+  amount: number;
+  date: string;
+  created_by?: string | null;
+  created_at: string;
 };
 
 export type DataContextType = {
