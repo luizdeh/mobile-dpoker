@@ -380,8 +380,8 @@ export default function Cash() {
               <HStack space={2} mx={3} mt={2}>
                 <Button
                   flex={1}
-                  variant="outline"
-                  colorScheme="blueGray"
+                  variant="solid"
+                  colorScheme="teal"
                   size="sm"
                   onPress={() => setFreePassTarget(game)}
                 >
@@ -390,7 +390,7 @@ export default function Cash() {
                 <Button
                   flex={1}
                   variant="outline"
-                  colorScheme="blueGray"
+                  colorScheme="teal"
                   size="sm"
                   onPress={() => setEditRakeTarget(game)}
                 >
