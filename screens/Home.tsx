@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Center, HStack, VStack, Button, Box, IconButton } from "native-base";
 import { Image } from "react-native";
 import { Video, ResizeMode } from "expo-av";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import useAuthContext from "../context/useAuthContext";
 import { getOpenGames } from "../utils/db/getOpenGames";
@@ -119,7 +119,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 variant="ghost"
                 size="sm"
                 borderRadius="full"
-                icon={<MaterialIcons name="monetization-on" size={40} color="#94a3b8" />}
+                icon={<MaterialCommunityIcons name="sack" size={40} color="#94a3b8" />}
                 onPress={() => navigation.navigate("Cash")}
               />
               {canManage ? (
