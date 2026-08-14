@@ -119,7 +119,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                 variant="ghost"
                 size="sm"
                 borderRadius="full"
-                icon={<MaterialCommunityIcons name="sack" size={40} color="#94a3b8" />}
+                icon={<MaterialCommunityIcons name="piggy-bank-outline" size={40} color="#94a3b8" />}
                 onPress={() => navigation.navigate("Cash")}
               />
               {canManage ? (
