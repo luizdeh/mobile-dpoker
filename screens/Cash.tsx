@@ -24,8 +24,11 @@ import { addDonation } from "../utils/db/addDonation";
 import { deleteDonation } from "../utils/db/deleteDonation";
 import { updateRakePaid } from "../utils/db/updateRakePaid";
 import { setRakeWaived } from "../utils/db/setRakeWaived";
+import { updateGameRakeValue } from "../utils/db/updateGameRakeValue";
 import { Expense, Donation, Game, GamePlayer, PlayerList } from "../lib/types";
 import { formatDateBR, todayBR, parseBRDateToISO } from "../lib/formatDate";
+import FreePassDialog from "../components/FreePassDialog";
+import EditRakeValueDialog from "../components/EditRakeValueDialog";
 
 type Panel = "rake" | "expenses" | "players" | "donations";
 
@@ -41,6 +44,11 @@ export default function Cash() {
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
   const [showClosedRakeGames, setShowClosedRakeGames] = useState(false);
   const scrollViewRef = useRef<any>(null);
+
+  const [freePassTarget, setFreePassTarget] = useState<Game | null>(null);
+  const [isSavingFreePass, setIsSavingFreePass] = useState(false);
+  const [editRakeTarget, setEditRakeTarget] = useState<Game | null>(null);
+  const [isSavingRakeValue, setIsSavingRakeValue] = useState(false);
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoadingExpenses, setIsLoadingExpenses] = useState(true);
@@ -237,13 +245,27 @@ export default function Cash() {
     }
   };
 
-  const handleToggleRakeWaived = async (game: Game) => {
+  const handleConfirmFreePass = async () => {
+    if (!freePassTarget) return;
+    const game = freePassTarget;
     const nextWaived = !game.rake_waived;
-    setGames?.((games ?? []).map((item) => (item.id === game.id ? { ...item, rake_waived: nextWaived } : item)));
+    setIsSavingFreePass(true);
     const result: any = await setRakeWaived(game.id, nextWaived);
-    if (result?.error) {
-      setGames?.((games ?? []).map((item) => (item.id === game.id ? { ...item, rake_waived: game.rake_waived } : item)));
-    }
+    setIsSavingFreePass(false);
+    if (result?.error) return;
+    setGames?.((games ?? []).map((item) => (item.id === game.id ? { ...item, rake_waived: nextWaived } : item)));
+    setFreePassTarget(null);
+  };
+
+  const handleConfirmRakeValue = async (value: number) => {
+    if (!editRakeTarget) return;
+    const game = editRakeTarget;
+    setIsSavingRakeValue(true);
+    const result: any = await updateGameRakeValue(game.id, value);
+    setIsSavingRakeValue(false);
+    if (result?.error) return;
+    setGames?.((games ?? []).map((item) => (item.id === game.id ? { ...item, rake_value: value } : item)));
+    setEditRakeTarget(null);
   };
 
   const handleAddExpense = async () => {
@@ -355,16 +377,26 @@ export default function Cash() {
               ))
             )}
             {isAdmin ? (
-              <Button
-                variant="outline"
-                colorScheme="blueGray"
-                size="sm"
-                mx={3}
-                mt={2}
-                onPress={() => handleToggleRakeWaived(game)}
-              >
-                {game.rake_waived ? "UNDO FREE PASS" : "MARK AS FREE PASS"}
-              </Button>
+              <HStack space={2} mx={3} mt={2}>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  colorScheme="blueGray"
+                  size="sm"
+                  onPress={() => setFreePassTarget(game)}
+                >
+                  {game.rake_waived ? "UNDO FREE PASS" : "FREE PASS"}
+                </Button>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  colorScheme="blueGray"
+                  size="sm"
+                  onPress={() => setEditRakeTarget(game)}
+                >
+                  EDIT VALUE
+                </Button>
+              </HStack>
             ) : null}
           </VStack>
         ) : null}
@@ -742,6 +774,26 @@ export default function Cash() {
           ) : null}
         </ScrollView>
       </Box>
+      {freePassTarget ? (
+        <FreePassDialog
+          gameDate={formatDateBR(freePassTarget.date)}
+          willWaive={!freePassTarget.rake_waived}
+          isOpen={!!freePassTarget}
+          onClose={() => setFreePassTarget(null)}
+          onConfirm={handleConfirmFreePass}
+          isSaving={isSavingFreePass}
+        />
+      ) : null}
+      {editRakeTarget ? (
+        <EditRakeValueDialog
+          gameDate={formatDateBR(editRakeTarget.date)}
+          currentValue={editRakeTarget.rake_value ?? 5}
+          isOpen={!!editRakeTarget}
+          onClose={() => setEditRakeTarget(null)}
+          onConfirm={handleConfirmRakeValue}
+          isSaving={isSavingRakeValue}
+        />
+      ) : null}
     </Box>
   );
 }
