@@ -40,7 +40,7 @@ export default function Cash() {
   const { canManage, role } = useAuthContext();
   const isAdmin = role === "admin";
 
-  const [panel, setPanel] = useState<Panel>(canManage ? "rake" : "expenses");
+  const [panel, setPanel] = useState<Panel>("rake");
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
   const [showClosedRakeGames, setShowClosedRakeGames] = useState(false);
   const scrollViewRef = useRef<any>(null);
@@ -64,10 +64,6 @@ export default function Cash() {
   const [donationAmounts, setDonationAmounts] = useState<Record<number, string>>({});
   const [isSavingDonations, setIsSavingDonations] = useState(false);
   const [expandedDonationPlayerId, setExpandedDonationPlayerId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!canManage && (panel === "rake" || panel === "players")) setPanel("expenses");
-  }, [canManage, panel]);
 
   const scrollToTop = () => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -355,7 +351,7 @@ export default function Cash() {
               </Text>
             ) : (
               rows.map((gp: GamePlayer, index: number) => (
-                <Pressable key={gp.id} onPress={() => handleToggleRakePaid(gp)}>
+                <Pressable key={gp.id} onPress={() => handleToggleRakePaid(gp)} isDisabled={!canManage}>
                   <HStack
                     justifyContent="space-between"
                     alignItems="center"
@@ -404,17 +400,12 @@ export default function Cash() {
     );
   };
 
-  const visiblePanels: { key: Panel; label: string }[] = canManage
-    ? [
-        { key: "rake", label: "RAKE" },
-        { key: "expenses", label: "EXPENSES" },
-        { key: "players", label: "PLAYERS" },
-        { key: "donations", label: "DONATIONS" },
-      ]
-    : [
-        { key: "expenses", label: "EXPENSES" },
-        { key: "donations", label: "DONATIONS" },
-      ];
+  const visiblePanels: { key: Panel; label: string }[] = [
+    { key: "rake", label: "RAKE" },
+    { key: "expenses", label: "EXPENSES" },
+    { key: "players", label: "PLAYERS" },
+    { key: "donations", label: "DONATIONS" },
+  ];
 
   return (
     <Box backgroundColor="black" h="100%" w="100%">
@@ -457,7 +448,7 @@ export default function Cash() {
           ))}
         </HStack>
         <ScrollView ref={scrollViewRef} flex={1} showsVerticalScrollIndicator={false}>
-          {panel === "rake" && canManage ? (
+          {panel === "rake" ? (
             <VStack space={2}>
               {openRakeGames.map((item) => renderRakeGameCard(item))}
               {!openRakeGames.length && !closedRakeGames.length ? (
@@ -592,7 +583,7 @@ export default function Cash() {
             </VStack>
           ) : null}
 
-          {panel === "players" && canManage ? (
+          {panel === "players" ? (
             <VStack space={0}>
               {playerContributions.map((item, index) => (
                 <HStack
