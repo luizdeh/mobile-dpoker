@@ -140,7 +140,7 @@ export default function NewTournament() {
           maxWidth="420px"
           alignSelf="center"
         >
-          <Text color="blueGray.500" fontSize="10" bold>
+          <Text color="blueGray.500" fontSize="xs" bold>
             DATE
           </Text>
           <Divider flex={1} mx={2} backgroundColor="blueGray.800" />
@@ -155,22 +155,22 @@ export default function NewTournament() {
                 color: "#2dd4bf",
                 border: "none",
                 borderRadius: 4,
-                padding: 4,
-                fontSize: 10,
+                padding: 6,
+                fontSize: 14,
                 fontWeight: 600,
-                width: 110,
+                width: 130,
                 textAlign: "center",
                 colorScheme: "dark",
               },
             })
           ) : (
             <Input
-              size="xs"
+              size="sm"
               p={1}
-              width="90px"
+              width="110px"
               textAlign="center"
               fontWeight="semibold"
-              fontSize="10"
+              fontSize="sm"
               variant="filled"
               color="teal.400"
               borderColor="blueGray.800"
