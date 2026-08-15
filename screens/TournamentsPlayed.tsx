@@ -49,32 +49,34 @@ export default function TournamentsPlayed() {
                     flex={1}
                     onPress={() => setExpandedId((prev) => (prev === tournament.id ? null : tournament.id))}
                   >
-                    <HStack justifyContent="space-between" alignItems="center">
-                      <VStack>
-                        <Text color="white" fontSize="sm" bold>
-                          {date}
-                        </Text>
-                        <Text color="blueGray.400" fontSize="10">
-                          {tournament.entrant_count} ENTRANTS
-                        </Text>
-                      </VStack>
-                      <VStack alignItems="flex-end">
-                        <Text color="teal.300" fontSize="sm" bold isTruncated maxWidth="150">
-                          {(tournament.champion?.name ?? "—").toUpperCase()}
-                        </Text>
-                        <Text color="blueGray.500" fontSize="10">
-                          CHAMPION
-                        </Text>
-                      </VStack>
-                    </HStack>
+                    <VStack>
+                      <Text color="white" fontSize="sm" bold>
+                        {date}
+                      </Text>
+                      <Text color="blueGray.400" fontSize="10">
+                        {tournament.entrant_count} ENTRANTS
+                      </Text>
+                    </VStack>
                   </Pressable>
                   <IconButton
                     size="sm"
                     variant="ghost"
-                    ml={2}
-                    _icon={{ as: FontAwesome, name: "dollar", size: "sm", color: "amber.400" }}
+                    _icon={{ as: FontAwesome, name: "dollar", size: "sm", color: "teal.400" }}
                     onPress={() => handleShowPayments(tournament)}
                   />
+                  <Pressable
+                    flex={1}
+                    onPress={() => setExpandedId((prev) => (prev === tournament.id ? null : tournament.id))}
+                  >
+                    <VStack alignItems="flex-end">
+                      <Text color="teal.300" fontSize="sm" bold isTruncated maxWidth="150">
+                        {(tournament.champion?.name ?? "—").toUpperCase()}
+                      </Text>
+                      <Text color="blueGray.500" fontSize="10">
+                        CHAMPION
+                      </Text>
+                    </VStack>
+                  </Pressable>
                 </HStack>
                 {isExpanded ? (
                   <VStack pb={3} pt={1} borderTopWidth={1} borderColor="blueGray.700">
@@ -170,10 +172,10 @@ export default function TournamentsPlayed() {
                     space={2}
                     backgroundColor={idx % 2 === 0 ? "blueGray.900" : "transparent"}
                   >
-                    <Text flex={1} fontSize="xs" color="white" isTruncated>
+                    <Text flex={1} fontSize="10" color="white" isTruncated>
                       {payment.from}
                     </Text>
-                    <Text flex={1} fontSize="xs" color="white" isTruncated>
+                    <Text flex={1} fontSize="10" color="white" isTruncated>
                       {payment.to}
                     </Text>
                     <Text flex={1} fontSize="xs" color="teal.300" bold textAlign="right">
