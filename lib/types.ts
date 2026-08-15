@@ -106,6 +106,7 @@ export type Tournament = {
   locked_by?: string | null;
   locked_at?: string | null;
   created_by?: string | null;
+  entries_locked?: boolean;
 };
 
 export type TournamentPlayer = {

@@ -23,17 +23,14 @@ import { addTournamentRebuy } from "../utils/db/addTournamentRebuy";
 import { eliminatePlayer } from "../utils/db/eliminatePlayer";
 import { undoEliminatePlayer } from "../utils/db/undoEliminatePlayer";
 import { removePlayerFromTournament } from "../utils/db/removePlayerFromTournament";
+import { lockTournamentEntries } from "../utils/db/lockTournamentEntries";
 import { TournamentPlayer, PlayerList, TournamentParamsNavigation } from "../lib/types";
 import { ordinal } from "../lib/ordinal";
 import useAuthContext from "../context/useAuthContext";
 import TournamentRebuyDialog from "../components/TournamentRebuyDialog";
 import RemoveTournamentEntryDialog from "../components/RemoveTournamentEntryDialog";
 import EliminatePlayerDialog from "../components/EliminatePlayerDialog";
-
-// Placeholder cutoff until live blind-level tracking exists: once 6th place
-// has been decided (5 players left), it's too late for a new entrant to
-// realistically catch up, so late entries are cut off here.
-const LATE_ENTRY_CUTOFF_POSITION = 6;
+import DisableEntriesDialog from "../components/DisableEntriesDialog";
 
 export default function ActiveTournament() {
   const { canManage } = useAuthContext();
@@ -51,6 +48,9 @@ export default function ActiveTournament() {
   const [removeTarget, setRemoveTarget] = useState<TournamentPlayer | null>(null);
   const [eliminateTarget, setEliminateTarget] = useState<TournamentPlayer | null>(null);
   const [expandedEntryId, setExpandedEntryId] = useState<number | null>(null);
+  const [entriesLocked, setEntriesLocked] = useState<boolean>(!!tournament.entries_locked);
+  const [showDisableEntriesConfirm, setShowDisableEntriesConfirm] = useState(false);
+  const [isLockingEntries, setIsLockingEntries] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<TournamentParamsNavigation>>();
 
@@ -86,9 +86,13 @@ export default function ActiveTournament() {
     .filter((entry) => entry.finish_position != null)
     .sort((a, b) => (a.finish_position as number) - (b.finish_position as number));
 
-  const lateEntryCutoffReached = entries.some(
-    (entry) => entry.finish_position != null && entry.finish_position <= LATE_ENTRY_CUTOFF_POSITION
-  );
+  const handleConfirmDisableEntries = async () => {
+    setIsLockingEntries(true);
+    await lockTournamentEntries(tournament.id);
+    setEntriesLocked(true);
+    setIsLockingEntries(false);
+    setShowDisableEntriesConfirm(false);
+  };
 
   const handleConfirmRebuy = async () => {
     if (!rebuyTarget) return;
@@ -232,18 +236,34 @@ export default function ActiveTournament() {
                   bg="blueGray.900"
                   _pressed={{ bg: "blueGray.800" }}
                   _text={{ fontSize: 10, color: "emerald.400" }}
-                  isDisabled={lateEntryCutoffReached || allEliminated}
+                  isDisabled={entriesLocked || allEliminated}
                 >
                   ADD PLAYER
                 </Button>
               ) : (
                 <Box />
               )}
-              <Text fontSize="2xl" bold>
-                <Text color="emerald.400">{activeEntries.length}</Text>
-                <Text color="white"> / </Text>
-                <Text color="teal.400">{entries.length}</Text>
-              </Text>
+              <HStack alignItems="center" space={3}>
+                {canManage ? (
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    isDisabled={entriesLocked}
+                    onPress={() => setShowDisableEntriesConfirm(true)}
+                    _icon={{
+                      as: MaterialIcons,
+                      name: entriesLocked ? "lock" : "schedule",
+                      size: "sm",
+                      color: entriesLocked ? "blueGray.700" : "blueGray.400",
+                    }}
+                  />
+                ) : null}
+                <Text fontSize="2xl" bold>
+                  <Text color="emerald.400">{activeEntries.length}</Text>
+                  <Text color="white"> / </Text>
+                  <Text color="teal.400">{entries.length}</Text>
+                </Text>
+              </HStack>
             </HStack>
             <Divider mb="2" backgroundColor="blueGray.800" />
             <VStack w="100%" space={2}>
@@ -252,7 +272,7 @@ export default function ActiveTournament() {
                 const isChampion = entry.finish_position === 1;
                 const isMostRecentEliminated = isEliminated && eliminatedEntries[0]?.id === entry.id;
                 const isExpanded = expandedEntryId === entry.id;
-                const canRebuy = entry.quantity_rebuy === 0 && !lateEntryCutoffReached;
+                const canRebuy = entry.quantity_rebuy === 0 && !entriesLocked;
                 const canExpand = canManage && (!isEliminated || isMostRecentEliminated);
                 return (
                   <VStack
@@ -400,6 +420,11 @@ export default function ActiveTournament() {
         isOpen={!!eliminateTarget}
         onClose={() => setEliminateTarget(null)}
         onConfirm={handleConfirmEliminate}
+      />
+      <DisableEntriesDialog
+        isOpen={showDisableEntriesConfirm}
+        onClose={() => !isLockingEntries && setShowDisableEntriesConfirm(false)}
+        onConfirm={handleConfirmDisableEntries}
       />
     </Box>
   );
