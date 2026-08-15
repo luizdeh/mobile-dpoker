@@ -10,8 +10,9 @@ import {
   Center,
   Modal,
   ScrollView,
+  Pressable,
 } from "native-base";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, AntDesign } from "@expo/vector-icons";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { getTournamentPlayers } from "../utils/db/getTournamentPlayers";
@@ -46,6 +47,7 @@ export default function ActiveTournament() {
   const [showInactivesModal, setShowInactivesModal] = useState(false);
   const [rebuyTarget, setRebuyTarget] = useState<TournamentPlayer | null>(null);
   const [removeTarget, setRemoveTarget] = useState<TournamentPlayer | null>(null);
+  const [expandedEntryId, setExpandedEntryId] = useState<number | null>(null);
 
   const navigation = useNavigation<NativeStackNavigationProp<TournamentParamsNavigation>>();
 
@@ -212,46 +214,74 @@ export default function ActiveTournament() {
               STILL PLAYING ({activeEntries.length})
             </Text>
             <Divider mb="2" backgroundColor="blueGray.800" />
-            <VStack w="100%" space={0}>
-              {activeEntries.map((entry: TournamentPlayer, index: number) => (
-                <HStack
-                  key={entry.id}
-                  justifyContent="space-between"
-                  alignItems="center"
-                  px={2}
-                  py={2}
-                  backgroundColor={index % 2 === 0 ? "blueGray.900" : "transparent"}
-                >
-                  <VStack flex={1}>
-                    <Text color="white" fontSize="sm" isTruncated>
-                      {(entry.name ?? "").toUpperCase()}
-                    </Text>
-                    {entry.quantity_rebuy > 0 ? (
-                      <Text color="blueGray.400" fontSize="10">
-                        1 REBUY
-                      </Text>
+            <VStack w="100%" space={2}>
+              {activeEntries.map((entry: TournamentPlayer) => {
+                const isExpanded = expandedEntryId === entry.id;
+                const canRebuy = entry.quantity_rebuy === 0 && !lateEntryCutoffReached;
+                return (
+                  <VStack key={entry.id} backgroundColor="blueGray.800" borderRadius="sm" overflow="hidden">
+                    <Pressable
+                      onPress={() =>
+                        canManage && setExpandedEntryId((prev) => (prev === entry.id ? null : entry.id))
+                      }
+                    >
+                      <HStack justifyContent="space-between" alignItems="center" px={3} py={3}>
+                        <Text color="white" fontSize="sm" isTruncated flex={1}>
+                          {(entry.name ?? "").toUpperCase()}
+                        </Text>
+                        <Box
+                          borderWidth={1.5}
+                          borderColor="teal.400"
+                          borderRadius="full"
+                          w={3}
+                          h={3}
+                          backgroundColor={entry.quantity_rebuy > 0 ? "teal.400" : "transparent"}
+                        />
+                      </HStack>
+                    </Pressable>
+                    {isExpanded && canManage ? (
+                      <HStack
+                        justifyContent="space-evenly"
+                        alignItems="center"
+                        px={3}
+                        pb={2}
+                        pt={2}
+                        borderTopWidth={1}
+                        borderColor="blueGray.700"
+                      >
+                        <IconButton
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="blueGray"
+                          _icon={{ as: AntDesign, name: "delete", size: "sm", color: "blueGray.500" }}
+                          onPress={() => setRemoveTarget(entry)}
+                        />
+                        <Button
+                          size="sm"
+                          variant="subtle"
+                          colorScheme="rose"
+                          py={1}
+                          width="100px"
+                          onPress={() => handleEliminate(entry)}
+                        >
+                          ELIMINATE
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="solid"
+                          colorScheme="teal"
+                          py={1}
+                          width="100px"
+                          isDisabled={!canRebuy}
+                          onPress={() => setRebuyTarget(entry)}
+                        >
+                          RE-BUY
+                        </Button>
+                      </HStack>
                     ) : null}
                   </VStack>
-                  {canManage ? (
-                    <HStack alignItems="center" space={2}>
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        _icon={{ as: MaterialIcons, name: "close", size: "sm", color: "blueGray.600" }}
-                        onPress={() => setRemoveTarget(entry)}
-                      />
-                      {entry.quantity_rebuy === 0 ? (
-                        <Button size="sm" variant="outline" colorScheme="teal" onPress={() => setRebuyTarget(entry)}>
-                          REBUY
-                        </Button>
-                      ) : null}
-                      <Button size="sm" variant="solid" colorScheme="rose" onPress={() => handleEliminate(entry)}>
-                        OUT
-                      </Button>
-                    </HStack>
-                  ) : null}
-                </HStack>
-              ))}
+                );
+              })}
               {!activeEntries.length && !eliminatedEntries.length ? (
                 <Text color="blueGray.400" fontSize="xs" textAlign="center" mt={2}>
                   No players registered yet.
