@@ -17,6 +17,7 @@ import Cash from './screens/Cash';
 import Tournament from './screens/Tournament';
 import ActiveTournament from './screens/ActiveTournament';
 import TournamentPayouts from './screens/TournamentPayouts';
+import TournamentsPlayed from './screens/TournamentsPlayed';
 import { GamesContextProvider } from './context/GamesContext';
 import { TournamentsContextProvider } from './context/TournamentsContext';
 import { AuthContextProvider } from './context/AuthContext';
@@ -72,6 +73,7 @@ export default function App() {
                 <Stack.Screen name="Tournament" component={Tournament} options={{ title: 'CREATE A TOURNAMENT' }} />
                 <Stack.Screen name="ActiveTournament" component={ActiveTournament} options={{ title: 'ACTIVE TOURNAMENT' }} />
                 <Stack.Screen name="TournamentPayouts" component={TournamentPayouts} options={{ title: 'PRIZES' }} />
+                <Stack.Screen name="TournamentsPlayed" component={TournamentsPlayed} options={{ title: 'TOURNAMENTS PLAYED' }} />
               </Stack.Navigator>
             </NavigationContainer>
           </TournamentsContextProvider>
