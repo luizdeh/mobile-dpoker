@@ -9,7 +9,6 @@ import {
   Center,
   Pressable,
   Icon,
-  IconButton,
   Divider,
   useToast,
 } from "native-base";
@@ -118,86 +117,87 @@ export default function NewTournament() {
     <Box backgroundColor="black" flex={1}>
       <VStack space={1} alignItems="center" flex={1} mt={4}>
         <VStack px={2} mb={4} width="100%" maxWidth="420px" alignSelf="center">
-          <VStack borderRadius="lg" backgroundColor="blueGray.600" py={2} px={3} space={2}>
-            <Text textAlign="center" color="blueGray.300" fontSize="xs" bold>
-              TOURNAMENT PARAMETERS
-            </Text>
-            <HStack alignItems="center" justifyContent="space-between">
-              <Text color="teal.300" fontSize="10" bold>
-                BUY-IN
+          <HStack borderRadius="lg" backgroundColor="blueGray.600" py={2} px={3}>
+            <VStack flex={2} space={2} pr={2}>
+              <Text textAlign="center" color="blueGray.300" fontSize="xs" bold>
+                TOURNAMENT PARAMETERS
               </Text>
-              <Input
-                size="xs"
-                p={1}
-                width="80px"
-                textAlign="center"
-                fontWeight="semibold"
-                fontSize="10"
-                variant="filled"
-                color="teal.400"
-                borderColor="blueGray.800"
-                backgroundColor="blueGray.800"
-                value={buyInValue}
-                keyboardType="number-pad"
-                onChangeText={(val) => {
-                  const parsed = Number(val);
-                  setTournamentParams((prev) => ({
-                    ...prev,
-                    buy_in_value: Number.isFinite(parsed) ? parsed : prev.buy_in_value,
-                  }));
-                }}
-              />
-            </HStack>
-            <HStack alignItems="center" justifyContent="space-between">
-              <Text color="teal.300" fontSize="10" bold>
-                RE-BUY
-              </Text>
-              <Input
-                size="xs"
-                p={1}
-                width="80px"
-                textAlign="center"
-                fontWeight="semibold"
-                fontSize="10"
-                variant="filled"
-                color="teal.400"
-                borderColor="blueGray.800"
-                backgroundColor="blueGray.800"
-                value={rebuyValue}
-                keyboardType="number-pad"
-                onChangeText={(val) => {
-                  const parsed = Number(val);
-                  setTournamentParams((prev) => ({
-                    ...prev,
-                    re_buy_value: Number.isFinite(parsed) ? parsed : prev.re_buy_value,
-                  }));
-                }}
-              />
-            </HStack>
-            <Divider backgroundColor="blueGray.700" />
-            <HStack alignItems="center" justifyContent="space-between">
-              <Text color="teal.300" fontSize="10" bold>
-                PLAYERS
-              </Text>
-              <HStack alignItems="center" space={1}>
-                <Text color="teal.400" fontSize="sm" bold>
-                  {selectedPlayers.length}
+              <HStack alignItems="center" justifyContent="space-between">
+                <Text color="teal.300" fontSize="10" bold>
+                  BUY-IN
                 </Text>
-                <IconButton
+                <Input
                   size="xs"
-                  variant="ghost"
-                  isDisabled={!selectedPlayers.length}
-                  onPress={clearPlayers}
-                  _icon={{
-                    as: AntDesign,
-                    name: "closecircleo",
-                    size: "xs",
-                    color: selectedPlayers.length ? "rose.300" : "blueGray.700",
+                  p={1}
+                  width="80px"
+                  textAlign="center"
+                  fontWeight="semibold"
+                  fontSize="10"
+                  variant="filled"
+                  color="teal.400"
+                  borderColor="blueGray.800"
+                  backgroundColor="blueGray.800"
+                  value={buyInValue}
+                  keyboardType="number-pad"
+                  onChangeText={(val) => {
+                    const parsed = Number(val);
+                    setTournamentParams((prev) => ({
+                      ...prev,
+                      buy_in_value: Number.isFinite(parsed) ? parsed : prev.buy_in_value,
+                    }));
                   }}
                 />
               </HStack>
-            </HStack>
-          </VStack>
+              <HStack alignItems="center" justifyContent="space-between">
+                <Text color="teal.300" fontSize="10" bold>
+                  RE-BUY
+                </Text>
+                <Input
+                  size="xs"
+                  p={1}
+                  width="80px"
+                  textAlign="center"
+                  fontWeight="semibold"
+                  fontSize="10"
+                  variant="filled"
+                  color="teal.400"
+                  borderColor="blueGray.800"
+                  backgroundColor="blueGray.800"
+                  value={rebuyValue}
+                  keyboardType="number-pad"
+                  onChangeText={(val) => {
+                    const parsed = Number(val);
+                    setTournamentParams((prev) => ({
+                      ...prev,
+                      re_buy_value: Number.isFinite(parsed) ? parsed : prev.re_buy_value,
+                    }));
+                  }}
+                />
+              </HStack>
+            </VStack>
+            <Divider orientation="vertical" backgroundColor="blueGray.700" mx={2} />
+            <VStack flex={1} alignItems="center" justifyContent="center" space={2}>
+              <Text fontSize="xs" color="blueGray.300" bold>
+                PLAYERS
+              </Text>
+              <Text fontSize="3xl" color="teal.400" bold>
+                {selectedPlayers.length}
+              </Text>
+              <Button
+                size="xs"
+                variant="outline"
+                colorScheme="teal"
+                borderRadius="md"
+                px={4}
+                py={1}
+                _text={{ fontSize: 10 }}
+                isDisabled={!selectedPlayers.length}
+                onPress={clearPlayers}
+              >
+                CLEAR
+              </Button>
+            </VStack>
+          </HStack>
         </VStack>
         <VStack style={{ width: "100%" }} flex={1} px={2}>
           <Input
