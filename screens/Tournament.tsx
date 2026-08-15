@@ -133,7 +133,6 @@ export default function NewTournament() {
       <VStack space={1} alignItems="center" flex={1} mt={4}>
         <HStack
           alignItems="center"
-          justifyContent="space-between"
           px={2}
           mt={1}
           mb={3}
@@ -141,16 +140,17 @@ export default function NewTournament() {
           maxWidth="420px"
           alignSelf="center"
         >
-          <Text color="teal.300" fontSize="sm" bold>
+          <Text color="blueGray.500" fontSize="10" bold>
             DATE
           </Text>
+          <Divider flex={1} mx={2} backgroundColor="blueGray.800" />
           <Input
             size="xs"
             p={1}
-            width="110px"
+            width="90px"
             textAlign="center"
             fontWeight="semibold"
-            fontSize="sm"
+            fontSize="10"
             variant="filled"
             color="teal.400"
             borderColor="blueGray.800"
