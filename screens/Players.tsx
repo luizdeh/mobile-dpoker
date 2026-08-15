@@ -1,6 +1,6 @@
 import { Entypo, MaterialIcons } from '@expo/vector-icons';
 import { Box, Button, HStack, IconButton, Input, Text, VStack } from 'native-base';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import RegisteredPlayer from '../components/RegisteredPlayer';
 import useGamesContext from '../context/useGamesContext';
@@ -25,10 +25,13 @@ export default function PlayersList() {
   })
     .sort((a, b) => a.name.localeCompare(b.name)))
 
-  const handlePlayerDeleted = (id: number) => {
-    setGotPlayers((prev) => prev?.filter((item: any) => item.id !== id));
-    setPlayers?.((players ?? []).filter((item: any) => item.id !== id));
-  };
+  const handlePlayerDeleted = useCallback(
+    (id: number) => {
+      setGotPlayers((prev) => prev?.filter((item: any) => item.id !== id));
+      setPlayers?.((players ?? []).filter((item: any) => item.id !== id));
+    },
+    [players, setPlayers]
+  );
 
   const ref = useRef<HTMLInputElement | null>(null);
 

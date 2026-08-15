@@ -15,7 +15,7 @@ type RegisteredPlayerProps = {
   onDeleted: (id: number) => void;
 }
 
-export default function RegisteredPlayer({ player, idx, onDeleted }: RegisteredPlayerProps) {
+function RegisteredPlayer({ player, idx, onDeleted }: RegisteredPlayerProps) {
 
   const { canManage, role } = useAuthContext();
   const [me, setMe] = useState(player);
@@ -146,3 +146,5 @@ export default function RegisteredPlayer({ player, idx, onDeleted }: RegisteredP
     </VStack>
   );
 }
+
+export default React.memo(RegisteredPlayer);
