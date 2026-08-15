@@ -10,37 +10,30 @@ import {
   Center,
   Modal,
   ScrollView,
-  Icon,
-  useToast,
 } from "native-base";
-import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { getTournamentPlayers } from "../utils/db/getTournamentPlayers";
 import { tournamentStatus } from "../utils/db/tournamentStatus";
 import { addPlayerToTournament } from "../utils/db/addPlayerToTournament";
 import { addTournamentRebuy } from "../utils/db/addTournamentRebuy";
-import { removeTournamentRebuy } from "../utils/db/removeTournamentRebuy";
 import { eliminatePlayer } from "../utils/db/eliminatePlayer";
 import { undoEliminatePlayer } from "../utils/db/undoEliminatePlayer";
 import { removePlayerFromTournament } from "../utils/db/removePlayerFromTournament";
 import { TournamentPlayer, PlayerList, TournamentParamsNavigation } from "../lib/types";
+import { ordinal } from "../lib/ordinal";
 import useAuthContext from "../context/useAuthContext";
+import TournamentRebuyDialog from "../components/TournamentRebuyDialog";
+import RemoveTournamentEntryDialog from "../components/RemoveTournamentEntryDialog";
 
-const ordinal = (n: number) => {
-  const rem100 = n % 100;
-  if (rem100 >= 11 && rem100 <= 13) return `${n}TH`;
-  switch (n % 10) {
-    case 1: return `${n}ST`;
-    case 2: return `${n}ND`;
-    case 3: return `${n}RD`;
-    default: return `${n}TH`;
-  }
-};
+// Placeholder cutoff until live blind-level tracking exists: once 6th place
+// has been decided (5 players left), it's too late for a new entrant to
+// realistically catch up, so late entries are cut off here.
+const LATE_ENTRY_CUTOFF_POSITION = 6;
 
 export default function ActiveTournament() {
   const { canManage } = useAuthContext();
-  const toast = useToast();
 
   const route = useRoute<RouteProp<TournamentParamsNavigation, "ActiveTournament">>();
   const tournament = route.params.tournament;
@@ -51,7 +44,8 @@ export default function ActiveTournament() {
   const [inactivePlayers, setInactivePlayers] = useState<{ id: number; name: string }[]>(inactive);
   const [addNewPlayers, setAddNewPlayers] = useState<[] | number[]>([]);
   const [showInactivesModal, setShowInactivesModal] = useState(false);
-  const [lastAction, setLastAction] = useState<{ eliminatedId: number; championId: number | null } | null>(null);
+  const [rebuyTarget, setRebuyTarget] = useState<TournamentPlayer | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<TournamentPlayer | null>(null);
 
   const navigation = useNavigation<NativeStackNavigationProp<TournamentParamsNavigation>>();
 
@@ -78,24 +72,25 @@ export default function ActiveTournament() {
   }, [tournament, players]);
 
   const activeEntries = entries.filter((entry) => entry.finish_position == null);
+  // Ascending by finish_position (champion first) — since eliminations
+  // assign positions in decreasing order over time, the smallest
+  // finish_position among the eliminated is always the most recent one, so
+  // eliminatedEntries[0] is always "undo-able" back to the very first
+  // elimination, one step at a time.
   const eliminatedEntries = [...entries]
     .filter((entry) => entry.finish_position != null)
     .sort((a, b) => (a.finish_position as number) - (b.finish_position as number));
 
-  const handleRebuy = async (entry: TournamentPlayer) => {
-    setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: item.quantity_rebuy + 1 } : item)));
-    const result: any = await addTournamentRebuy(entry.id);
-    if (!result || result.error) {
-      setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: entry.quantity_rebuy } : item)));
-    }
-  };
+  const lateEntryCutoffReached = entries.some(
+    (entry) => entry.finish_position != null && entry.finish_position <= LATE_ENTRY_CUTOFF_POSITION
+  );
 
-  const handleRemoveRebuy = async (entry: TournamentPlayer) => {
-    if (entry.quantity_rebuy <= 0) return;
-    setEntries((prev) =>
-      prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: item.quantity_rebuy - 1 } : item))
-    );
-    const result: any = await removeTournamentRebuy(entry.id);
+  const handleConfirmRebuy = async () => {
+    if (!rebuyTarget) return;
+    const entry = rebuyTarget;
+    setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: 1 } : item)));
+    setRebuyTarget(null);
+    const result: any = await addTournamentRebuy(entry.id);
     if (!result || result.error) {
       setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: entry.quantity_rebuy } : item)));
     }
@@ -113,25 +108,16 @@ export default function ActiveTournament() {
         return item;
       })
     );
-    setLastAction({ eliminatedId: entry.id, championId: champion?.id ?? null });
 
     await eliminatePlayer(entry.id, position);
     if (champion) await eliminatePlayer(champion.id, 1);
   };
 
-  const handleUndo = async () => {
-    if (!lastAction) return;
-    const { eliminatedId, championId } = lastAction;
-    setEntries((prev) =>
-      prev.map((item) => {
-        if (item.id === eliminatedId) return { ...item, finish_position: null };
-        if (championId && item.id === championId) return { ...item, finish_position: null };
-        return item;
-      })
-    );
-    await undoEliminatePlayer(eliminatedId);
-    if (championId) await undoEliminatePlayer(championId);
-    setLastAction(null);
+  const handleUndoLast = async () => {
+    if (!eliminatedEntries.length) return;
+    const target = eliminatedEntries[0];
+    setEntries((prev) => prev.map((item) => (item.id === target.id ? { ...item, finish_position: null } : item)));
+    await undoEliminatePlayer(target.id);
   };
 
   const toggleAddPlayers = (id: number) => {
@@ -153,8 +139,11 @@ export default function ActiveTournament() {
     await buildEntries();
   };
 
-  const handleRemoveEntry = async (entry: TournamentPlayer) => {
+  const handleConfirmRemoveEntry = async () => {
+    if (!removeTarget) return;
+    const entry = removeTarget;
     const success = await removePlayerFromTournament(entry.id);
+    setRemoveTarget(null);
     if (!success) return;
     setEntries((prev) => prev.filter((item) => item.id !== entry.id));
     setInactivePlayers((prev) => [...prev, { id: entry.person_id, name: entry.name ?? "" }]);
@@ -216,42 +205,47 @@ export default function ActiveTournament() {
   return (
     <Box backgroundColor="black" h="100%" w="100%">
       {renderInactivesModal()}
-      <Box flex={1} p={8} pb={3}>
+      <Box flex={1} p={6} pb={3}>
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           <VStack flex={1}>
             <Text fontSize="10" color="blueGray.400" bold mb={1}>
               STILL PLAYING ({activeEntries.length})
             </Text>
             <Divider mb="2" backgroundColor="blueGray.800" />
-            <VStack w="100%" space={2}>
-              {activeEntries.map((entry: TournamentPlayer) => (
-                <HStack key={entry.id} justifyContent="space-between" alignItems="center">
+            <VStack w="100%" space={0}>
+              {activeEntries.map((entry: TournamentPlayer, index: number) => (
+                <HStack
+                  key={entry.id}
+                  justifyContent="space-between"
+                  alignItems="center"
+                  px={2}
+                  py={2}
+                  backgroundColor={index % 2 === 0 ? "blueGray.900" : "transparent"}
+                >
                   <VStack flex={1}>
                     <Text color="white" fontSize="sm" isTruncated>
                       {(entry.name ?? "").toUpperCase()}
                     </Text>
                     {entry.quantity_rebuy > 0 ? (
                       <Text color="blueGray.400" fontSize="10">
-                        {entry.quantity_rebuy} REBUY{entry.quantity_rebuy > 1 ? "S" : ""}
+                        1 REBUY
                       </Text>
                     ) : null}
                   </VStack>
                   {canManage ? (
-                    <HStack alignItems="center" space={1}>
+                    <HStack alignItems="center" space={2}>
                       <IconButton
                         size="sm"
                         variant="ghost"
-                        _icon={{ as: AntDesign, name: "minuscircleo", size: "sm", color: "blueGray.600" }}
-                        isDisabled={entry.quantity_rebuy <= 0}
-                        onPress={() => handleRemoveRebuy(entry)}
+                        _icon={{ as: MaterialIcons, name: "close", size: "sm", color: "blueGray.600" }}
+                        onPress={() => setRemoveTarget(entry)}
                       />
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        _icon={{ as: MaterialIcons, name: "add-circle-outline", size: "sm", color: "teal.400" }}
-                        onPress={() => handleRebuy(entry)}
-                      />
-                      <Button size="sm" variant="outline" colorScheme="rose" onPress={() => handleEliminate(entry)}>
+                      {entry.quantity_rebuy === 0 ? (
+                        <Button size="sm" variant="outline" colorScheme="teal" onPress={() => setRebuyTarget(entry)}>
+                          REBUY
+                        </Button>
+                      ) : null}
+                      <Button size="sm" variant="solid" colorScheme="rose" onPress={() => handleEliminate(entry)}>
                         OUT
                       </Button>
                     </HStack>
@@ -267,7 +261,14 @@ export default function ActiveTournament() {
 
             {canManage ? (
               <Center>
-                <Button onPress={() => setShowInactivesModal(true)} variant="solid" width="80%" colorScheme="blueGray" mt={4}>
+                <Button
+                  onPress={() => setShowInactivesModal(true)}
+                  variant="solid"
+                  width="80%"
+                  colorScheme="blueGray"
+                  mt={4}
+                  isDisabled={lateEntryCutoffReached || allEliminated}
+                >
                   ADD PLAYER
                 </Button>
               </Center>
@@ -294,12 +295,12 @@ export default function ActiveTournament() {
                       <Text fontSize="xs" color={entry.finish_position === 1 ? "teal.300" : "blueGray.300"} bold>
                         {ordinal(entry.finish_position as number)}
                       </Text>
-                      {canManage && lastAction?.eliminatedId === entry.id ? (
+                      {canManage && index === 0 ? (
                         <IconButton
                           size="xs"
                           variant="ghost"
                           _icon={{ as: MaterialIcons, name: "undo", size: "xs", color: "blueGray.500" }}
-                          onPress={handleUndo}
+                          onPress={handleUndoLast}
                         />
                       ) : null}
                     </HStack>
@@ -326,6 +327,18 @@ export default function ActiveTournament() {
           </Button>
         </Box>
       ) : null}
+      <TournamentRebuyDialog
+        player={(rebuyTarget?.name ?? "").toUpperCase()}
+        isOpen={!!rebuyTarget}
+        onClose={() => setRebuyTarget(null)}
+        onConfirm={handleConfirmRebuy}
+      />
+      <RemoveTournamentEntryDialog
+        player={(removeTarget?.name ?? "").toUpperCase()}
+        isOpen={!!removeTarget}
+        onClose={() => setRemoveTarget(null)}
+        onConfirm={handleConfirmRemoveEntry}
+      />
     </Box>
   );
 }

@@ -9,19 +9,9 @@ import { setTournamentPrize } from "../utils/db/setTournamentPrize";
 import { endTournament } from "../utils/db/endTournament";
 import { releaseTournamentLock } from "../utils/db/releaseTournamentLock";
 import { TournamentPlayer, TournamentParamsNavigation } from "../lib/types";
+import { ordinal } from "../lib/ordinal";
 import useGamesContext from "../context/useGamesContext";
 import useTournamentsContext from "../context/useTournamentsContext";
-
-const ordinal = (n: number) => {
-  const rem100 = n % 100;
-  if (rem100 >= 11 && rem100 <= 13) return `${n}TH`;
-  switch (n % 10) {
-    case 1: return `${n}ST`;
-    case 2: return `${n}ND`;
-    case 3: return `${n}RD`;
-    default: return `${n}TH`;
-  }
-};
 
 export default function TournamentPayouts() {
   const { players } = useGamesContext();

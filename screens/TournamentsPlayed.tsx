@@ -2,17 +2,7 @@ import React, { useState } from "react";
 import { Box, VStack, HStack, Text, Pressable, Icon, ScrollView, Center } from "native-base";
 import { AntDesign } from "@expo/vector-icons";
 import useTournamentsContext from "../context/useTournamentsContext";
-
-const ordinal = (n: number) => {
-  const rem100 = n % 100;
-  if (rem100 >= 11 && rem100 <= 13) return `${n}TH`;
-  switch (n % 10) {
-    case 1: return `${n}ST`;
-    case 2: return `${n}ND`;
-    case 3: return `${n}RD`;
-    default: return `${n}TH`;
-  }
-};
+import { ordinal } from "../lib/ordinal";
 
 const formatMoney = (value: number) => (Math.round((value + Number.EPSILON) * 100) / 100).toString();
 

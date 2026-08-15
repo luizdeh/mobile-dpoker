@@ -21,6 +21,9 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import useGamesContext from "../context/useGamesContext";
 import useTournamentsContext from "../context/useTournamentsContext";
 import { getDeviceId } from "../lib/deviceId";
+import StartTournamentDialog from "../components/StartTournamentDialog";
+
+const MIN_PLAYERS = 5;
 
 export default function NewTournament() {
   const { players } = useGamesContext();
@@ -38,12 +41,14 @@ export default function NewTournament() {
       ? [...tournaments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
       : null;
     return {
-      buy_in_value: mostRecent?.buy_in_value ?? 100,
-      re_buy_value: mostRecent?.re_buy_value ?? 100,
+      buy_in_value: mostRecent?.buy_in_value ?? 25,
+      re_buy_value: mostRecent?.re_buy_value ?? 25,
       status: "LOBBY",
     };
   });
   const [search, setSearch] = useState("");
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<TournamentParamsNavigation>>();
 
@@ -77,6 +82,7 @@ export default function NewTournament() {
   };
 
   const startTournament = async () => {
+    setIsStarting(true);
     const deviceId = await getDeviceId();
     const { tournament: createdTournament, alreadyOpen } = await createNewTournament({
       ...tournamentParams,
@@ -84,6 +90,8 @@ export default function NewTournament() {
       locked_at: new Date().toISOString(),
     });
     if (alreadyOpen) {
+      setIsStarting(false);
+      setShowStartConfirm(false);
       toast.show({ description: "Another tournament was just opened. Redirecting you to it." });
       navigation.navigate("Home");
       return;
@@ -92,6 +100,8 @@ export default function NewTournament() {
       for (const player of playerList) {
         if (player.active === true) await addPlayerToTournament(createdTournament.id, player.id);
       }
+      setIsStarting(false);
+      setShowStartConfirm(false);
       navigation.navigate("ActiveTournament", {
         tournament: createdTournament,
         players: playerList,
@@ -112,7 +122,7 @@ export default function NewTournament() {
             </Text>
             <HStack flex={1} alignItems="center">
               <Text color="teal.300" fontSize="10" flex={2} bold>
-                BUY-IN (R$)
+                BUY-IN
               </Text>
               <Input
                 size="xs"
@@ -138,7 +148,7 @@ export default function NewTournament() {
             </HStack>
             <HStack flex={1} alignItems="center">
               <Text color="teal.300" fontSize="10" flex={2} bold>
-                RE-BUY (R$)
+                RE-BUY
               </Text>
               <Input
                 size="xs"
@@ -163,7 +173,7 @@ export default function NewTournament() {
               />
             </HStack>
           </VStack>
-          <VStack minW="30%" flex={1} borderRadius="lg" backgroundColor="blueGray.600" px={1} pt={1} pb={0} space={2}>
+          <VStack minW="30%" flex={1} borderRadius="lg" backgroundColor="blueGray.600" px={1} pt={1} pb={3} space={2}>
             <VStack flex={1} alignItems="center" justifyContent="space-evenly">
               <Text fontSize="xs" color="blueGray.300" bold>
                 PLAYERS
@@ -174,10 +184,11 @@ export default function NewTournament() {
               <Button
                 size="xs"
                 variant="solid"
-                width="80%"
+                width="70%"
                 borderRadius="md"
                 px={4}
                 py={1}
+                mb={1}
                 _text={{ fontSize: 10 }}
                 isDisabled={!selectedPlayers.length}
                 onPress={clearPlayers}
@@ -255,19 +266,26 @@ export default function NewTournament() {
       </VStack>
       <Box safeArea mt={2}>
         <Button
-          isDisabled={selectedPlayers.length < 2}
+          isDisabled={selectedPlayers.length < MIN_PLAYERS}
           variant="solid"
           colorScheme="blueGray"
           width="100%"
           mb="0"
-          minHeight="16"
+          minHeight="12"
           borderRadius="none"
-          onPress={startTournament}
-          _text={{ fontSize: "lg" }}
+          onPress={() => setShowStartConfirm(true)}
+          _text={{ fontSize: "md" }}
         >
           START TOURNAMENT
         </Button>
       </Box>
+      <StartTournamentDialog
+        players={selectedPlayers.map((player) => player.name.toUpperCase())}
+        isOpen={showStartConfirm}
+        onClose={() => setShowStartConfirm(false)}
+        onConfirm={startTournament}
+        isStarting={isStarting}
+      />
     </Box>
   );
 }
