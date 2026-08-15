@@ -9,6 +9,8 @@ import {
   Center,
   Pressable,
   Icon,
+  IconButton,
+  Divider,
   useToast,
 } from "native-base";
 import { AntDesign } from "@expo/vector-icons";
@@ -115,19 +117,19 @@ export default function NewTournament() {
   return (
     <Box backgroundColor="black" flex={1}>
       <VStack space={1} alignItems="center" flex={1} mt={4}>
-        <HStack px={2} mb={4} space={1}>
-          <VStack minW="70%" flex={1} borderRadius="lg" backgroundColor="blueGray.600" py={1} px={2} space={2}>
-            <Text textAlign="center" color="blueGray.300" fontSize="xs" bold flex={1}>
+        <VStack px={2} mb={4} width="100%" maxWidth="420px" alignSelf="center">
+          <VStack borderRadius="lg" backgroundColor="blueGray.600" py={2} px={3} space={2}>
+            <Text textAlign="center" color="blueGray.300" fontSize="xs" bold>
               TOURNAMENT PARAMETERS
             </Text>
-            <HStack flex={1} alignItems="center">
-              <Text color="teal.300" fontSize="10" flex={2} bold>
+            <HStack alignItems="center" justifyContent="space-between">
+              <Text color="teal.300" fontSize="10" bold>
                 BUY-IN
               </Text>
               <Input
                 size="xs"
                 p={1}
-                flex={1}
+                width="80px"
                 textAlign="center"
                 fontWeight="semibold"
                 fontSize="10"
@@ -146,14 +148,14 @@ export default function NewTournament() {
                 }}
               />
             </HStack>
-            <HStack flex={1} alignItems="center">
-              <Text color="teal.300" fontSize="10" flex={2} bold>
+            <HStack alignItems="center" justifyContent="space-between">
+              <Text color="teal.300" fontSize="10" bold>
                 RE-BUY
               </Text>
               <Input
                 size="xs"
                 p={1}
-                flex={1}
+                width="80px"
                 textAlign="center"
                 fontWeight="semibold"
                 fontSize="10"
@@ -172,33 +174,31 @@ export default function NewTournament() {
                 }}
               />
             </HStack>
-          </VStack>
-          <VStack minW="30%" flex={1} borderRadius="lg" backgroundColor="blueGray.600" px={1} pt={1} pb={3} space={2}>
-            <VStack flex={1} alignItems="center" justifyContent="space-evenly">
-              <Text fontSize="xs" color="blueGray.300" bold>
+            <Divider backgroundColor="blueGray.700" />
+            <HStack alignItems="center" justifyContent="space-between">
+              <Text color="teal.300" fontSize="10" bold>
                 PLAYERS
               </Text>
-              <Text fontSize="4xl" color="teal.400">
-                {selectedPlayers.length}
-              </Text>
-              <Button
-                size="xs"
-                variant="solid"
-                width="70%"
-                borderRadius="md"
-                px={4}
-                py={1}
-                mb={1}
-                _text={{ fontSize: 10 }}
-                isDisabled={!selectedPlayers.length}
-                onPress={clearPlayers}
-                colorScheme="teal"
-              >
-                CLEAR
-              </Button>
-            </VStack>
+              <HStack alignItems="center" space={1}>
+                <Text color="teal.400" fontSize="sm" bold>
+                  {selectedPlayers.length}
+                </Text>
+                <IconButton
+                  size="xs"
+                  variant="ghost"
+                  isDisabled={!selectedPlayers.length}
+                  onPress={clearPlayers}
+                  _icon={{
+                    as: AntDesign,
+                    name: "closecircleo",
+                    size: "xs",
+                    color: selectedPlayers.length ? "rose.300" : "blueGray.700",
+                  }}
+                />
+              </HStack>
+            </HStack>
           </VStack>
-        </HStack>
+        </VStack>
         <VStack style={{ width: "100%" }} flex={1} px={2}>
           <Input
             value={search}
