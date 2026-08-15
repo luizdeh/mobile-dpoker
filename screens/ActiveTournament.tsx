@@ -224,22 +224,26 @@ export default function ActiveTournament() {
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           <VStack flex={1}>
             <HStack justifyContent="space-between" alignItems="center" mb={2}>
-              <Text fontSize="2xl" color="white" bold>
-                {activeEntries.length} / {entries.length}
-              </Text>
               {canManage ? (
                 <Button
                   onPress={() => setShowInactivesModal(true)}
                   variant="solid"
                   size="sm"
-                  bg="blueGray.800"
-                  _pressed={{ bg: "blueGray.700" }}
-                  _text={{ fontSize: 10, color: "blueGray.300" }}
+                  bg="blueGray.900"
+                  _pressed={{ bg: "blueGray.800" }}
+                  _text={{ fontSize: 10, color: "emerald.400" }}
                   isDisabled={lateEntryCutoffReached || allEliminated}
                 >
                   ADD PLAYER
                 </Button>
-              ) : null}
+              ) : (
+                <Box />
+              )}
+              <Text fontSize="2xl" bold>
+                <Text color="emerald.400">{activeEntries.length}</Text>
+                <Text color="white"> / </Text>
+                <Text color="teal.400">{entries.length}</Text>
+              </Text>
             </HStack>
             <Divider mb="2" backgroundColor="blueGray.800" />
             <VStack w="100%" space={2}>
