@@ -11,6 +11,7 @@ import {
   Modal,
   ScrollView,
   Pressable,
+  Icon,
 } from "native-base";
 import { MaterialIcons, AntDesign } from "@expo/vector-icons";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
@@ -214,42 +215,75 @@ export default function ActiveTournament() {
     </Center>
   );
 
+  const displayEntries = [...activeEntries, ...eliminatedEntries];
+
   return (
     <Box backgroundColor="black" h="100%" w="100%">
       {renderInactivesModal()}
       <Box flex={1} p={6} pb={3}>
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           <VStack flex={1}>
-            <Text fontSize="10" color="blueGray.400" bold mb={1}>
-              STILL PLAYING ({activeEntries.length})
-            </Text>
+            <HStack justifyContent="space-between" alignItems="center" mb={2}>
+              <Text fontSize="2xl" color="white" bold>
+                {activeEntries.length} / {entries.length}
+              </Text>
+              {canManage ? (
+                <Button
+                  onPress={() => setShowInactivesModal(true)}
+                  variant="solid"
+                  size="sm"
+                  bg="blueGray.800"
+                  _pressed={{ bg: "blueGray.700" }}
+                  _text={{ fontSize: 10, color: "blueGray.300" }}
+                  isDisabled={lateEntryCutoffReached || allEliminated}
+                >
+                  ADD PLAYER
+                </Button>
+              ) : null}
+            </HStack>
             <Divider mb="2" backgroundColor="blueGray.800" />
             <VStack w="100%" space={2}>
-              {activeEntries.map((entry: TournamentPlayer) => {
+              {displayEntries.map((entry: TournamentPlayer) => {
+                const isEliminated = entry.finish_position != null;
+                const isMostRecentEliminated = isEliminated && eliminatedEntries[0]?.id === entry.id;
                 const isExpanded = expandedEntryId === entry.id;
                 const canRebuy = entry.quantity_rebuy === 0 && !lateEntryCutoffReached;
+                const canExpand = canManage && (!isEliminated || isMostRecentEliminated);
                 return (
-                  <VStack key={entry.id} backgroundColor="blueGray.800" borderRadius="sm" overflow="hidden">
+                  <VStack
+                    key={entry.id}
+                    backgroundColor="blueGray.800"
+                    borderRadius="sm"
+                    overflow="hidden"
+                    opacity={isEliminated ? 0.55 : 1}
+                  >
                     <Pressable
                       onPress={() =>
-                        canManage && setExpandedEntryId((prev) => (prev === entry.id ? null : entry.id))
+                        canExpand && setExpandedEntryId((prev) => (prev === entry.id ? null : entry.id))
                       }
                     >
                       <HStack justifyContent="space-between" alignItems="center" px={3} py={3}>
                         <Text color="white" fontSize="sm" isTruncated flex={1}>
                           {(entry.name ?? "").toUpperCase()}
                         </Text>
-                        <Box
-                          borderWidth={1.5}
-                          borderColor="teal.400"
-                          borderRadius="full"
-                          w={3}
-                          h={3}
-                          backgroundColor={entry.quantity_rebuy > 0 ? "teal.400" : "transparent"}
-                        />
+                        <HStack alignItems="center" space={2}>
+                          {isEliminated ? (
+                            <Text color="blueGray.300" fontSize="xs" bold>
+                              {ordinal(entry.finish_position as number)}
+                            </Text>
+                          ) : null}
+                          <Box
+                            borderWidth={1.5}
+                            borderColor="teal.400"
+                            borderRadius="full"
+                            w={3}
+                            h={3}
+                            backgroundColor={entry.quantity_rebuy > 0 ? "teal.400" : "transparent"}
+                          />
+                        </HStack>
                       </HStack>
                     </Pressable>
-                    {isExpanded && canManage ? (
+                    {isExpanded && canManage && !isEliminated ? (
                       <HStack
                         justifyContent="space-evenly"
                         alignItems="center"
@@ -289,65 +323,37 @@ export default function ActiveTournament() {
                         </Button>
                       </HStack>
                     ) : null}
+                    {isExpanded && canManage && isMostRecentEliminated ? (
+                      <HStack
+                        justifyContent="center"
+                        alignItems="center"
+                        px={3}
+                        pb={2}
+                        pt={2}
+                        borderTopWidth={1}
+                        borderColor="blueGray.700"
+                      >
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="blueGray"
+                          leftIcon={<Icon as={MaterialIcons} name="undo" size="xs" color="blueGray.400" />}
+                          _text={{ color: "blueGray.400" }}
+                          onPress={handleUndoLast}
+                        >
+                          UNDO
+                        </Button>
+                      </HStack>
+                    ) : null}
                   </VStack>
                 );
               })}
-              {!activeEntries.length && !eliminatedEntries.length ? (
+              {!displayEntries.length ? (
                 <Text color="blueGray.400" fontSize="xs" textAlign="center" mt={2}>
                   No players registered yet.
                 </Text>
               ) : null}
             </VStack>
-
-            {canManage ? (
-              <Center>
-                <Button
-                  onPress={() => setShowInactivesModal(true)}
-                  variant="solid"
-                  width="80%"
-                  colorScheme="blueGray"
-                  mt={4}
-                  isDisabled={lateEntryCutoffReached || allEliminated}
-                >
-                  ADD PLAYER
-                </Button>
-              </Center>
-            ) : null}
-
-            {eliminatedEntries.length ? (
-              <VStack mt={6} space={0}>
-                <Text fontSize="10" color="blueGray.500" bold mb={1}>
-                  ELIMINATED
-                </Text>
-                {eliminatedEntries.map((entry, index) => (
-                  <HStack
-                    key={entry.id}
-                    justifyContent="space-between"
-                    alignItems="center"
-                    px={2}
-                    py={1}
-                    backgroundColor={index % 2 === 0 ? "blueGray.900" : "transparent"}
-                  >
-                    <Text fontSize="xs" color="blueGray.300" flexShrink={1} isTruncated>
-                      {(entry.name ?? "").toUpperCase()}
-                    </Text>
-                    <HStack alignItems="center" space={2}>
-                      <Text fontSize="xs" color={entry.finish_position === 1 ? "teal.300" : "blueGray.300"} bold>
-                        {ordinal(entry.finish_position as number)}
-                      </Text>
-                      {canManage && index === 0 ? (
-                        <IconButton
-                          size="xs"
-                          variant="ghost"
-                          _icon={{ as: MaterialIcons, name: "undo", size: "xs", color: "blueGray.500" }}
-                          onPress={handleUndoLast}
-                        />
-                      ) : null}
-                    </HStack>
-                  </HStack>
-                ))}
-              </VStack>
-            ) : null}
           </VStack>
         </ScrollView>
       </Box>
