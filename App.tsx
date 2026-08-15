@@ -18,7 +18,8 @@ import Tournament from './screens/Tournament';
 import ActiveTournament from './screens/ActiveTournament';
 import TournamentPayouts from './screens/TournamentPayouts';
 import TournamentsPlayed from './screens/TournamentsPlayed';
-import TournamentStats from './screens/TournamentStats';
+import TournamentStatistics from './screens/TournamentStatistics';
+import TournamentPlayerStats from './screens/TournamentPlayerStats';
 import TournamentsHome from './screens/TournamentsHome';
 import { GamesContextProvider } from './context/GamesContext';
 import { TournamentsContextProvider } from './context/TournamentsContext';
@@ -76,7 +77,8 @@ export default function App() {
                 <Stack.Screen name="ActiveTournament" component={ActiveTournament} options={{ title: 'ACTIVE TOURNAMENT' }} />
                 <Stack.Screen name="TournamentPayouts" component={TournamentPayouts} options={{ title: 'PRIZES' }} />
                 <Stack.Screen name="TournamentsPlayed" component={TournamentsPlayed} options={{ title: 'TOURNAMENTS PLAYED' }} />
-                <Stack.Screen name="TournamentStats" component={TournamentStats} options={{ title: 'TOURNAMENT STATS' }} />
+                <Stack.Screen name="TournamentStatistics" component={TournamentStatistics} options={{ title: 'TOURNAMENT STATISTICS' }} />
+                <Stack.Screen name="TournamentPlayerStats" component={TournamentPlayerStats} options={{ title: 'TOURNAMENT PLAYER STATS' }} />
                 <Stack.Screen name="TournamentsHome" component={TournamentsHome} options={{ title: 'TOURNAMENTS' }} />
               </Stack.Navigator>
             </NavigationContainer>

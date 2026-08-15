@@ -75,9 +75,18 @@ export default function TournamentsHome({ navigation }: { navigation: any }) {
             colorScheme="blueGray"
             width="90%"
             p="4"
-            onPress={() => navigation.navigate("TournamentStats")}
+            onPress={() => navigation.navigate("TournamentStatistics")}
           >
-            TOURNAMENT STATS
+            STATISTICS
+          </Button>
+          <Button
+            variant="solid"
+            colorScheme="blueGray"
+            width="90%"
+            p="4"
+            onPress={() => navigation.navigate("TournamentPlayerStats")}
+          >
+            PLAYER STATS
           </Button>
           {canManage ? (
             <Button

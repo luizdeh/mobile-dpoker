@@ -9,13 +9,6 @@ import { PlayerList } from "../lib/types";
 const formatMoney = (value: number) => value.toFixed(2);
 const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 
-const STAT_CATEGORIES = ["Tournament Records", "All-Time Totals", "Per-Tournament Averages"];
-const CATEGORY_LABELS: Record<string, string> = {
-  "Tournament Records": "RECORDS",
-  "All-Time Totals": "TOTALS",
-  "Per-Tournament Averages": "AVERAGES",
-};
-
 function StatTile({ label, value, color = "white" }: { label: string; value: string; color?: string }) {
   return (
     <Box>
@@ -25,13 +18,11 @@ function StatTile({ label, value, color = "white" }: { label: string; value: str
   );
 }
 
-export default function TournamentStats() {
+export default function TournamentPlayerStats() {
   const { players } = useGamesContext();
-  const { tournaments, tournamentPlayers, tournamentStats } = useTournamentsContext();
+  const { tournaments, tournamentPlayers } = useTournamentsContext();
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string>(STAT_CATEGORIES[0]);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const sortedPlayers = useMemo(
     () => [...(players ?? [])].sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name)),
@@ -53,10 +44,9 @@ export default function TournamentStats() {
               color="white"
               placeholderTextColor="blueGray.400"
               selectedValue={selectedPlayerId !== null ? String(selectedPlayerId) : ""}
-              placeholder="ALL PLAYERS (LEADERBOARDS)"
+              placeholder="SELECT A PLAYER"
               onValueChange={(value) => setSelectedPlayerId(value ? Number(value) : null)}
             >
-              <Select.Item label="ALL PLAYERS (LEADERBOARDS)" value="" />
               {sortedPlayers.map((player: PlayerList) => (
                 <Select.Item key={player.id} label={player.name.toUpperCase()} value={String(player.id)} />
               ))}
@@ -71,73 +61,11 @@ export default function TournamentStats() {
       </VStack>
 
       {!card ? (
-        !tournamentStats?.length ? (
-          <Center flex={1}>
-            <Text color="blueGray.500">Not enough data yet.</Text>
-          </Center>
-        ) : (
-          <ScrollView>
-            <VStack space={1} pb={2}>
-              <HStack space={1}>
-                {STAT_CATEGORIES.map((category) => (
-                  <Button
-                    key={category}
-                    flex={1}
-                    size="sm"
-                    borderRadius="none"
-                    colorScheme="blueGray"
-                    variant={activeCategory === category ? "subtle" : "solid"}
-                    onPress={() => setActiveCategory(category)}
-                  >
-                    {CATEGORY_LABELS[category]}
-                  </Button>
-                ))}
-              </HStack>
-            </VStack>
-            {tournamentStats
-              .filter((item: any) => item.category === activeCategory)
-              .map((item: any) => (
-                <Box alignItems="center" key={item.name}>
-                  <Button
-                    p="2"
-                    colorScheme={expanded[item.name] ? "teal" : "blueGray"}
-                    variant="solid"
-                    textAlign="center"
-                    w="100%"
-                    mt="3"
-                    borderRadius="none"
-                    onPress={() => setExpanded((prev) => ({ ...prev, [item.name]: !prev[item.name] }))}
-                  >
-                    {item.name.toUpperCase()}
-                  </Button>
-                  {expanded[item.name] ? (
-                    <VStack w="100%" space={0}>
-                      {item.stats.map((subItem: any, idx: number) => (
-                        <HStack
-                          key={idx}
-                          w="100%"
-                          alignItems="center"
-                          h="10"
-                          backgroundColor={idx % 2 === 0 ? "white" : "teal.50"}
-                          px="2"
-                        >
-                          <Text flex={3} fontSize="xs">
-                            {idx + 1}. {subItem.name.toUpperCase()}
-                          </Text>
-                          <Text flex={1} fontSize="xs" textAlign="center" color="coolGray.400">
-                            T: {subItem.games}
-                          </Text>
-                          <Text flex={1} textAlign="right" fontSize="xs">
-                            {item.name === "ITM percentage" ? formatPercent(subItem.stat) : subItem.stat.toFixed(item.decimals ?? 2)}
-                          </Text>
-                        </HStack>
-                      ))}
-                    </VStack>
-                  ) : null}
-                </Box>
-              ))}
-          </ScrollView>
-        )
+        <Center flex={1}>
+          <Text color="blueGray.500" fontSize="xs">
+            Select a player to view their tournament stats.
+          </Text>
+        </Center>
       ) : (
         <ScrollView>
           <VStack space={6} flex={1}>
