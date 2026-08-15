@@ -15,6 +15,7 @@ import PlayerStats from './screens/PlayerStats';
 import Operators from './screens/Operators';
 import Cash from './screens/Cash';
 import { GamesContextProvider } from './context/GamesContext';
+import { TournamentsContextProvider } from './context/TournamentsContext';
 import { AuthContextProvider } from './context/AuthContext';
 
 // Define the config
@@ -37,35 +38,37 @@ export default function App() {
     <NativeBaseProvider>
       <AuthContextProvider>
         <GamesContextProvider>
-          <NavigationContainer theme={DefaultTheme}>
-            <Stack.Navigator
-              initialRouteName="Home"
-              screenOptions={{
-                headerStyle: {
-                  backgroundColor: 'white',
-                },
-                headerTintColor: '#0f766e',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                  fontSize: 16,
-                },
-                headerTitleAlign: 'center',
-              }}
-            >
-              <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="Players" component={PlayersList} options={{ title: 'PLAYER LIST' }} />
-              <Stack.Screen name="Stats" component={OverallStats} options={{ title: 'STATISTICS' }} />
-              <Stack.Screen name="Profile" component={Profile} options={{ title: 'SETTINGS' }} />
-              <Stack.Screen name="Game" component={Game} options={{ title: 'CREATE A GAME' }} />
-              <Stack.Screen name="OpenGame" component={OpenGame} options={{ title: 'OPEN GAME' }} />
-              <Stack.Screen name="Games" component={GamesPlayed} options={{ title: 'GAMES PLAYED' }} />
-              <Stack.Screen name="Matchups" component={Matchups} options={{ title: 'MATCHUPS' }} />
-              <Stack.Screen name="PlayerStats" component={PlayerStats} options={{ title: 'PLAYER STATS' }} />
-              <Stack.Screen name="ActiveGame" component={ActiveGame} options={{ title: 'ACTIVE GAME' }} />
-              <Stack.Screen name="Operators" component={Operators} options={{ title: 'OPERATORS' }} />
-              <Stack.Screen name="Cash" component={Cash} options={{ title: 'CASH' }} />
-            </Stack.Navigator>
-          </NavigationContainer>
+          <TournamentsContextProvider>
+            <NavigationContainer theme={DefaultTheme}>
+              <Stack.Navigator
+                initialRouteName="Home"
+                screenOptions={{
+                  headerStyle: {
+                    backgroundColor: 'white',
+                  },
+                  headerTintColor: '#0f766e',
+                  headerTitleStyle: {
+                    fontWeight: 'bold',
+                    fontSize: 16,
+                  },
+                  headerTitleAlign: 'center',
+                }}
+              >
+                <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="Players" component={PlayersList} options={{ title: 'PLAYER LIST' }} />
+                <Stack.Screen name="Stats" component={OverallStats} options={{ title: 'STATISTICS' }} />
+                <Stack.Screen name="Profile" component={Profile} options={{ title: 'SETTINGS' }} />
+                <Stack.Screen name="Game" component={Game} options={{ title: 'CREATE A GAME' }} />
+                <Stack.Screen name="OpenGame" component={OpenGame} options={{ title: 'OPEN GAME' }} />
+                <Stack.Screen name="Games" component={GamesPlayed} options={{ title: 'GAMES PLAYED' }} />
+                <Stack.Screen name="Matchups" component={Matchups} options={{ title: 'MATCHUPS' }} />
+                <Stack.Screen name="PlayerStats" component={PlayerStats} options={{ title: 'PLAYER STATS' }} />
+                <Stack.Screen name="ActiveGame" component={ActiveGame} options={{ title: 'ACTIVE GAME' }} />
+                <Stack.Screen name="Operators" component={Operators} options={{ title: 'OPERATORS' }} />
+                <Stack.Screen name="Cash" component={Cash} options={{ title: 'CASH' }} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </TournamentsContextProvider>
         </GamesContextProvider>
       </AuthContextProvider>
     </NativeBaseProvider>

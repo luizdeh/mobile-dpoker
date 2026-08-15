@@ -83,6 +83,55 @@ export type Donation = {
   created_at: string;
 };
 
+export type Tournament = {
+  id: number;
+  date: string;
+  buy_in_value: number;
+  re_buy_value: number;
+  status: string;
+  locked_by?: string | null;
+  locked_at?: string | null;
+  created_by?: string | null;
+};
+
+export type TournamentPlayer = {
+  id: number;
+  tournament_id: number;
+  person_id: number;
+  quantity_rebuy: number;
+  finish_position: number | null;
+  prize_amount: number;
+  is_split: boolean;
+  name?: string;
+};
+
+export type TournamentPayout = {
+  id: number;
+  tournament_id: number;
+  position: number;
+  percentage: number;
+};
+
+export type TournamentParams = {
+  buy_in_value: number;
+  re_buy_value: number;
+  status: string;
+};
+
+export type TournamentsContextType = {
+  tournaments: Tournament[] | null;
+  tournamentPlayers: TournamentPlayer[] | null;
+  tournamentPayouts: TournamentPayout[] | null;
+  fetchTournaments: () => void;
+  fetchTournamentPlayers: () => void;
+  fetchTournamentPayouts: () => void;
+  setTournaments?: (tournaments: Tournament[]) => void;
+  setTournamentPlayers?: (tournamentPlayers: TournamentPlayer[]) => void;
+  setTournamentPayouts?: (tournamentPayouts: TournamentPayout[]) => void;
+  tournamentsPlayed: any[] | null;
+  tournamentStats: any[] | null;
+};
+
 export type DataContextType = {
   games: Game[] | null;
   players: PlayerList[] | null;
