@@ -128,6 +128,7 @@ export type TournamentPayout = {
 };
 
 export type TournamentParams = {
+  date: string;
   buy_in_value: number;
   re_buy_value: number;
   status: string;

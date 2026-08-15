@@ -26,6 +26,19 @@ import StartTournamentDialog from "../components/StartTournamentDialog";
 
 const MIN_PLAYERS = 5;
 
+const formatDateInput = (date: Date) =>
+  `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+
+const parseDateInput = (value: string): string | null => {
+  const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const [, dd, mm, yyyy] = match;
+  const day = Number(dd);
+  const month = Number(mm);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+};
+
 export default function NewTournament() {
   const { players } = useGamesContext();
   const { tournaments } = useTournamentsContext();
@@ -42,11 +55,13 @@ export default function NewTournament() {
       ? [...tournaments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
       : null;
     return {
+      date: new Date().toISOString().slice(0, 10),
       buy_in_value: mostRecent?.buy_in_value ?? 25,
       re_buy_value: mostRecent?.re_buy_value ?? 25,
       status: "LOBBY",
     };
   });
+  const [dateInput, setDateInput] = useState(() => formatDateInput(new Date()));
   const [search, setSearch] = useState("");
   const [showStartConfirm, setShowStartConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -116,6 +131,40 @@ export default function NewTournament() {
   return (
     <Box backgroundColor="black" flex={1}>
       <VStack space={1} alignItems="center" flex={1} mt={4}>
+        <HStack
+          alignItems="center"
+          justifyContent="space-between"
+          px={2}
+          mt={2}
+          mb={6}
+          width="100%"
+          maxWidth="420px"
+          alignSelf="center"
+        >
+          <Text color="teal.300" fontSize="md" bold>
+            DATE
+          </Text>
+          <Input
+            size="sm"
+            p={1}
+            width="140px"
+            textAlign="center"
+            fontWeight="semibold"
+            fontSize="md"
+            variant="filled"
+            color="teal.400"
+            borderColor="blueGray.800"
+            backgroundColor="blueGray.800"
+            value={dateInput}
+            placeholder="DD/MM/AAAA"
+            placeholderTextColor="blueGray.600"
+            onChangeText={(val) => {
+              setDateInput(val);
+              const parsed = parseDateInput(val);
+              if (parsed) setTournamentParams((prev) => ({ ...prev, date: parsed }));
+            }}
+          />
+        </HStack>
         <VStack px={2} mb={4} width="100%" maxWidth="420px" alignSelf="center">
           <HStack borderRadius="lg" backgroundColor="blueGray.600" py={2} px={3}>
             <VStack flex={2} justifyContent="space-between" pr={2}>
