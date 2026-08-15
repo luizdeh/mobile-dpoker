@@ -135,22 +135,22 @@ export default function NewTournament() {
           alignItems="center"
           justifyContent="space-between"
           px={2}
-          mt={2}
-          mb={6}
+          mt={1}
+          mb={3}
           width="100%"
           maxWidth="420px"
           alignSelf="center"
         >
-          <Text color="teal.300" fontSize="md" bold>
+          <Text color="teal.300" fontSize="sm" bold>
             DATE
           </Text>
           <Input
-            size="sm"
+            size="xs"
             p={1}
-            width="140px"
+            width="110px"
             textAlign="center"
             fontWeight="semibold"
-            fontSize="md"
+            fontSize="sm"
             variant="filled"
             color="teal.400"
             borderColor="blueGray.800"
