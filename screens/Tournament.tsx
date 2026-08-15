@@ -17,7 +17,7 @@ import { createNewTournament } from "../utils/db/createNewTournament";
 import { addPlayerToTournament } from "../utils/db/addPlayerToTournament";
 import { useNavigation } from "@react-navigation/native";
 import { PlayerList, TournamentParamsNavigation, TournamentParams } from "../lib/types";
-import { ScrollView } from "react-native";
+import { Platform, ScrollView } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import useGamesContext from "../context/useGamesContext";
 import useTournamentsContext from "../context/useTournamentsContext";
@@ -144,26 +144,47 @@ export default function NewTournament() {
             DATE
           </Text>
           <Divider flex={1} mx={2} backgroundColor="blueGray.800" />
-          <Input
-            size="xs"
-            p={1}
-            width="90px"
-            textAlign="center"
-            fontWeight="semibold"
-            fontSize="10"
-            variant="filled"
-            color="teal.400"
-            borderColor="blueGray.800"
-            backgroundColor="blueGray.800"
-            value={dateInput}
-            placeholder="DD/MM/AAAA"
-            placeholderTextColor="blueGray.600"
-            onChangeText={(val) => {
-              setDateInput(val);
-              const parsed = parseDateInput(val);
-              if (parsed) setTournamentParams((prev) => ({ ...prev, date: parsed }));
-            }}
-          />
+          {Platform.OS === "web" ? (
+            React.createElement("input", {
+              type: "date",
+              value: tournamentParams.date,
+              onChange: (e: any) =>
+                setTournamentParams((prev) => ({ ...prev, date: e.target.value })),
+              style: {
+                backgroundColor: "#1e293b",
+                color: "#2dd4bf",
+                border: "none",
+                borderRadius: 4,
+                padding: 4,
+                fontSize: 10,
+                fontWeight: 600,
+                width: 110,
+                textAlign: "center",
+                colorScheme: "dark",
+              },
+            })
+          ) : (
+            <Input
+              size="xs"
+              p={1}
+              width="90px"
+              textAlign="center"
+              fontWeight="semibold"
+              fontSize="10"
+              variant="filled"
+              color="teal.400"
+              borderColor="blueGray.800"
+              backgroundColor="blueGray.800"
+              value={dateInput}
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor="blueGray.600"
+              onChangeText={(val) => {
+                setDateInput(val);
+                const parsed = parseDateInput(val);
+                if (parsed) setTournamentParams((prev) => ({ ...prev, date: parsed }));
+              }}
+            />
+          )}
         </HStack>
         <VStack px={2} mb={4} width="100%" maxWidth="420px" alignSelf="center">
           <HStack borderRadius="lg" backgroundColor="blueGray.600" py={2} px={3}>
