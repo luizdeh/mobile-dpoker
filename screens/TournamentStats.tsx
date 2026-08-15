@@ -18,7 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 function StatTile({ label, value, color = "white" }: { label: string; value: string; color?: string }) {
   return (
-    <Box width="48%" mb={4}>
+    <Box>
       <Text color="blueGray.400" fontSize="11">{label}</Text>
       <Text color={color} fontSize="sm" bold>{value}</Text>
     </Box>
@@ -47,18 +47,27 @@ export default function TournamentStats() {
     <Box h="100%" backgroundColor="black" px={4} py={4}>
       <VStack space={1} mb={4}>
         <Text fontSize="10" color="blueGray.400" ml={1}>PLAYER</Text>
-        <Select
-          color="white"
-          placeholderTextColor="blueGray.400"
-          selectedValue={selectedPlayerId !== null ? String(selectedPlayerId) : ""}
-          placeholder="ALL PLAYERS (LEADERBOARDS)"
-          onValueChange={(value) => setSelectedPlayerId(value ? Number(value) : null)}
-        >
-          <Select.Item label="ALL PLAYERS (LEADERBOARDS)" value="" />
-          {sortedPlayers.map((player: PlayerList) => (
-            <Select.Item key={player.id} label={player.name.toUpperCase()} value={String(player.id)} />
-          ))}
-        </Select>
+        <HStack space={2} alignItems="center">
+          <Box flex={1}>
+            <Select
+              color="white"
+              placeholderTextColor="blueGray.400"
+              selectedValue={selectedPlayerId !== null ? String(selectedPlayerId) : ""}
+              placeholder="ALL PLAYERS (LEADERBOARDS)"
+              onValueChange={(value) => setSelectedPlayerId(value ? Number(value) : null)}
+            >
+              <Select.Item label="ALL PLAYERS (LEADERBOARDS)" value="" />
+              {sortedPlayers.map((player: PlayerList) => (
+                <Select.Item key={player.id} label={player.name.toUpperCase()} value={String(player.id)} />
+              ))}
+            </Select>
+          </Box>
+          {selectedPlayerId !== null ? (
+            <Button size="sm" variant="ghost" colorScheme="blueGray" onPress={() => setSelectedPlayerId(null)}>
+              CLEAR
+            </Button>
+          ) : null}
+        </HStack>
       </VStack>
 
       {!card ? (
@@ -135,30 +144,24 @@ export default function TournamentStats() {
             <Text color="white" fontSize="lg" bold textAlign="center">
               {card.name.toUpperCase()}
             </Text>
-            <HStack flexWrap="wrap" justifyContent="space-between">
-              <StatTile label="TOURNAMENTS PLAYED" value={String(card.tournaments_played)} />
-              <StatTile label="WINS" value={String(card.wins)} color={card.wins > 0 ? "teal.300" : "white"} />
-              <StatTile label="ITM FINISHES" value={String(card.itm_count)} />
-              <StatTile label="ITM %" value={formatPercent(card.itm_percentage)} />
-              <StatTile label="TOTAL POINTS" value={String(card.total_points)} />
-              <StatTile label="AVG POINTS" value={formatMoney(card.average_points)} />
-              <StatTile label="TOTAL PRIZE MONEY" value={formatMoney(card.total_prize)} color="teal.300" />
-              <StatTile
-                label="NET EARNINGS"
-                value={formatMoney(card.net_earnings)}
-                color={card.net_earnings > 0 ? "teal.300" : card.net_earnings < 0 ? "rose.400" : "white"}
-              />
-            </HStack>
-            {card.best_result ? (
-              <HStack flexWrap="wrap" justifyContent="space-between">
-                <StatTile label="BEST RESULT" value={formatMoney(card.best_result.profit)} color="teal.300" />
+            <HStack space={4}>
+              <VStack flex={1} space={4}>
+                <StatTile label="TOURNAMENTS PLAYED" value={String(card.tournaments_played)} />
+                <StatTile label="ITM FINISHES" value={String(card.itm_count)} />
+                <StatTile label="TOTAL POINTS" value={String(card.total_points)} />
+                <StatTile label="TOTAL PRIZE MONEY" value={formatMoney(card.total_prize)} color="teal.300" />
+              </VStack>
+              <VStack flex={1} space={4}>
+                <StatTile label="WINS" value={String(card.wins)} color={card.wins > 0 ? "teal.300" : "white"} />
+                <StatTile label="ITM %" value={formatPercent(card.itm_percentage)} />
+                <StatTile label="AVG POINTS" value={formatMoney(card.average_points)} />
                 <StatTile
-                  label="WORST RESULT"
-                  value={card.worst_result ? formatMoney(card.worst_result.profit) : "N/A"}
-                  color="rose.400"
+                  label="NET EARNINGS"
+                  value={formatMoney(card.net_earnings)}
+                  color={card.net_earnings > 0 ? "teal.300" : card.net_earnings < 0 ? "rose.400" : "white"}
                 />
-              </HStack>
-            ) : null}
+              </VStack>
+            </HStack>
           </VStack>
         </ScrollView>
       )}
