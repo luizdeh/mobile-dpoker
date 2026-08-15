@@ -12,6 +12,7 @@ const baseNavLinks = [
   { link: "Stats", title: "STATISTICS" },
   { link: "PlayerStats", title: "PLAYER STATS" },
   { link: "Matchups", title: "MATCHUPS" },
+  { link: "TournamentsHome", title: "TOURNAMENTS" },
 ];
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
