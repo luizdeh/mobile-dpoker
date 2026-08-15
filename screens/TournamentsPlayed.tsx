@@ -170,7 +170,7 @@ export default function TournamentsPlayed() {
                     py={2}
                     px={2}
                     space={2}
-                    backgroundColor={idx % 2 === 0 ? "blueGray.900" : "transparent"}
+                    backgroundColor={idx % 2 === 0 ? "transparent" : "blueGray.800"}
                   >
                     <Text flex={1} fontSize="10" color="white" isTruncated>
                       {payment.from}
