@@ -249,6 +249,7 @@ export default function ActiveTournament() {
             <VStack w="100%" space={2}>
               {displayEntries.map((entry: TournamentPlayer) => {
                 const isEliminated = entry.finish_position != null;
+                const isChampion = entry.finish_position === 1;
                 const isMostRecentEliminated = isEliminated && eliminatedEntries[0]?.id === entry.id;
                 const isExpanded = expandedEntryId === entry.id;
                 const canRebuy = entry.quantity_rebuy === 0 && !lateEntryCutoffReached;
@@ -259,7 +260,7 @@ export default function ActiveTournament() {
                     backgroundColor="blueGray.800"
                     borderRadius="sm"
                     overflow="hidden"
-                    opacity={isEliminated ? 0.55 : 1}
+                    opacity={isEliminated && !isChampion ? 0.55 : 1}
                   >
                     <Pressable
                       onPress={() =>
@@ -270,9 +271,14 @@ export default function ActiveTournament() {
                         <Text color="white" fontSize="sm" isTruncated flex={1}>
                           {(entry.name ?? "").toUpperCase()}
                         </Text>
-                        <HStack alignItems="center" space={2}>
+                        {isChampion ? (
+                          <Box flex={1} alignItems="center">
+                            <Icon as={MaterialIcons} name="emoji-events" size="md" color="amber.400" />
+                          </Box>
+                        ) : null}
+                        <HStack alignItems="center" space={2} flex={isChampion ? 1 : undefined} justifyContent="flex-end">
                           {isEliminated ? (
-                            <Text color="blueGray.300" fontSize="xs" bold>
+                            <Text color={isChampion ? "amber.400" : "blueGray.300"} fontSize="xs" bold>
                               {ordinal(entry.finish_position as number)}
                             </Text>
                           ) : null}
