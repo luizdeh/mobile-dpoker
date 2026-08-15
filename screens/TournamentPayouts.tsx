@@ -56,6 +56,15 @@ export default function TournamentPayouts() {
 
   const totalPercentage = payoutPositions.reduce((sum, item) => sum + (Number(item.percentage) || 0), 0);
 
+  // The prize a position is entitled to under the current payout structure,
+  // ignoring any manual edits sitting in the `prizes` input state — this is
+  // what decides split eligibility and what a split group's pot is made of.
+  const basePrizeFor = (entry: TournamentPlayer) => {
+    const payout = payoutPositions.find((p) => p.position === entry.finish_position);
+    const pct = payout ? Number(payout.percentage) || 0 : 0;
+    return (pct / 100) * totalPool;
+  };
+
   const handlePercentageChange = (position: number, value: string) => {
     setPayoutPositions((prev) => prev.map((item) => (item.position === position ? { ...item, percentage: value } : item)));
   };
@@ -71,15 +80,53 @@ export default function TournamentPayouts() {
   const applyStructure = () => {
     const nextPrizes: Record<number, string> = {};
     entries.forEach((entry) => {
-      const payout = payoutPositions.find((p) => p.position === entry.finish_position);
-      const pct = payout ? Number(payout.percentage) || 0 : 0;
-      nextPrizes[entry.id] = ((pct / 100) * totalPool).toFixed(2);
+      nextPrizes[entry.id] = basePrizeFor(entry).toFixed(2);
     });
+    const groupIds = entries.filter((e) => splits[e.id]).map((e) => e.id);
+    if (groupIds.length >= 2) {
+      const groupEntries = entries.filter((e) => groupIds.includes(e.id));
+      const total = groupEntries.reduce((sum, e) => sum + basePrizeFor(e), 0);
+      const share = (total / groupIds.length).toFixed(2);
+      groupIds.forEach((id) => {
+        nextPrizes[id] = share;
+      });
+    }
     setPrizes(nextPrizes);
   };
 
+  // Split only makes sense between two-or-more paid positions: toggling
+  // recomputes just the entries that were in the old or new group, averaging
+  // the paid group's combined base prize evenly and reverting anyone who
+  // dropped out (or a lone leftover member) back to their own base prize.
   const toggleSplit = (id: number) => {
-    setSplits((prev) => ({ ...prev, [id]: !prev[id] }));
+    const targetEntry = entries.find((e) => e.id === id);
+    if (targetEntry && basePrizeFor(targetEntry) <= 0) return;
+
+    const nextSplits = { ...splits, [id]: !splits[id] };
+    const oldGroupIds = new Set(entries.filter((e) => splits[e.id]).map((e) => e.id));
+    const newGroupIds = new Set(entries.filter((e) => nextSplits[e.id]).map((e) => e.id));
+    const affectedIds = new Set([...oldGroupIds, ...newGroupIds]);
+
+    setPrizes((prevPrizes) => {
+      const nextPrizes = { ...prevPrizes };
+      if (newGroupIds.size >= 2) {
+        const groupEntries = entries.filter((e) => newGroupIds.has(e.id));
+        const total = groupEntries.reduce((sum, e) => sum + basePrizeFor(e), 0);
+        const share = (total / newGroupIds.size).toFixed(2);
+        newGroupIds.forEach((gid) => {
+          nextPrizes[gid] = share;
+        });
+      }
+      affectedIds.forEach((aid) => {
+        if (!newGroupIds.has(aid) || newGroupIds.size === 1) {
+          const entry = entries.find((e) => e.id === aid);
+          if (entry) nextPrizes[aid] = basePrizeFor(entry).toFixed(2);
+        }
+      });
+      return nextPrizes;
+    });
+
+    setSplits(nextSplits);
   };
 
   const totalPrizesAssigned = entries.reduce((sum, entry) => sum + (Number(prizes[entry.id]) || 0), 0);
@@ -192,49 +239,53 @@ export default function TournamentPayouts() {
           </Text>
           <Divider mb="2" backgroundColor="blueGray.800" />
           <VStack space={2} mb={4}>
-            {entries.map((entry, index) => (
-              <HStack
-                key={entry.id}
-                alignItems="center"
-                space={2}
-                px={2}
-                py={1}
-                backgroundColor={index % 2 === 0 ? "blueGray.900" : "transparent"}
-              >
-                <VStack flex={2}>
-                  <Text color="white" fontSize="sm" isTruncated>
-                    {(entry.name ?? "").toUpperCase()}
-                  </Text>
-                  <Text color="blueGray.500" fontSize="10">
-                    {entry.finish_position ? ordinal(entry.finish_position) : "—"}
-                  </Text>
-                </VStack>
-                <Input
-                  flex={2}
-                  size="sm"
-                  textAlign="center"
-                  keyboardType="numeric"
-                  value={prizes[entry.id] ?? ""}
-                  onChangeText={(val) => setPrizes((prev) => ({ ...prev, [entry.id]: val }))}
-                  color="teal.300"
-                  backgroundColor="blueGray.800"
-                  borderColor="blueGray.700"
-                  placeholder="0.00"
-                  placeholderTextColor="blueGray.600"
-                />
-                <IconButton
-                  size="sm"
-                  variant="ghost"
-                  onPress={() => toggleSplit(entry.id)}
-                  _icon={{
-                    as: AntDesign,
-                    name: "team",
-                    size: "sm",
-                    color: splits[entry.id] ? "teal.300" : "blueGray.700",
-                  }}
-                />
-              </HStack>
-            ))}
+            {entries.map((entry, index) => {
+              const eligibleForSplit = basePrizeFor(entry) > 0;
+              return (
+                <HStack
+                  key={entry.id}
+                  alignItems="center"
+                  space={2}
+                  px={2}
+                  py={1}
+                  backgroundColor={index % 2 === 0 ? "blueGray.900" : "transparent"}
+                >
+                  <VStack flex={2}>
+                    <Text color="white" fontSize="sm" isTruncated>
+                      {(entry.name ?? "").toUpperCase()}
+                    </Text>
+                    <Text color="blueGray.500" fontSize="10">
+                      {entry.finish_position ? ordinal(entry.finish_position) : "—"}
+                    </Text>
+                  </VStack>
+                  <Input
+                    flex={2}
+                    size="sm"
+                    textAlign="center"
+                    keyboardType="numeric"
+                    value={prizes[entry.id] ?? ""}
+                    onChangeText={(val) => setPrizes((prev) => ({ ...prev, [entry.id]: val }))}
+                    color="teal.300"
+                    backgroundColor="blueGray.800"
+                    borderColor="blueGray.700"
+                    placeholder="0.00"
+                    placeholderTextColor="blueGray.600"
+                  />
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    isDisabled={!eligibleForSplit}
+                    onPress={() => toggleSplit(entry.id)}
+                    _icon={{
+                      as: AntDesign,
+                      name: "team",
+                      size: "sm",
+                      color: splits[entry.id] ? "teal.300" : eligibleForSplit ? "blueGray.700" : "blueGray.900",
+                    }}
+                  />
+                </HStack>
+              );
+            })}
             {!entries.length ? (
               <Text color="blueGray.400" fontSize="xs" textAlign="center" mt={2}>
                 No entries found for this tournament.
