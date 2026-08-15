@@ -27,6 +27,7 @@ import { ordinal } from "../lib/ordinal";
 import useAuthContext from "../context/useAuthContext";
 import TournamentRebuyDialog from "../components/TournamentRebuyDialog";
 import RemoveTournamentEntryDialog from "../components/RemoveTournamentEntryDialog";
+import EliminatePlayerDialog from "../components/EliminatePlayerDialog";
 
 // Placeholder cutoff until live blind-level tracking exists: once 6th place
 // has been decided (5 players left), it's too late for a new entrant to
@@ -47,6 +48,7 @@ export default function ActiveTournament() {
   const [showInactivesModal, setShowInactivesModal] = useState(false);
   const [rebuyTarget, setRebuyTarget] = useState<TournamentPlayer | null>(null);
   const [removeTarget, setRemoveTarget] = useState<TournamentPlayer | null>(null);
+  const [eliminateTarget, setEliminateTarget] = useState<TournamentPlayer | null>(null);
   const [expandedEntryId, setExpandedEntryId] = useState<number | null>(null);
 
   const navigation = useNavigation<NativeStackNavigationProp<TournamentParamsNavigation>>();
@@ -92,6 +94,7 @@ export default function ActiveTournament() {
     const entry = rebuyTarget;
     setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: 1 } : item)));
     setRebuyTarget(null);
+    setExpandedEntryId((prev) => (prev === entry.id ? null : prev));
     const result: any = await addTournamentRebuy(entry.id);
     if (!result || result.error) {
       setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: entry.quantity_rebuy } : item)));
@@ -113,6 +116,13 @@ export default function ActiveTournament() {
 
     await eliminatePlayer(entry.id, position);
     if (champion) await eliminatePlayer(champion.id, 1);
+  };
+
+  const handleConfirmEliminate = async () => {
+    if (!eliminateTarget) return;
+    const entry = eliminateTarget;
+    setEliminateTarget(null);
+    await handleEliminate(entry);
   };
 
   const handleUndoLast = async () => {
@@ -262,7 +272,7 @@ export default function ActiveTournament() {
                           colorScheme="rose"
                           py={1}
                           width="100px"
-                          onPress={() => handleEliminate(entry)}
+                          onPress={() => setEliminateTarget(entry)}
                         >
                           ELIMINATE
                         </Button>
@@ -368,6 +378,12 @@ export default function ActiveTournament() {
         isOpen={!!removeTarget}
         onClose={() => setRemoveTarget(null)}
         onConfirm={handleConfirmRemoveEntry}
+      />
+      <EliminatePlayerDialog
+        player={(eliminateTarget?.name ?? "").toUpperCase()}
+        isOpen={!!eliminateTarget}
+        onClose={() => setEliminateTarget(null)}
+        onConfirm={handleConfirmEliminate}
       />
     </Box>
   );
