@@ -118,21 +118,21 @@ export default function NewTournament() {
       <VStack space={1} alignItems="center" flex={1} mt={4}>
         <VStack px={2} mb={4} width="100%" maxWidth="420px" alignSelf="center">
           <HStack borderRadius="lg" backgroundColor="blueGray.600" py={2} px={3}>
-            <VStack flex={2} space={2} pr={2}>
+            <VStack flex={2} justifyContent="space-between" pr={2}>
               <Text textAlign="center" color="blueGray.300" fontSize="xs" bold>
                 TOURNAMENT PARAMETERS
               </Text>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text color="teal.300" fontSize="10" bold>
+                <Text color="teal.300" fontSize="md" bold>
                   BUY-IN
                 </Text>
                 <Input
-                  size="xs"
+                  size="sm"
                   p={1}
-                  width="80px"
+                  width="90px"
                   textAlign="center"
                   fontWeight="semibold"
-                  fontSize="10"
+                  fontSize="md"
                   variant="filled"
                   color="teal.400"
                   borderColor="blueGray.800"
@@ -149,16 +149,16 @@ export default function NewTournament() {
                 />
               </HStack>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text color="teal.300" fontSize="10" bold>
+                <Text color="teal.300" fontSize="md" bold>
                   RE-BUY
                 </Text>
                 <Input
-                  size="xs"
+                  size="sm"
                   p={1}
-                  width="80px"
+                  width="90px"
                   textAlign="center"
                   fontWeight="semibold"
-                  fontSize="10"
+                  fontSize="md"
                   variant="filled"
                   color="teal.400"
                   borderColor="blueGray.800"
