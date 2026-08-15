@@ -65,6 +65,20 @@ export type GameParams = {
   status: string;
 };
 
+export type TournamentParamsNavigation = {
+  Home: undefined;
+  ActiveTournament: {
+    tournament: Tournament;
+    players: any;
+  };
+  OpenTournament: {
+    tournament: Tournament;
+  };
+  TournamentPayouts: {
+    tournament: Tournament;
+  };
+};
+
 export type Expense = {
   id: number;
   description: string;
