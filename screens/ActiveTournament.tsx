@@ -243,17 +243,17 @@ export default function ActiveTournament() {
               ) : (
                 <Box />
               )}
-              <HStack alignItems="center" space={3}>
+              <HStack alignItems="center" space={5}>
                 {canManage ? (
                   <IconButton
-                    size="sm"
+                    size="md"
                     variant="ghost"
                     isDisabled={entriesLocked}
                     onPress={() => setShowDisableEntriesConfirm(true)}
                     _icon={{
                       as: MaterialIcons,
-                      name: entriesLocked ? "lock" : "schedule",
-                      size: "sm",
+                      name: entriesLocked ? "lock" : "access-alarm",
+                      size: "md",
                       color: entriesLocked ? "blueGray.700" : "blueGray.400",
                     }}
                   />
