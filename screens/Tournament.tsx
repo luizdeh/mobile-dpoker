@@ -185,12 +185,12 @@ export default function NewTournament() {
               </Text>
               <Button
                 size="xs"
-                variant="outline"
-                colorScheme="teal"
+                variant={selectedPlayers.length ? "solid" : "outline"}
+                colorScheme={selectedPlayers.length ? "teal" : "blueGray"}
                 borderRadius="md"
                 px={4}
                 py={1}
-                _text={{ fontSize: 10 }}
+                _text={{ fontSize: 10, color: selectedPlayers.length ? "white" : "blueGray.500" }}
                 isDisabled={!selectedPlayers.length}
                 onPress={clearPlayers}
               >
