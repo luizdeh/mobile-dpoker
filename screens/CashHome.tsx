@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
-import { Center, VStack, Button, Box } from "native-base";
+import { Center, VStack, Button, Box, IconButton } from "native-base";
 import { Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import useAuthContext from "../context/useAuthContext";
 import { getOpenGames } from "../utils/db/getOpenGames";
@@ -76,6 +77,15 @@ export default function CashHome({ navigation }: { navigation: any }) {
             </Button>
           ) : null}
         </VStack>
+      </Center>
+      <Center pb={6} pt={2}>
+        <IconButton
+          variant="ghost"
+          size="sm"
+          borderRadius="full"
+          icon={<Ionicons name="home" size={40} color="#94a3b8" />}
+          onPress={() => navigation.navigate("Home")}
+        />
       </Center>
     </Box>
   );
