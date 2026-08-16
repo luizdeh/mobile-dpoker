@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Box, Center, VStack, Button, Text, useToast } from "native-base";
+import { Box, Center, VStack, Button, useToast } from "native-base";
 import { Image } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import useAuthContext from "../context/useAuthContext";
@@ -63,9 +63,6 @@ export default function TournamentsHome({ navigation }: { navigation: any }) {
       <Box flex={1} w="100%" minH="100px">
         <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logo.jpg")} />
       </Box>
-      <Text color="teal.700" fontSize="xl" bold textAlign="center" mt={2}>
-        TOURNAMENTS
-      </Text>
       <Center flex={2} px={4}>
         <VStack space={4} alignItems="center" w="100%">
           <Button
