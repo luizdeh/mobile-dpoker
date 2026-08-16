@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { Box, Center, VStack, Button, Text, useToast } from "native-base";
+import { Image } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import useAuthContext from "../context/useAuthContext";
 import useGamesContext from "../context/useGamesContext";
@@ -58,12 +59,20 @@ export default function TournamentsHome({ navigation }: { navigation: any }) {
   };
 
   return (
-    <Box h="100%" backgroundColor="black" px={4} py={4}>
-      <Center flex={1}>
+    <Box h="100%" backgroundColor="black">
+      <Box flex={1} w="100%" minH="100px">
+        <Image style={{ width: "100%", height: "100%" }} source={require("../assets/logo.jpg")} />
+      </Box>
+      <Text color="teal.700" fontSize="xl" bold textAlign="center" mt={2}>
+        TOURNAMENTS
+      </Text>
+      <Center flex={2} px={4}>
         <VStack space={4} alignItems="center" w="100%">
           <Button
             variant="solid"
             colorScheme="blueGray"
+            bg="blueGray.800"
+            _pressed={{ bg: "blueGray.700" }}
             width="90%"
             p="4"
             onPress={() => navigation.navigate("TournamentsPlayed")}
@@ -73,6 +82,8 @@ export default function TournamentsHome({ navigation }: { navigation: any }) {
           <Button
             variant="solid"
             colorScheme="blueGray"
+            bg="blueGray.800"
+            _pressed={{ bg: "blueGray.700" }}
             width="90%"
             p="4"
             onPress={() => navigation.navigate("TournamentStatistics")}
@@ -82,6 +93,8 @@ export default function TournamentsHome({ navigation }: { navigation: any }) {
           <Button
             variant="solid"
             colorScheme="blueGray"
+            bg="blueGray.800"
+            _pressed={{ bg: "blueGray.700" }}
             width="90%"
             p="4"
             onPress={() => navigation.navigate("TournamentPlayerStats")}
@@ -92,6 +105,8 @@ export default function TournamentsHome({ navigation }: { navigation: any }) {
             <Button
               variant="solid"
               colorScheme={openTournament ? "amber" : "emerald"}
+              bg={openTournament ? "amber.700" : "emerald.700"}
+              _pressed={{ bg: openTournament ? "amber.600" : "emerald.600" }}
               width="90%"
               p="4"
               mt={4}

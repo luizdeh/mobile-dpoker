@@ -3,6 +3,7 @@ import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NativeBaseProvider, extendTheme } from 'native-base';
 import HomeScreen from './screens/Home';
+import CashHome from './screens/CashHome';
 import PlayersList from './screens/Players';
 import OverallStats from './screens/Stats';
 import Profile from './screens/Profile';
@@ -62,6 +63,7 @@ export default function App() {
                 }}
               >
                 <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="CashHome" component={CashHome} options={{ title: 'CASH GAMES' }} />
                 <Stack.Screen name="Players" component={PlayersList} options={{ title: 'PLAYER LIST' }} />
                 <Stack.Screen name="Stats" component={OverallStats} options={{ title: 'STATISTICS' }} />
                 <Stack.Screen name="Profile" component={Profile} options={{ title: 'SETTINGS' }} />
