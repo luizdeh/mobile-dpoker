@@ -18,9 +18,34 @@ function StatTile({ label, value, color = "white" }: { label: string; value: str
   );
 }
 
+function TopPerformerRow({
+  category,
+  entries,
+  valueColor,
+}: {
+  category: string;
+  entries: { name: string; value?: string }[];
+  valueColor?: string;
+}) {
+  if (!entries.length) return null;
+  const names = entries.map((entry) => entry.name.toUpperCase()).join(", ");
+  const value = entries[0].value;
+  return (
+    <VStack py={1.5} borderBottomWidth={1} borderColor="blueGray.800">
+      <Text color="blueGray.400" fontSize="xs">{category}</Text>
+      <HStack justifyContent="space-between" alignItems="baseline">
+        <Text color="teal.300" fontSize="sm" bold flexShrink={1} pr={2}>{names}</Text>
+        {value ? (
+          <Text color={valueColor ?? "blueGray.400"} fontSize="sm" bold>{value}</Text>
+        ) : null}
+      </HStack>
+    </VStack>
+  );
+}
+
 export default function TournamentPlayerStats() {
   const { players } = useGamesContext();
-  const { tournaments, tournamentPlayers } = useTournamentsContext();
+  const { tournaments, tournamentPlayers, tournamentStats } = useTournamentsContext();
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
 
@@ -33,6 +58,27 @@ export default function TournamentPlayerStats() {
     if (!selectedPlayerId || !tournaments?.length || !tournamentPlayers?.length || !players?.length) return null;
     return makePlayerTournamentCard(selectedPlayerId, tournaments, tournamentPlayers, players);
   }, [selectedPlayerId, tournaments, tournamentPlayers, players]);
+
+  const topPerformers = useMemo(() => {
+    if (!tournamentStats?.length) return null;
+
+    // Every player tied for the top value in a leaderboard, not just the first.
+    const topOf = (categoryName: string): { name: string; stat: number }[] => {
+      const list = tournamentStats.find((item: any) => item.name === categoryName)?.stats ?? [];
+      if (!list.length) return [];
+      const topStat = list[0].stat;
+      return list.filter((row: any) => row.stat === topStat);
+    };
+
+    return {
+      mostWins: topOf("wins"),
+      mostPoints: topOf("all-time points"),
+      mostItm: topOf("ITM finishes"),
+      bestItmPercentage: topOf("ITM percentage"),
+      biggestNetEarnings: topOf("all-time net earnings"),
+      bestPointAverage: topOf("points per tournament"),
+    };
+  }, [tournamentStats]);
 
   return (
     <Box h="100%" backgroundColor="black" px={4} py={4}>
@@ -61,11 +107,45 @@ export default function TournamentPlayerStats() {
       </VStack>
 
       {!card ? (
-        <Center flex={1}>
-          <Text color="blueGray.500" fontSize="xs">
-            Select a player to view their tournament stats.
-          </Text>
-        </Center>
+        !topPerformers ? (
+          <Center flex={1}>
+            <Text color="blueGray.500">Not enough data yet.</Text>
+          </Center>
+        ) : (
+          <ScrollView>
+            <VStack space={3}>
+              <Text color="white" fontSize="md" bold textAlign="center" mb={1}>
+                TOP PERFORMERS
+              </Text>
+              <TopPerformerRow
+                category="MOST WINS"
+                entries={topPerformers.mostWins.map((item) => ({ name: item.name, value: String(item.stat) }))}
+                valueColor="teal.300"
+              />
+              <TopPerformerRow
+                category="MOST POINTS"
+                entries={topPerformers.mostPoints.map((item) => ({ name: item.name, value: String(item.stat) }))}
+              />
+              <TopPerformerRow
+                category="MOST ITM FINISHES"
+                entries={topPerformers.mostItm.map((item) => ({ name: item.name, value: String(item.stat) }))}
+              />
+              <TopPerformerRow
+                category="BEST ITM %"
+                entries={topPerformers.bestItmPercentage.map((item) => ({ name: item.name, value: formatPercent(item.stat) }))}
+              />
+              <TopPerformerRow
+                category="BIGGEST NET EARNINGS"
+                entries={topPerformers.biggestNetEarnings.map((item) => ({ name: item.name, value: formatMoney(item.stat) }))}
+                valueColor="teal.300"
+              />
+              <TopPerformerRow
+                category="BEST POINT AVERAGE"
+                entries={topPerformers.bestPointAverage.map((item) => ({ name: item.name, value: formatMoney(item.stat) }))}
+              />
+            </VStack>
+          </ScrollView>
+        )
       ) : (
         <ScrollView>
           <VStack space={6} flex={1}>
