@@ -97,16 +97,29 @@ export type Donation = {
   created_at: string;
 };
 
+export type SeatAssignment = {
+  position: string;
+  person_id: number;
+  name: string;
+};
+
+export type SeatingTable = {
+  label: string;
+  seats: SeatAssignment[];
+};
+
 export type Tournament = {
   id: number;
   date: string;
   buy_in_value: number;
   re_buy_value: number;
+  max_rebuys: number;
   status: string;
   locked_by?: string | null;
   locked_at?: string | null;
   created_by?: string | null;
   entries_locked?: boolean;
+  seating?: SeatingTable[] | null;
 };
 
 export type TournamentPlayer = {
@@ -131,6 +144,7 @@ export type TournamentParams = {
   date: string;
   buy_in_value: number;
   re_buy_value: number;
+  max_rebuys: number;
   status: string;
 };
 

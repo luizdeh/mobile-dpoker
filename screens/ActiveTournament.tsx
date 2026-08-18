@@ -31,6 +31,7 @@ import TournamentRebuyDialog from "../components/TournamentRebuyDialog";
 import RemoveTournamentEntryDialog from "../components/RemoveTournamentEntryDialog";
 import EliminatePlayerDialog from "../components/EliminatePlayerDialog";
 import DisableEntriesDialog from "../components/DisableEntriesDialog";
+import TournamentSeatingDialog from "../components/TournamentSeatingDialog";
 
 export default function ActiveTournament() {
   const { canManage } = useAuthContext();
@@ -51,6 +52,7 @@ export default function ActiveTournament() {
   const [entriesLocked, setEntriesLocked] = useState<boolean>(!!tournament.entries_locked);
   const [showDisableEntriesConfirm, setShowDisableEntriesConfirm] = useState(false);
   const [isLockingEntries, setIsLockingEntries] = useState(false);
+  const [showSeatingDialog, setShowSeatingDialog] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<TournamentParamsNavigation>>();
 
@@ -97,7 +99,9 @@ export default function ActiveTournament() {
   const handleConfirmRebuy = async () => {
     if (!rebuyTarget) return;
     const entry = rebuyTarget;
-    setEntries((prev) => prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: 1 } : item)));
+    setEntries((prev) =>
+      prev.map((item) => (item.id === entry.id ? { ...item, quantity_rebuy: entry.quantity_rebuy + 1 } : item))
+    );
     setRebuyTarget(null);
     setExpandedEntryId((prev) => (prev === entry.id ? null : prev));
     const result: any = await addTournamentRebuy(entry.id);
@@ -244,6 +248,17 @@ export default function ActiveTournament() {
                 <Box />
               )}
               <HStack alignItems="center" space={5}>
+                <IconButton
+                  size="md"
+                  variant="ghost"
+                  onPress={() => setShowSeatingDialog(true)}
+                  _icon={{
+                    as: MaterialIcons,
+                    name: "event-seat",
+                    size: "md",
+                    color: "blueGray.400",
+                  }}
+                />
                 {canManage ? (
                   <IconButton
                     size="md"
@@ -272,7 +287,7 @@ export default function ActiveTournament() {
                 const isChampion = entry.finish_position === 1;
                 const isMostRecentEliminated = isEliminated && eliminatedEntries[0]?.id === entry.id;
                 const isExpanded = expandedEntryId === entry.id;
-                const canRebuy = entry.quantity_rebuy === 0 && !entriesLocked;
+                const canRebuy = entry.quantity_rebuy < tournament.max_rebuys && !entriesLocked;
                 const canExpand = canManage && (!isEliminated || isMostRecentEliminated);
                 return (
                   <VStack
@@ -302,14 +317,19 @@ export default function ActiveTournament() {
                               {ordinal(entry.finish_position as number)}
                             </Text>
                           ) : null}
-                          <Box
-                            borderWidth={1.5}
-                            borderColor="teal.400"
-                            borderRadius="full"
-                            w={3}
-                            h={3}
-                            backgroundColor={entry.quantity_rebuy > 0 ? "teal.400" : "transparent"}
-                          />
+                          <HStack space={1}>
+                            {Array.from({ length: tournament.max_rebuys }).map((_, index) => (
+                              <Box
+                                key={index}
+                                borderWidth={1.5}
+                                borderColor="teal.400"
+                                borderRadius="full"
+                                w={3}
+                                h={3}
+                                backgroundColor={index < entry.quantity_rebuy ? "teal.400" : "transparent"}
+                              />
+                            ))}
+                          </HStack>
                         </HStack>
                       </HStack>
                     </Pressable>
@@ -425,6 +445,11 @@ export default function ActiveTournament() {
         isOpen={showDisableEntriesConfirm}
         onClose={() => !isLockingEntries && setShowDisableEntriesConfirm(false)}
         onConfirm={handleConfirmDisableEntries}
+      />
+      <TournamentSeatingDialog
+        seating={tournament.seating}
+        isOpen={showSeatingDialog}
+        onClose={() => setShowSeatingDialog(false)}
       />
     </Box>
   );

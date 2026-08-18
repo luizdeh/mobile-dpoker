@@ -22,6 +22,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import useGamesContext from "../context/useGamesContext";
 import useTournamentsContext from "../context/useTournamentsContext";
 import { getDeviceId } from "../lib/deviceId";
+import { randomizeSeating } from "../lib/seating";
 import StartTournamentDialog from "../components/StartTournamentDialog";
 
 const MIN_PLAYERS = 5;
@@ -58,6 +59,7 @@ export default function NewTournament() {
       date: new Date().toISOString().slice(0, 10),
       buy_in_value: mostRecent?.buy_in_value ?? 25,
       re_buy_value: mostRecent?.re_buy_value ?? 25,
+      max_rebuys: mostRecent?.max_rebuys ?? 1,
       status: "LOBBY",
     };
   });
@@ -100,8 +102,10 @@ export default function NewTournament() {
   const startTournament = async () => {
     setIsStarting(true);
     const deviceId = await getDeviceId();
+    const seating = randomizeSeating(selectedPlayers.map((player) => ({ id: player.id, name: player.name })));
     const { tournament: createdTournament, alreadyOpen } = await createNewTournament({
       ...tournamentParams,
+      seating,
       locked_by: deviceId,
       locked_at: new Date().toISOString(),
     });
@@ -122,7 +126,11 @@ export default function NewTournament() {
         tournament: createdTournament,
         players: playerList,
       });
+      return;
     }
+    setIsStarting(false);
+    setShowStartConfirm(false);
+    toast.show({ description: "Couldn't start the tournament. Please try again." });
   };
 
   const buyInValue = tournamentParams.buy_in_value.toLocaleString().replace(",", ".");
@@ -188,21 +196,21 @@ export default function NewTournament() {
         </HStack>
         <VStack px={2} mb={4} width="100%" maxWidth="420px" alignSelf="center">
           <HStack borderRadius="lg" backgroundColor="blueGray.600" py={2} px={3}>
-            <VStack flex={2} justifyContent="space-between" pr={2}>
+            <VStack flex={2} justifyContent="space-between" pr={2} space={2}>
               <Text textAlign="center" color="blueGray.300" fontSize="xs" bold>
                 TOURNAMENT PARAMETERS
               </Text>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text color="teal.300" fontSize="md" bold>
+                <Text color="teal.300" fontSize="sm" bold>
                   BUY-IN
                 </Text>
                 <Input
                   size="sm"
                   p={1}
-                  width="90px"
+                  width="80px"
                   textAlign="center"
                   fontWeight="semibold"
-                  fontSize="md"
+                  fontSize="sm"
                   variant="filled"
                   color="teal.400"
                   borderColor="blueGray.800"
@@ -219,16 +227,16 @@ export default function NewTournament() {
                 />
               </HStack>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text color="teal.300" fontSize="md" bold>
+                <Text color="teal.300" fontSize="sm" bold>
                   RE-BUY
                 </Text>
                 <Input
                   size="sm"
                   p={1}
-                  width="90px"
+                  width="80px"
                   textAlign="center"
                   fontWeight="semibold"
-                  fontSize="md"
+                  fontSize="sm"
                   variant="filled"
                   color="teal.400"
                   borderColor="blueGray.800"
@@ -243,6 +251,36 @@ export default function NewTournament() {
                     }));
                   }}
                 />
+              </HStack>
+              <HStack alignItems="center" justifyContent="space-between">
+                <Text color="teal.600" fontSize="sm" bold>
+                  MAX RE-BUYS
+                </Text>
+                <HStack alignItems="center" space={1}>
+                  <Pressable
+                    onPress={() =>
+                      setTournamentParams((prev) => ({ ...prev, max_rebuys: Math.max(1, prev.max_rebuys - 1) }))
+                    }
+                    p={1}
+                  >
+                    <Icon as={AntDesign} name="down" size="xs" color="teal.600" />
+                  </Pressable>
+                  <Text
+                    color="teal.600"
+                    fontSize="sm"
+                    fontWeight="semibold"
+                    width="24px"
+                    textAlign="center"
+                  >
+                    {tournamentParams.max_rebuys}
+                  </Text>
+                  <Pressable
+                    onPress={() => setTournamentParams((prev) => ({ ...prev, max_rebuys: prev.max_rebuys + 1 }))}
+                    p={1}
+                  >
+                    <Icon as={AntDesign} name="up" size="xs" color="teal.600" />
+                  </Pressable>
+                </HStack>
               </HStack>
             </VStack>
             <Divider orientation="vertical" backgroundColor="blueGray.700" mx={2} />

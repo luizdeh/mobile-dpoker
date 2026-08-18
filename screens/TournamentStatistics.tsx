@@ -70,11 +70,11 @@ export default function TournamentStatistics() {
                         backgroundColor={idx % 2 === 0 ? "white" : "teal.50"}
                         px="2"
                       >
-                        <Text flex={3} fontSize="xs">
+                        <Text flex={3} fontSize="10">
                           {idx + 1}. {subItem.name.toUpperCase()}
                         </Text>
                         <Text flex={1} fontSize="xs" textAlign="center" color="coolGray.400">
-                          T: {subItem.games}
+                          {subItem.secondaryLabel !== undefined ? subItem.secondaryLabel : `T: ${subItem.games}`}
                         </Text>
                         <Text flex={1} textAlign="right" fontSize="xs">
                           {item.name === "ITM percentage" ? formatPercent(subItem.stat) : subItem.stat.toFixed(item.decimals ?? 2)}

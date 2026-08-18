@@ -43,7 +43,11 @@ export default function TournamentsPlayed() {
             const isExpanded = expandedId === tournament.id;
             const date = new Date(tournament.date).toLocaleDateString("pt-BR");
             return (
-              <VStack key={tournament.id} backgroundColor="blueGray.800" borderRadius="sm" overflow="hidden">
+              <HStack key={tournament.id} space={2} alignItems="center">
+                <Text color="blueGray.600" fontSize="sm" bold width="28px" textAlign="right">
+                  #{tournament.sequence_number}
+                </Text>
+                <VStack flex={1} backgroundColor="blueGray.800" borderRadius="sm" overflow="hidden">
                 <HStack justifyContent="space-between" alignItems="center" px={3} py={3}>
                   <Pressable
                     flex={1}
@@ -129,7 +133,8 @@ export default function TournamentsPlayed() {
                     ))}
                   </VStack>
                 ) : null}
-              </VStack>
+                </VStack>
+              </HStack>
             );
           })}
           {!tournaments.length ? (
