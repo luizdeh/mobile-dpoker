@@ -158,10 +158,8 @@ export default function Cash() {
         unpaidRake: data.unpaidRake,
       }))
       .filter((item) => item.total > 0)
-      .sort((a, b) =>
-        (playerNameById.get(a.personId) ?? "").localeCompare(playerNameById.get(b.personId) ?? "")
-      );
-  }, [gamePlayers, donations, rakeValueByGameId, playerNameById]);
+      .sort((a, b) => b.total - a.total);
+  }, [gamePlayers, donations, rakeValueByGameId]);
 
   const sortedPlayers = useMemo(
     () => [...(players ?? [])].sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name)),

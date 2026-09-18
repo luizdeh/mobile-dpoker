@@ -90,22 +90,15 @@ export default function NewGame() {
   }, []);
 
   const toggleRegisterPlayer = (id: number) => {
-    setPlayerList((prev) => {
-      const updatedList = [...prev];
-      const idx = updatedList.findIndex((item: PlayerList) => item.id === id);
-      updatedList[idx].active = !updatedList[idx].active;
-      return updatedList;
-    });
+    setPlayerList((prev) =>
+      prev.map((item: PlayerList) =>
+        item.id === id ? { ...item, active: !item.active } : item
+      )
+    );
   };
 
   const clearPlayers = () => {
-    setPlayerList((prev) => {
-      const updatedList = [...prev];
-      for (const player of updatedList) {
-        player.active = false;
-      }
-      return updatedList;
-    });
+    setPlayerList((prev) => prev.map((player) => ({ ...player, active: false })));
   };
 
   useEffect(() => {
