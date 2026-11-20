@@ -56,17 +56,41 @@ export default function ActiveTournament() {
 
   const navigation = useNavigation<NativeStackNavigationProp<TournamentParamsNavigation>>();
 
-  const buildEntries = async () => {
+  const fetchEntries = async (): Promise<TournamentPlayer[] | null> => {
     const tournamentPlayers = await getTournamentPlayers();
-    if (tournamentPlayers) {
-      const withNames = tournamentPlayers
-        .filter((item: any) => item.tournament_id === tournament.id)
-        .map((item: any) => ({
-          ...item,
-          name: players.find((player: any) => player.id === item.person_id)?.name ?? "",
-        }));
-      setEntries(withNames);
+    if (!tournamentPlayers) return null;
+    return tournamentPlayers
+      .filter((item: any) => item.tournament_id === tournament.id)
+      .map((item: any) => ({
+        ...item,
+        name: players.find((player: any) => player.id === item.person_id)?.name ?? "",
+      }));
+  };
+
+  const buildEntries = async () => {
+    const withNames = await fetchEntries();
+    if (withNames) setEntries(withNames);
+  };
+
+  // Eliminated players must always hold positions N, N-1, ... (N = field
+  // size), in elimination order. A late entry or a removed entry changes N,
+  // so re-anchor everyone already out — otherwise the next elimination
+  // (position = players still in) collides with or skips an existing one.
+  const renumberEliminated = async (list: TournamentPlayer[]): Promise<TournamentPlayer[]> => {
+    const eliminatedOldestFirst = list
+      .filter((entry) => entry.finish_position != null)
+      .sort((a, b) => (b.finish_position as number) - (a.finish_position as number));
+    const corrected = new Map<number, number>();
+    eliminatedOldestFirst.forEach((entry, index) => {
+      const position = list.length - index;
+      if (entry.finish_position !== position) corrected.set(entry.id, position);
+    });
+    for (const [id, position] of corrected) {
+      await eliminatePlayer(id, position);
     }
+    return list.map((entry) =>
+      corrected.has(entry.id) ? { ...entry, finish_position: corrected.get(entry.id) as number } : entry
+    );
   };
 
   useEffect(() => {
@@ -157,7 +181,8 @@ export default function ActiveTournament() {
     setInactivePlayers((prev) => prev.filter((item: any) => !addedIds.has(item.id)));
     setAddNewPlayers([]);
     setShowInactivesModal(false);
-    await buildEntries();
+    const withNames = await fetchEntries();
+    if (withNames) setEntries(await renumberEliminated(withNames));
   };
 
   const handleConfirmRemoveEntry = async () => {
@@ -166,7 +191,7 @@ export default function ActiveTournament() {
     const success = await removePlayerFromTournament(entry.id);
     setRemoveTarget(null);
     if (!success) return;
-    setEntries((prev) => prev.filter((item) => item.id !== entry.id));
+    setEntries(await renumberEliminated(entries.filter((item) => item.id !== entry.id)));
     setInactivePlayers((prev) => [...prev, { id: entry.person_id, name: entry.name ?? "" }]);
   };
 
