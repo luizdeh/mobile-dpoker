@@ -47,6 +47,9 @@ export default function NewGame() {
   });
   const [buyInAmount, setBuyInAmount] = useState<number>(15);
   const [search, setSearch] = useState('');
+  // The night's dealer is exempt from rake. Deliberately no default — picked
+  // fresh each game (or left empty), and editable later on the Cash > RAKE card.
+  const [dealerId, setDealerId] = useState<number | null>(null);
 
   const navigation =
     useNavigation<NativeStackNavigationProp<GameParamsNavigation>>();
@@ -90,6 +93,8 @@ export default function NewGame() {
   }, []);
 
   const toggleRegisterPlayer = (id: number) => {
+    // Deselecting the dealer drops them as dealer too.
+    setDealerId((prev) => (prev === id ? null : prev));
     setPlayerList((prev) =>
       prev.map((item: PlayerList) =>
         item.id === id ? { ...item, active: !item.active } : item
@@ -98,6 +103,7 @@ export default function NewGame() {
   };
 
   const clearPlayers = () => {
+    setDealerId(null);
     setPlayerList((prev) => prev.map((player) => ({ ...player, active: false })));
   };
 
@@ -114,6 +120,7 @@ export default function NewGame() {
     const { game: createdGame, alreadyOpen } = await createNewGame({
       ...gameParams,
       rake_value: Number.isFinite(gameParams.rake_value) ? gameParams.rake_value : 5,
+      dealer_id: dealerId,
       locked_by: deviceId,
       locked_at: new Date().toISOString(),
     });
@@ -365,6 +372,31 @@ export default function NewGame() {
                   {player.name.toUpperCase()}
                 </Button>
               ))}
+            </HStack>
+          ) : null}
+          {selectedPlayers.length ? (
+            <HStack flexWrap="wrap" alignItems="center" mb={2}>
+              <Text color="blueGray.400" fontSize="10" bold mr={1}>
+                DEALER
+              </Text>
+              {selectedPlayers.map((player: PlayerList) => {
+                const isDealer = dealerId === player.id;
+                return (
+                  <Button
+                    key={player.id}
+                    onPress={() => setDealerId(isDealer ? null : player.id)}
+                    size="xs"
+                    borderRadius="full"
+                    colorScheme="amber"
+                    variant={isDealer ? "solid" : "outline"}
+                    borderColor={isDealer ? undefined : "blueGray.700"}
+                    _text={isDealer ? undefined : { color: "blueGray.400" }}
+                    m={0.5}
+                  >
+                    {player.name.toUpperCase()}
+                  </Button>
+                );
+              })}
             </HStack>
           ) : null}
           <ScrollView style={{ flex: 1, width: "100%" }}>

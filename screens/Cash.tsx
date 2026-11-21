@@ -25,10 +25,12 @@ import { deleteDonation } from "../utils/db/deleteDonation";
 import { updateRakePaid } from "../utils/db/updateRakePaid";
 import { setRakeWaived } from "../utils/db/setRakeWaived";
 import { updateGameRakeValue } from "../utils/db/updateGameRakeValue";
+import { updateGameDealer } from "../utils/db/updateGameDealer";
 import { Expense, Donation, Game, GamePlayer, PlayerList } from "../lib/types";
 import { formatDateBR, todayBR, parseBRDateToISO } from "../lib/formatDate";
 import FreePassDialog from "../components/FreePassDialog";
 import EditRakeValueDialog from "../components/EditRakeValueDialog";
+import SetDealerDialog from "../components/SetDealerDialog";
 
 type Panel = "rake" | "expenses" | "players" | "donations";
 
@@ -49,6 +51,8 @@ export default function Cash() {
   const [isSavingFreePass, setIsSavingFreePass] = useState(false);
   const [editRakeTarget, setEditRakeTarget] = useState<Game | null>(null);
   const [isSavingRakeValue, setIsSavingRakeValue] = useState(false);
+  const [dealerTarget, setDealerTarget] = useState<Game | null>(null);
+  const [isSavingDealer, setIsSavingDealer] = useState(false);
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoadingExpenses, setIsLoadingExpenses] = useState(true);
@@ -98,6 +102,22 @@ export default function Cash() {
     return map;
   }, [games]);
 
+  // The night's dealer doesn't pay rake: their game_players row is left out
+  // of every rake total and of the game's paid count.
+  const dealerIdByGameId = useMemo(() => {
+    const map = new Map<number, number>();
+    (games ?? []).forEach((game: Game) => {
+      if (game.dealer_id != null) map.set(game.id, game.dealer_id);
+    });
+    return map;
+  }, [games]);
+
+  const isDealerRow = (gp: GamePlayer) => dealerIdByGameId.get(gp.game_id) === gp.person_id;
+
+  // Rake owed for this row, or 0 when nothing is owed (untracked game, free
+  // pass, or the row is the dealer).
+  const rakeOwed = (gp: GamePlayer) => (isDealerRow(gp) ? 0 : rakeValueByGameId.get(gp.game_id) ?? 0);
+
   const playerNameById = useMemo(
     () => new Map((players ?? []).map((player: PlayerList) => [player.id, player.name])),
     [players]
@@ -115,23 +135,24 @@ export default function Cash() {
     () =>
       rakeTrackedGames.map((game: Game) => {
         const rows = (gamePlayers ?? []).filter((gp: GamePlayer) => gp.game_id === game.id);
-        const paidCount = rows.filter((gp: GamePlayer) => gp.rake_paid).length;
-        const isFullyPaid = rows.length > 0 && paidCount === rows.length;
-        return { game, rows, paidCount, isFullyPaid };
+        const chargeableRows = rows.filter((gp: GamePlayer) => gp.person_id !== game.dealer_id);
+        const paidCount = chargeableRows.filter((gp: GamePlayer) => gp.rake_paid).length;
+        const isFullyPaid = chargeableRows.length > 0 && paidCount === chargeableRows.length;
+        return { game, rows, chargeableCount: chargeableRows.length, paidCount, isFullyPaid };
       }),
     [rakeTrackedGames, gamePlayers]
   );
 
-  // Free-pass games stay in the always-visible list (that's the whole point
-  // — show that the game happened and nothing was charged) rather than
-  // getting lumped into the "fully collected, hide it" bucket.
+  // Only games still waiting on someone's rake stay in the always-visible
+  // list. A free pass has nothing left to collect, so it's settled and goes
+  // under SHOW GAMES with the fully paid ones (the card still says FREE PASS).
   const openRakeGames = useMemo(
-    () => rakeGamesWithStatus.filter((item) => item.game.rake_waived || !item.isFullyPaid),
+    () => rakeGamesWithStatus.filter((item) => !item.game.rake_waived && !item.isFullyPaid),
     [rakeGamesWithStatus]
   );
 
   const closedRakeGames = useMemo(
-    () => rakeGamesWithStatus.filter((item) => !item.game.rake_waived && item.isFullyPaid),
+    () => rakeGamesWithStatus.filter((item) => item.game.rake_waived || item.isFullyPaid),
     [rakeGamesWithStatus]
   );
 
@@ -142,7 +163,7 @@ export default function Cash() {
       return map.get(id)!;
     };
     (gamePlayers ?? []).forEach((gp: GamePlayer) => {
-      const rakeValue = rakeValueByGameId.get(gp.game_id);
+      const rakeValue = rakeOwed(gp);
       if (!rakeValue) return;
       const entry = ensure(gp.person_id);
       if (gp.rake_paid) entry.paidRake += rakeValue;
@@ -159,7 +180,7 @@ export default function Cash() {
       }))
       .filter((item) => item.total > 0)
       .sort((a, b) => b.total - a.total);
-  }, [gamePlayers, donations, rakeValueByGameId]);
+  }, [gamePlayers, donations, rakeValueByGameId, dealerIdByGameId]);
 
   const sortedPlayers = useMemo(
     () => [...(players ?? [])].sort((a: PlayerList, b: PlayerList) => a.name.localeCompare(b.name)),
@@ -191,21 +212,14 @@ export default function Cash() {
 
   const totalExpectedRake = useMemo(
     () =>
-      (gamePlayers ?? []).reduce((sum: number, gp: GamePlayer) => {
-        const rakeValue = rakeValueByGameId.get(gp.game_id);
-        return rakeValue ? sum + rakeValue : sum;
-      }, 0),
-    [gamePlayers, rakeValueByGameId]
+      (gamePlayers ?? []).reduce((sum: number, gp: GamePlayer) => sum + rakeOwed(gp), 0),
+    [gamePlayers, rakeValueByGameId, dealerIdByGameId]
   );
 
   const totalRakeCollected = useMemo(
     () =>
-      (gamePlayers ?? []).reduce((sum: number, gp: GamePlayer) => {
-        if (!gp.rake_paid) return sum;
-        const rakeValue = rakeValueByGameId.get(gp.game_id);
-        return rakeValue ? sum + rakeValue : sum;
-      }, 0),
-    [gamePlayers, rakeValueByGameId]
+      (gamePlayers ?? []).reduce((sum: number, gp: GamePlayer) => (gp.rake_paid ? sum + rakeOwed(gp) : sum), 0),
+    [gamePlayers, rakeValueByGameId, dealerIdByGameId]
   );
 
   const totalDonations = useMemo(
@@ -262,6 +276,33 @@ export default function Cash() {
     setEditRakeTarget(null);
   };
 
+  const handleConfirmDealer = async (dealerId: number | null) => {
+    if (!dealerTarget) return;
+    const game = dealerTarget;
+    setIsSavingDealer(true);
+    const result: any = await updateGameDealer(game.id, dealerId);
+    if (result?.error) {
+      setIsSavingDealer(false);
+      return;
+    }
+    // The dealer owes nothing, so a leftover "paid" tick on them is never
+    // real money — clear it so it can't resurface if the dealer is changed.
+    const dealerRow = (gamePlayers ?? []).find(
+      (gp: GamePlayer) => gp.game_id === game.id && gp.person_id === dealerId && gp.rake_paid
+    );
+    if (dealerRow) {
+      const cleared: any = await updateRakePaid(dealerRow.id, false);
+      if (!cleared?.error) {
+        setGamePlayers?.(
+          (gamePlayers ?? []).map((item) => (item.id === dealerRow.id ? { ...item, rake_paid: false } : item))
+        );
+      }
+    }
+    setIsSavingDealer(false);
+    setGames?.((games ?? []).map((item) => (item.id === game.id ? { ...item, dealer_id: dealerId } : item)));
+    setDealerTarget(null);
+  };
+
   const handleAddExpense = async () => {
     const parsedAmount = Number(amount);
     if (!description.trim() || !amount || parsedAmount <= 0) return;
@@ -315,8 +356,13 @@ export default function Cash() {
     if (!success) loadDonations();
   };
 
-  const renderRakeGameCard = (item: { game: Game; rows: GamePlayer[]; paidCount: number }) => {
-    const { game, rows, paidCount } = item;
+  const renderRakeGameCard = (item: {
+    game: Game;
+    rows: GamePlayer[];
+    chargeableCount: number;
+    paidCount: number;
+  }) => {
+    const { game, rows, chargeableCount, paidCount } = item;
     const isExpanded = expandedGameId === game.id;
     return (
       <VStack key={game.id} backgroundColor="blueGray.800" borderRadius="sm" overflow="hidden">
@@ -334,9 +380,9 @@ export default function Cash() {
             ) : (
               <Text
                 fontSize="xs"
-                color={rows.length && paidCount === rows.length ? "teal.300" : "blueGray.400"}
+                color={chargeableCount && paidCount === chargeableCount ? "teal.300" : "blueGray.400"}
               >
-                {paidCount} / {rows.length}
+                {paidCount} / {chargeableCount}
               </Text>
             )}
           </HStack>
@@ -348,28 +394,53 @@ export default function Cash() {
                 No rake was charged for this game.
               </Text>
             ) : (
-              rows.map((gp: GamePlayer, index: number) => (
-                <Pressable key={gp.id} onPress={() => handleToggleRakePaid(gp)} isDisabled={!canManage}>
-                  <HStack
-                    justifyContent="space-between"
-                    alignItems="center"
-                    px={3}
-                    py={1}
-                    backgroundColor={index % 2 === 0 ? "blueGray.900" : "transparent"}
+              rows.map((gp: GamePlayer, index: number) => {
+                const isDealer = gp.person_id === game.dealer_id;
+                return (
+                  <Pressable
+                    key={gp.id}
+                    onPress={() => handleToggleRakePaid(gp)}
+                    isDisabled={!canManage || isDealer}
                   >
-                    <Text color="white" fontSize="sm" flexShrink={1} isTruncated>
-                      {(playerNameById.get(gp.person_id) ?? gp.name ?? "").toUpperCase()}
-                    </Text>
-                    <Icon
-                      as={AntDesign}
-                      name={gp.rake_paid ? "checkcircle" : "checkcircleo"}
-                      size="sm"
-                      color={gp.rake_paid ? "teal.300" : "blueGray.600"}
-                    />
-                  </HStack>
-                </Pressable>
-              ))
+                    <HStack
+                      justifyContent="space-between"
+                      alignItems="center"
+                      px={3}
+                      py={1}
+                      backgroundColor={index % 2 === 0 ? "blueGray.900" : "transparent"}
+                    >
+                      <Text color="white" fontSize="sm" flexShrink={1} isTruncated>
+                        {(playerNameById.get(gp.person_id) ?? gp.name ?? "").toUpperCase()}
+                      </Text>
+                      {isDealer ? (
+                        <Text color="amber.400" fontSize="xs" bold>
+                          DEALER
+                        </Text>
+                      ) : (
+                        <Icon
+                          as={AntDesign}
+                          name={gp.rake_paid ? "checkcircle" : "checkcircleo"}
+                          size="sm"
+                          color={gp.rake_paid ? "teal.300" : "blueGray.600"}
+                        />
+                      )}
+                    </HStack>
+                  </Pressable>
+                );
+              })
             )}
+            {canManage ? (
+              <Button
+                mx={3}
+                mt={2}
+                variant="outline"
+                colorScheme="amber"
+                size="sm"
+                onPress={() => setDealerTarget(game)}
+              >
+                {game.dealer_id != null ? "CHANGE DEALER" : "SET DEALER"}
+              </Button>
+            ) : null}
             {isAdmin ? (
               <HStack space={2} mx={3} mt={2}>
                 <Button
@@ -781,6 +852,20 @@ export default function Cash() {
           onClose={() => setEditRakeTarget(null)}
           onConfirm={handleConfirmRakeValue}
           isSaving={isSavingRakeValue}
+        />
+      ) : null}
+      {dealerTarget ? (
+        <SetDealerDialog
+          gameDate={formatDateBR(dealerTarget.date)}
+          players={(gamePlayers ?? [])
+            .filter((gp: GamePlayer) => gp.game_id === dealerTarget.id)
+            .map((gp: GamePlayer) => ({ id: gp.person_id, name: playerNameById.get(gp.person_id) ?? gp.name ?? "" }))
+            .sort((a, b) => a.name.localeCompare(b.name))}
+          currentDealerId={dealerTarget.dealer_id ?? null}
+          isOpen={!!dealerTarget}
+          onClose={() => setDealerTarget(null)}
+          onConfirm={handleConfirmDealer}
+          isSaving={isSavingDealer}
         />
       ) : null}
     </Box>

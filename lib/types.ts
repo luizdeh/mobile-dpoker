@@ -30,6 +30,7 @@ export type Game = {
   chip_value: number;
   rake_value: number | null;
   rake_waived: boolean;
+  dealer_id?: number | null;
   status: string;
   locked_by?: string | null;
   locked_at?: string | null;
